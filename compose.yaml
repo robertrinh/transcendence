@@ -1,0 +1,14 @@
+services:
+  web:
+    image: transcendence
+    build: .
+    ports:
+      - "127.0.0.1:8080:8080"
+    develop:
+      watch:
+        - action: rebuild
+          path: ./index.html
+          target: /app/index.html
+        - action: rebuild
+          path: ./static/stylesheet.css
+          target: /app/static/stylesheet.css

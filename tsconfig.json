@@ -1,1 +1,7 @@
-"extends": "@tsconfig/node24/tsconfig.json"
+{ 
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "outDir": "./build",
+  },
+  "extends": "@tsconfig/node24/tsconfig.json"
+}
