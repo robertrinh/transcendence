@@ -12,6 +12,6 @@
 	},
 	"scripts": {
 		"build": "tsc -p tsconfig.json",
-		"start": "node ./build/index.js"
+		"start": "node ./build/src/index.js"
 	}
 }
