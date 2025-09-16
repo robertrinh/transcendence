@@ -4,10 +4,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <link href="./static/output.css" rel="stylesheet" />
+    <script src="./build/static/game.js" type="module"></script>
     <title>Home</title>
   </head>
-  <body>
-    <header class="w-full bg-[#00487c] p-5">
+  <body id="body" class="min-h-screen bg-gray-800">
+    <header id="header" class="w-full bg-[#00487c] p-5">
       <nav class="w-full">
         <ul class="flex justify-evenly w-full">
           <li><a href="#home" class="transition-all delay-150 ease-in hover:text-[#0496ff] font-[Montserrat] font-sans font-medium text-base text-[#edf0f1]">Home</a></li>
@@ -17,5 +18,7 @@
         </ul>
       </nav>
     </header>
+    <main id="main" class="w-5/6 justify-center m-auto">
+    </main>
   </body>
 </html>
