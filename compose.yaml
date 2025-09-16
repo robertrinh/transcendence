@@ -10,5 +10,5 @@ services:
           path: ./index.html
           target: /app/index.html
         - action: rebuild
-          path: ./static/stylesheet.css
-          target: /app/static/stylesheet.css
+          path: ./static/
+          target: /app/static/
