@@ -2,6 +2,7 @@
   "compilerOptions": {
     "baseUrl": "./src",
     "outDir": "./build",
+    "lib": ["dom"]
   },
   "extends": "@tsconfig/node24/tsconfig.json"
 }
