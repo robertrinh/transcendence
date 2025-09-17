@@ -1,3 +1,5 @@
+import { CollisionBox } from './game.js'
+
 export class playerPaddle
 {
     x: number
@@ -56,6 +58,30 @@ export class playerPaddle
         return false
     }
 
+    public getHitSide(ball: CollisionBox): playerPaddle.hitSide {
+        const deltaX = (ball.x + ball.width / 2) - (this.x + this.width / 2)
+        const deltaY = (ball.y + ball.height / 2) - (this.y + this.height / 2)
+
+        console.log(deltaX)
+        console.log(deltaY)
+        if (deltaX === deltaY) {
+            return playerPaddle.hitSide.Error
+        }
+        if (deltaX > deltaY) {
+            if (Math.abs(deltaY) > deltaY) {
+                return playerPaddle.hitSide.Top
+            }
+            return playerPaddle.hitSide.Bottom
+        }
+        else
+        {
+            if (Math.abs(deltaX) > deltaX) {
+                return playerPaddle.hitSide.Left
+            }
+            return playerPaddle.hitSide.Right
+        }
+    }
+
     draw(canvas: HTMLCanvasElement, canvasCtx: CanvasRenderingContext2D, deltaTimeSeconds: number) {
         canvasCtx.fillStyle = this.color
         canvasCtx.fillRect(this.x, this.y, this.width, this.height)
@@ -67,4 +93,16 @@ export class playerPaddle
             this.moveUp(canvas, deltaTimeSeconds)
         }
     }
+}
+
+export namespace playerPaddle
+{
+    export enum hitSide
+    {
+        Top,
+        Bottom,
+        Left,
+        Right,
+        Error
+    } 
 }
