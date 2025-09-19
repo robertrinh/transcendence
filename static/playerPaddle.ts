@@ -1,6 +1,6 @@
-import { CollisionBox } from './game.js'
+import { CollisionBox } from './lib.js'
 
-export class playerPaddle
+export class PlayerPaddle
 {
     x: number
     y: number
@@ -58,27 +58,27 @@ export class playerPaddle
         return false
     }
 
-    public getHitSide(ball: CollisionBox): playerPaddle.hitSide {
+    public getHitSide(ball: CollisionBox): player_paddle.hitSide {
         const deltaX = (ball.x + ball.width / 2) - (this.x + this.width / 2)
         const deltaY = (ball.y + ball.height / 2) - (this.y + this.height / 2)
 
         console.log(deltaX)
         console.log(deltaY)
         if (deltaX === deltaY) {
-            return playerPaddle.hitSide.Error
+            return player_paddle.hitSide.Error
         }
         if (deltaX > deltaY) {
             if (Math.abs(deltaY) > deltaY) {
-                return playerPaddle.hitSide.Top
+                return player_paddle.hitSide.Top
             }
-            return playerPaddle.hitSide.Bottom
+            return player_paddle.hitSide.Bottom
         }
         else
         {
             if (Math.abs(deltaX) > deltaX) {
-                return playerPaddle.hitSide.Left
+                return player_paddle.hitSide.Left
             }
-            return playerPaddle.hitSide.Right
+            return player_paddle.hitSide.Right
         }
     }
 
@@ -95,7 +95,7 @@ export class playerPaddle
     }
 }
 
-export namespace playerPaddle
+export namespace player_paddle
 {
     export enum hitSide
     {
