@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "@tailwindcss/cli": "4.1.13",
+    "http-server": "^14.1.1"
+  },
+  "scripts": {
+    "build": "npx @tailwindcss/cli -i ./static/stylesheet.css -o ./static/output.css",
+    "start": "npx http-server -p 80"
+  }
+}
