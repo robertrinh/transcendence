@@ -17,6 +17,7 @@
 	},
 	"scripts": {
 		"build": "tsc -p tsconfig.json",
-		"start": "node ./build/src/index.js"
+		"start": "node ./build/src/index.js",
+		"lint": "npx eslint ."
 	}
 }
