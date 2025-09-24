@@ -6,6 +6,7 @@ export default defineConfig({
 	extends: [
 		eslint.configs.recommended,
 		tseslint.configs.strict,
+		tseslint.configs.stylistic
 	],
 		languageOptions: {
 		parser: tseslint.parser,
