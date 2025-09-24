@@ -6,17 +6,19 @@ import { Player } from './player.js'
 function handleKeyDown(key: KeyboardEvent) {
     switch (key.key) {
         case "ArrowDown":
-            playerOne.downPressed = true
+            playerOne.paddle.downPressed = true
             break
         case "ArrowUp":
-            playerOne.upPressed = true
+            playerOne.paddle.upPressed = true
             break
         case "s":
-            playerTwo.downPressed = true
+            playerTwo.paddle.downPressed = true
             break
         case "w":
-            playerTwo.upPressed = true
+            playerTwo.paddle.upPressed = true
             break
+        case " ":
+            spacePressed = true
     }
     key.preventDefault()
 }
@@ -24,16 +26,19 @@ function handleKeyDown(key: KeyboardEvent) {
 function handleKeyUp(key: KeyboardEvent) {
     switch (key.key) {
         case "ArrowDown":
-            playerOne.downPressed = false
+            playerOne.paddle.downPressed = false
             break
         case "ArrowUp":
-            playerOne.upPressed = false
+            playerOne.paddle.upPressed = false
             break
         case "s":
-            playerTwo.downPressed = false
+            playerTwo.paddle.downPressed = false
             break
         case "w":
-            playerTwo.upPressed = false
+            playerTwo.paddle.upPressed = false
+            break
+        case " ":
+            spacePressed = false
             break
     }
     key.preventDefault()
@@ -237,14 +242,14 @@ function hasPlayerTwoCollision(ball: Ball, playerTwo: PlayerPaddle) {
 
 
 function ballExitsLeftSide(): boolean {
-    if (ball.x < (playerTwo.x + playerTwo.width / 2)) {
+    if (ball.x < (playerTwo.paddle.x + playerTwo.paddle.width / 2)) {
         return true
     }
     return false
 }
 
 function ballExitsRightSide(): boolean {
-    if (ball.x > (playerOne.x + playerOne.width / 2)) {
+    if (ball.x > (playerOne.paddle.x + playerOne.paddle.width / 2)) {
         return true
     }
     return false
@@ -259,14 +264,15 @@ function getRandomInt(max: number) {
  * @param playerOne starts on the right side, this is always a human controlled player
  * @param playerTwo starts on the left side
  */
-async function initRound(playerOne: PlayerPaddle, playerTwo: PlayerPaddle, startingBallSpeed: number, ctx: CanvasRenderingContext2D, ball: Ball) {
-    const horizontalOffset = 50
-    const verticalOffset = (canvas.height - playerOne.height) / 2
+async function initRound(canvas: HTMLCanvasElement, playerOne: Player, playerTwo: Player, startingBallSpeed: number, 
+    ctx: CanvasRenderingContext2D, ball: Ball) {
+    const horizontalOffset = canvas.width * 0.05
+    const verticalOffset = (canvas.height - playerOne.paddle.height) / 2
 
-    playerOne.x = canvas.width - horizontalOffset - playerOne.width
-    playerOne.y = verticalOffset
-    playerTwo.x = horizontalOffset
-    playerTwo.y = verticalOffset
+    playerOne.paddle.x = canvas.width - horizontalOffset - playerOne.paddle.width
+    playerOne.paddle.y = verticalOffset
+    playerTwo.paddle.x = horizontalOffset
+    playerTwo.paddle.y = verticalOffset
 
     ball.movementSpeed = startingBallSpeed
     ball.speedX = 0
@@ -274,7 +280,7 @@ async function initRound(playerOne: PlayerPaddle, playerTwo: PlayerPaddle, start
     ball.y = getRandomInt(canvas.height - ball.radius)
     ball.dirVector.x = Math.random() < 0.5 ? -1: 1
     ball.dirVector.y = Math.random() < 0.5 ? -1: 1
-    draw(ctx, ball, playerOne)
+    draw(canvas, ctx, ball, playerOne, playerTwo)
     await sleep(500)
 }
 
@@ -285,8 +291,38 @@ enum gameState {
     ActiveRound
 }
 
-async function game(state: gameState) {
+function drawPlayerScores(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, playerOneRoundScore: number, playerTwoRoundScore: number) {
+    ctx.font = "48px sans-serif"
+    ctx.textAlign = "center"
+    ctx.fillStyle = "#36454F"
+    ctx.fillText(playerTwoRoundScore.toString(), canvas.width * 0.25, canvas.height * 0.1)
+    ctx.fillText(playerOneRoundScore.toString(), canvas.width * 0.75, canvas.height * 0.1)
+}
+
+function waitGameStart(spacePressed: boolean, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, state: gameState,
+    playerOne: Player, playerTwo: Player
+) {
+    ctx.font = "48px sans-serif"
+    ctx.textAlign = "center"
+    ctx.fillStyle = "#36454F"
+    ctx.fillText("Press space bar to start...", canvas.width * 0.5, canvas.height * 0.9)
+
+    if (!spacePressed) {
+        return
+    }
+    spacePressed = false
+    app.state = gameState.RoundEnd
+    playerOne.roundScore = 0
+    playerTwo.roundScore = 0
+}
+
+async function game() {
     const startingBallSpeed = ball.movementSpeed
+    const roundMax = 3
+    let playerOneRoundScore = 0
+    let playerOneGameScore = 0
+    let playerTwoRoundScore = 0
+    let playerTwoGameScore = 0
 
     assertIsNotNull(ctx)
     while (true) {
@@ -294,19 +330,28 @@ async function game(state: gameState) {
         deltaTimeSeconds = (newTimestamp - timestamp) / 1000
         timestamp = newTimestamp
 
-        if (state === gameState.Start || state === gameState.RoundEnd) {
-            await initRound(playerOne, playerTwo, startingBallSpeed, ctx, ball)
-            state = gameState.ActiveRound
+        if (app.state === gameState.GameEnd || app.state === gameState.Start) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height)
+            waitGameStart(spacePressed, canvas, ctx, app.state, playerOne, playerTwo)
         }
-        draw(ctx, ball, playerOne)
-        moveBall(canvas, ball, playerOne, playerTwo)
-        if (ballExitsLeftSide()) {
-            console.log("GOAL FOR PLAYER ONE")
-            state = gameState.RoundEnd
+        if (app.state === gameState.RoundEnd) {
+            await initRound(canvas, playerOne, playerTwo, startingBallSpeed, ctx, ball)
+            app.state = gameState.ActiveRound
         }
-        if (ballExitsRightSide()) {
-            console.log("GOAL FOR PLAYER TWO")
-            state = gameState.RoundEnd
+        if (app.state === gameState.ActiveRound) {
+            draw(canvas, ctx, ball, playerOne, playerTwo)
+            moveBall(canvas, ball, playerOne.paddle, playerTwo.paddle)
+            if (ballExitsLeftSide()) {
+                playerOne.roundScore++
+                app.state = gameState.RoundEnd
+            }
+            if (ballExitsRightSide()) {
+                playerTwo.roundScore++
+                app.state = gameState.RoundEnd
+            }
+            if (playerOne.roundScore === roundMax || playerTwo.roundScore === roundMax) {
+                app.state = gameState.GameEnd
+            }
         }
         await new Promise(resolve => {
             requestAnimationFrame(resolve)
@@ -314,12 +359,13 @@ async function game(state: gameState) {
     }
 }
 
-function draw(ctx: CanvasRenderingContext2D, ball: Ball, playerOne: PlayerPaddle) {
+function draw(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, ball: Ball, playerOne: Player, playerTwo: Player) {
     assertIsNotNull(ctx)
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     ball.draw(ctx)
-    playerOne.draw(canvas, ctx, deltaTimeSeconds)
-    playerTwo.draw(canvas, ctx, deltaTimeSeconds)
+    playerOne.paddle.draw(canvas, ctx, deltaTimeSeconds)
+    playerTwo.paddle.draw(canvas, ctx, deltaTimeSeconds)
+    drawPlayerScores(canvas, ctx, playerOne.roundScore, playerTwo.roundScore)
 }
 
 async function sleep(ms: number): Promise<void> {
@@ -330,6 +376,7 @@ async function sleep(ms: number): Promise<void> {
 
 let timestamp = performance.now()
 let deltaTimeSeconds = 0
+let spacePressed = false
 const canvas = document.createElement('canvas')
 const ctx = canvas.getContext("2d")
 assertIsNotNull(ctx)
@@ -343,10 +390,10 @@ canvas.addEventListener("keyup", handleKeyUp)
 const main = document.getElementById('main')
 
 const ball = new Ball(0, 0, {x: 1, y: 1}, 15, 2, "#a31621", 0, 7.5)
-const playerTwo = new PlayerPaddle(40, 40, 20, 150, 1000, "#08A4BD")
-const playerOne = new PlayerPaddle(canvas.width - 40, 40, 20, 150, 1000, "#08A4BD") 
-const state = gameState.Start
+const playerTwo = new Player(40, 40, 20, 150, 1000, "#08A4BD")
+const playerOne = new Player(canvas.width - 40, 40, 20, 150, 1000, "#08A4BD") 
+const app = {state: gameState.Start}
 
 assertIsNotNull(main)
 main.insertAdjacentElement('afterend', canvas)
-await game(state)
+await game()
