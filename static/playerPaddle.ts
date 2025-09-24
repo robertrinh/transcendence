@@ -1,5 +1,3 @@
-import { CollisionBox } from './lib.js'
-
 export class PlayerPaddle
 {
     x: number
@@ -46,40 +44,6 @@ export class PlayerPaddle
             return
         }
         this.y = newY
-    }
-
-    public pointInBox(x: number, y: number): boolean {
-        if (
-            x >= this.x && x <= this.x + this.width &&
-            y >= this.y && y <= this.y + this.height
-        ) {
-            return true
-        }
-        return false
-    }
-
-    public getHitSide(ball: CollisionBox): player_paddle.hitSide {
-        const deltaX = (ball.x + ball.width / 2) - (this.x + this.width / 2)
-        const deltaY = (ball.y + ball.height / 2) - (this.y + this.height / 2)
-
-        console.log(deltaX)
-        console.log(deltaY)
-        if (deltaX === deltaY) {
-            return player_paddle.hitSide.Error
-        }
-        if (deltaX > deltaY) {
-            if (Math.abs(deltaY) > deltaY) {
-                return player_paddle.hitSide.Top
-            }
-            return player_paddle.hitSide.Bottom
-        }
-        else
-        {
-            if (Math.abs(deltaX) > deltaX) {
-                return player_paddle.hitSide.Left
-            }
-            return player_paddle.hitSide.Right
-        }
     }
 
     draw(canvas: HTMLCanvasElement, canvasCtx: CanvasRenderingContext2D, deltaTimeSeconds: number) {

@@ -8,9 +8,11 @@ export class Ball
 	radius: number
 	movementSpeed: number
 	color: string
+	speedX: number
+	maxSpeed: number
 
 	constructor(x: number, y: number, dirVector: Vector2, radius: number,
-		movementSpeed: number, color: string
+		movementSpeed: number, color: string, speedX: number, maxSpeed: number
 	) {
 		this.x = x
 		this.y = y
@@ -18,6 +20,8 @@ export class Ball
 		this.radius	 = radius
 		this.movementSpeed = movementSpeed
 		this.color = color
+		this.speedX = speedX
+		this.maxSpeed = maxSpeed
 	}
 
 	draw(ctx: CanvasRenderingContext2D) {
@@ -34,5 +38,15 @@ export class Ball
 		assertIsNotNull(ctx)
 		ctx.strokeStyle = color
 		ctx.strokeRect(this.x, this.y, this.radius * 2, this.radius * 2)
+	}
+	
+	increaseSpeed() {
+		if (this.movementSpeed < this.maxSpeed) {
+			this.movementSpeed += 0.5 * Math.pow(1.2, this.speedX)
+			this.speedX += 1
+		}
+		if (this.movementSpeed > this.maxSpeed) {
+			this.movementSpeed = this.maxSpeed
+		}
 	}
 }

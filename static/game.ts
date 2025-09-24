@@ -1,9 +1,8 @@
 import { Ball } from './ball.js'
 import { PlayerPaddle, player_paddle } from './playerPaddle.js'
-import { CollisionBox, assertIsNotNull } from './lib.js'
+import { Point, Vector2, assertIsNotNull, lineLineIntersection } from './lib.js'
 
 function handleKeyDown(key: KeyboardEvent) {
-    console.log(key.key)
     switch (key.key) {
         case "ArrowDown":
             playerOne.downPressed = true
@@ -39,18 +38,6 @@ function handleKeyUp(key: KeyboardEvent) {
     key.preventDefault()
 }
 
-function rectangleCollideRectangle(rec1: CollisionBox, rec2: CollisionBox): boolean {
-    if (
-        rec1.x + rec1.width >= rec2.x &&
-        rec1.x <= rec2.x + rec2.width &&
-        rec1.y + rec1.height >= rec2.y &&
-        rec1.y <= rec2.y + rec2.height
-    ) {
-        return true
-    }
-    return false
-}
-
 function getRandomDegreeOffset(maxDegreeOffset: number) {
     const radian = Math.PI / 180
     const randInt = getRandomInt(maxDegreeOffset * 2)
@@ -61,37 +48,43 @@ function getRandomDegreeOffset(maxDegreeOffset: number) {
     return randInt * radian
 }
 
-function setPaddleBounceVector(hitY: number, hit: player_paddle.hitSide, paddle: PlayerPaddle, ball: Ball) {
+function setPaddleBounceVectorPlayerOne(hitY: number, hit: player_paddle.hitSide, paddle: PlayerPaddle, ball: Ball) {
     const paddleHeightThird = paddle.height / 3
     const degrees45 = 1 / Math.sqrt(2)
 
     if (hit === player_paddle.hitSide.Bottom || (hitY > paddle.y + paddleHeightThird * 2 && hitY <= paddle.y + paddle.height)) {
-        if (ball.dirVector.x < 0) {
-            ball.dirVector.x = degrees45
-        }
-        else {
-            ball.dirVector.x = -degrees45
-        }
+        ball.dirVector.x = -degrees45
         ball.dirVector.y = degrees45 + getRandomDegreeOffset(15)
     }
     else if (hit === player_paddle.hitSide.Top || (hitY >= paddle.y && hitY < paddle.y + paddleHeightThird)) {
-        if (ball.dirVector.x < 0) {
-            ball.dirVector.x = degrees45
-        }
-        else {
-            ball.dirVector.x = -degrees45
-        }
-        ball.dirVector.x = -degrees45 + getRandomDegreeOffset(15)
+        ball.dirVector.x = -degrees45
+        ball.dirVector.y = -(degrees45 + getRandomDegreeOffset(15))
     } else {
         ball.dirVector.y = getRandomDegreeOffset(3)
         ball.dirVector.x = -1
     }
 }
 
+function setPaddleBounceVectorPlayerTwo(hitY: number, hit: player_paddle.hitSide, paddle: PlayerPaddle, ball: Ball) {
+    const paddleHeightThird = paddle.height / 3
+    const degrees45 = 1 / Math.sqrt(2)
+
+    if (hit === player_paddle.hitSide.Bottom || (hitY > paddle.y + paddleHeightThird * 2 && hitY <= paddle.y + paddle.height)) {
+        ball.dirVector.x = degrees45
+        ball.dirVector.y = degrees45 + getRandomDegreeOffset(15)
+    }
+    else if (hit === player_paddle.hitSide.Top || (hitY >= paddle.y && hitY < paddle.y + paddleHeightThird)) {
+        ball.dirVector.x = degrees45
+        ball.dirVector.y = -(degrees45 + getRandomDegreeOffset(15))
+    } else {
+        ball.dirVector.y = getRandomDegreeOffset(3)
+        ball.dirVector.x = 1
+    }
+}
 function ballInVerticalBounds(canvas: HTMLCanvasElement, ball: Ball): boolean {
 	if (
-		ball.y + ball.dirVector.y > canvas.height - ball.radius ||
-		ball.y + ball.dirVector.y < ball.radius
+		ball.y + (ball.dirVector.y * ball.movementSpeed) > canvas.height - ball.radius * 2 ||
+		ball.y + (ball.dirVector.y * ball.movementSpeed) < 0
 	) {
 		return true
 	}
@@ -104,90 +97,143 @@ function applyBallVerticalBounce(canvas: HTMLCanvasElement, ball: Ball): void {
 	}
 }
 
+
+
 function moveBall(canvas: HTMLCanvasElement, ball: Ball, playerOne: PlayerPaddle, playerTwo: PlayerPaddle): void {
-	applyBallVerticalBounce(canvas, ball)
-	checkPaddleCollision(ball, playerOne, playerTwo)
+    applyBallVerticalBounce(canvas, ball)
+    if (hasPlayerOneCollision(ball, playerOne) || hasPlayerTwoCollision(ball, playerTwo)) {
+        ball.increaseSpeed()
+    }
+    ball.dirVector = normalizeVector2(ball.dirVector)
 	ball.x += ball.dirVector.x * ball.movementSpeed
 	ball.y += ball.dirVector.y * ball.movementSpeed
 }
 
-function checkPaddleCollision(ball: Ball, playerOne: PlayerPaddle, playerTwo: PlayerPaddle) {
-    const newX = ball.dirVector.x * ball.movementSpeed + ball.radius / 2
-    const newY = ball.dirVector.y * ball.movementSpeed + ball.radius / 2
-    const hypotenuse = Math.sqrt(Math.pow(newX, 2) + Math.pow(newY, 2)) // the ball will travel this distance
-    const angle = Math.atan2(ball.dirVector.y, ball.dirVector.x)
-    const maxRayDistance = Math.sqrt(Math.pow(canvas.height, 2) + Math.pow(canvas.width, 2))
-    const rayIncrement = 1
-
-    assertIsNotNull(ctx)
-    // ctx.beginPath()
-    // ctx.moveTo(ball.x, ball.y)
-    let rayDistance = 0
-    let x = ball.x
-    let y = ball.y
-    while (rayDistance < maxRayDistance) {
-        const ballBox: CollisionBox = {x: ball.x, y: ball.y, width: ball.radius, height: ball.radius}
-		const hitX = x + ball.radius / 2      
-		const hitY = y + ball.radius / 2
-        if (rectangleCollideRectangle(
-            ballBox,
-            {x: playerOne.x, y: playerOne.y, width: playerOne.width, height: playerOne.height}
-        )) {
-            if (hypotenuse > rayDistance) {
-				drawPoint(5, x, y, "#000000")
-                const hitSide = playerOne.getHitSide(ballBox)
-                // push ball out of paddle
-                while (rectangleCollideRectangle(
-                    {x: x, y: y, width: ball.radius, height: ball.radius},
-                    {x: playerOne.x, y: playerOne.y, width: playerOne.width, height: playerOne.height}) ||
-                    ballInVerticalBounds(canvas, ball)) {
-					drawPoint(5, x, y, "#fa45be")
-                    x -= rayIncrement * Math.cos(angle)
-                    y -= rayIncrement * Math.sin(angle)
-                }
-                ball.x = x + ball.radius / 2
-                ball.y = y + ball.radius / 2
-                if (hitSide === player_paddle.hitSide.Top || hitSide === player_paddle.hitSide.Bottom) {
-                    ball.dirVector.y = -ball.dirVector.y
-                }
-                setPaddleBounceVector(hitY, hitSide, playerOne, ball)
-                ball.movementSpeed *= 1.1
-            }
-            break
-        }
-        // if (rectangleCollideRectangle(
-        //     ballBox,
-        //     {x: playerTwo.x, y: playerTwo.y, width: playerTwo.width, height: playerTwo.height}
-        // )) {
-        //     if (hypotenuse > rayDistance) {
-        //         const hitSide = playerTwo.getHitSide(ballBox)
-        //         // push ball out of paddle
-        //         while (rectangleCollideRectangle(
-        //             {x: x, y: y, width: ball.radius, height: ball.radius},
-        //             {x: playerTwo.x, y: playerTwo.y, width: playerTwo.width, height: playerTwo.height}) ||
-        //             hasVerticalCollision()) {
-        //             x -= rayIncrement * Math.cos(angle)
-        //             y -= rayIncrement * Math.sin(angle)
-        //         }
-        //         ball.x = x + ball.radius / 2
-        //         ball.y = y + ball.radius / 2
-        //         if (hitSide === playerPaddle.hitSide.Top || hitSide === playerPaddle.hitSide.Bottom) {
-        //             ball.yVector = -ball.yVector
-        //         }
-        //         setPaddleBounceVector(hitY, hitSide, playerTwo)
-        //         ball.movementSpeed *= 1.1
-        //     }
-        //     break
-        // }
-
-        x += rayIncrement * Math.cos(angle)
-        y += rayIncrement * Math.sin(angle)
-        rayDistance += rayIncrement
+function getXHitboxOffset(dirVector: Vector2, hitboxWidth: number) {
+    if (dirVector.x === 0 ) {
+        return 0
     }
-    // ctx.lineTo(x, y)
-    // ctx.closePath()
-    // ctx.stroke()
+    else if (dirVector.x < 0) {
+        return (hitboxWidth / -2)
+    }
+    else {
+        return (hitboxWidth / 2)
+    }
 }
+
+function getYHitboxOffset(dirVector: Vector2, hitboxHeight: number) {
+    if (dirVector.y === 0 ) {
+        return 0
+    }
+    else if (dirVector.y < 0) {
+        return (hitboxHeight / -2)
+    }
+    else {
+        return (hitboxHeight / 2)
+    }
+}
+
+function getSquaredDistance(pointA: Point, pointB: Point) {
+    return (Math.pow(pointA.x - pointB.x, 2) + Math.pow(pointA.y - pointB.y, 2))
+}
+
+function getHitSide(leftPoint: Point | null, rightPoint: Point | null, upPoint: Point | null, downPoint: Point | null, paddleCentre: Point): player_paddle.hitSide {
+    const distMap = new Map<player_paddle.hitSide, number>()
+
+    if (leftPoint !== null) {
+        distMap.set(player_paddle.hitSide.Left, getSquaredDistance(paddleCentre, leftPoint))
+    }
+    if (rightPoint !== null) {
+        distMap.set(player_paddle.hitSide.Right, getSquaredDistance(paddleCentre, rightPoint))
+    }
+    if (upPoint !== null) {
+        distMap.set(player_paddle.hitSide.Top, getSquaredDistance(paddleCentre, upPoint))
+    }
+    if (downPoint !== null) {
+        distMap.set(player_paddle.hitSide.Bottom, getSquaredDistance(paddleCentre, downPoint))
+    }
+    const sortedMap = new Map([...distMap.entries()].sort((a, b) => b[1] - a[1]))
+    const shortest = sortedMap.entries().next().value
+
+    if (shortest === undefined) {
+        throw Error("Shortest should not be undefined")
+    }
+    return shortest[0]
+}
+
+function normalizeVector2(vector: Vector2): Vector2 {
+    const magnitude = Math.pow(vector.x, 2) + Math.pow(vector.y, 2)
+    return {x: vector.x / magnitude, y: vector.y / magnitude}
+}
+
+function hasPlayerOneCollision(ball: Ball, playerOne: PlayerPaddle) {
+    const ballCenterPoint: Vector2 = {x: ball.x + ball.radius, y: ball.y + ball.radius}
+    const newX = ball.dirVector.x * ball.movementSpeed + ballCenterPoint.x + getXHitboxOffset(ball.dirVector, ball.radius * 2)
+    const newY = ball.dirVector.y * ball.movementSpeed + ballCenterPoint.y + getYHitboxOffset(ball.dirVector, ball.radius * 2)
+    const leftPoint = lineLineIntersection(ballCenterPoint, {x: newX, y: newY}, {x: playerOne.x, y: playerOne.y}, {x: playerOne.x, y: playerOne.y + playerOne.height})
+    const rightPoint = lineLineIntersection(ballCenterPoint, {x: newX, y: newY}, {x: playerOne.x + playerOne.width, y: playerOne.y}, {x: playerOne.x + playerOne.width, y: playerOne.y + playerOne.height})
+    const upPoint = lineLineIntersection(ballCenterPoint, {x: newX, y: newY}, {x: playerOne.x, y: playerOne.y}, {x: playerOne.x + playerOne.width, y: playerOne.y})
+    const downPoint = lineLineIntersection(ballCenterPoint, {x: newX, y: newY}, {x: playerOne.x, y: playerOne.y + playerOne.height}, {x: playerOne.x + playerOne.width, y: playerOne.y + playerOne.height})
+    
+    if (leftPoint === null && rightPoint === null && upPoint === null && downPoint === null) {
+        return false
+    }
+    const hitside = getHitSide(leftPoint, rightPoint, upPoint, downPoint, {x: playerOne.x + playerOne.width / 2, y: playerOne.y + playerOne.height / 2})
+    switch (hitside) {
+        case player_paddle.hitSide.Left:
+            assertIsNotNull(leftPoint)
+            setPaddleBounceVectorPlayerOne(leftPoint.y, player_paddle.hitSide.Left, playerOne, ball)
+            break
+        case player_paddle.hitSide.Right:
+            assertIsNotNull(rightPoint)
+            setPaddleBounceVectorPlayerOne(rightPoint.y, player_paddle.hitSide.Right, playerOne, ball)
+            break
+        case player_paddle.hitSide.Top:
+            assertIsNotNull(upPoint)
+            setPaddleBounceVectorPlayerOne(upPoint.y, player_paddle.hitSide.Top, playerOne, ball)
+            break
+        case player_paddle.hitSide.Bottom:
+            assertIsNotNull(downPoint)
+            setPaddleBounceVectorPlayerOne(downPoint.y, player_paddle.hitSide.Bottom, playerOne, ball)
+            break
+    }
+    return true
+}
+
+function hasPlayerTwoCollision(ball: Ball, playerTwo: PlayerPaddle) {
+    const ballCenterPoint: Vector2 = {x: ball.x + ball.radius, y: ball.y + ball.radius}
+    const newX = ball.dirVector.x * ball.movementSpeed + ballCenterPoint.x + getXHitboxOffset(ball.dirVector, ball.radius * 2)
+    const newY = ball.dirVector.y * ball.movementSpeed + ballCenterPoint.y + getYHitboxOffset(ball.dirVector, ball.radius * 2)
+    const leftPoint = lineLineIntersection(ballCenterPoint, {x: newX, y: newY}, {x: playerTwo.x, y: playerTwo.y}, {x: playerTwo.x, y: playerTwo.y + playerTwo.height})
+    const rightPoint = lineLineIntersection(ballCenterPoint, {x: newX, y: newY}, {x: playerTwo.x + playerTwo.width, y: playerTwo.y}, {x: playerTwo.x + playerTwo.width, y: playerTwo.y + playerTwo.height})
+    const upPoint = lineLineIntersection(ballCenterPoint, {x: newX, y: newY}, {x: playerTwo.x, y: playerTwo.y}, {x: playerTwo.x + playerTwo.width, y: playerTwo.y})
+    const downPoint = lineLineIntersection(ballCenterPoint, {x: newX, y: newY}, {x: playerTwo.x, y: playerTwo.y + playerTwo.height}, {x: playerTwo.x + playerTwo.width, y: playerTwo.y + playerTwo.height})
+    
+    if (leftPoint === null && rightPoint === null && upPoint === null && downPoint === null) {
+        return false
+    }
+    const hitside = getHitSide(leftPoint, rightPoint, upPoint, downPoint, {x: playerTwo.x + playerTwo.width / 2, y: playerTwo.y + playerTwo.height / 2})
+    switch (hitside) {
+        case player_paddle.hitSide.Left:
+            assertIsNotNull(leftPoint)
+            setPaddleBounceVectorPlayerTwo(leftPoint.y, player_paddle.hitSide.Left, playerTwo, ball)
+            break
+        case player_paddle.hitSide.Right:
+            assertIsNotNull(rightPoint)
+            setPaddleBounceVectorPlayerTwo(rightPoint.y, player_paddle.hitSide.Right, playerTwo, ball)
+            break
+        case player_paddle.hitSide.Top:
+            assertIsNotNull(upPoint)
+            setPaddleBounceVectorPlayerTwo(upPoint.y, player_paddle.hitSide.Top, playerTwo, ball)
+            break
+        case player_paddle.hitSide.Bottom:
+            assertIsNotNull(downPoint)
+            setPaddleBounceVectorPlayerTwo(downPoint.y, player_paddle.hitSide.Bottom, playerTwo, ball)
+            break
+    }
+    return true
+}
+
 
 function ballExitsLeftSide(): boolean {
     if (ball.x < (playerTwo.x + playerTwo.width / 2)) {
@@ -212,7 +258,7 @@ function getRandomInt(max: number) {
  * @param playerOne starts on the right side, this is always a human controlled player
  * @param playerTwo starts on the left side
  */
-async function initRound(playerOne: PlayerPaddle, playerTwo: PlayerPaddle, startingBallSpeed: number) {
+async function initRound(playerOne: PlayerPaddle, playerTwo: PlayerPaddle, startingBallSpeed: number, ctx: CanvasRenderingContext2D, ball: Ball) {
     const horizontalOffset = 50
     const verticalOffset = (canvas.height - playerOne.height) / 2
 
@@ -222,11 +268,12 @@ async function initRound(playerOne: PlayerPaddle, playerTwo: PlayerPaddle, start
     playerTwo.y = verticalOffset
 
     ball.movementSpeed = startingBallSpeed
+    ball.speedX = 0
     ball.x = canvas.width / 2
     ball.y = getRandomInt(canvas.height - ball.radius)
     ball.dirVector.x = Math.random() < 0.5 ? -1: 1
     ball.dirVector.y = Math.random() < 0.5 ? -1: 1
-    draw()
+    draw(ctx, ball, playerOne)
     await sleep(500)
 }
 
@@ -239,16 +286,18 @@ enum gameState {
 
 async function game(state: gameState) {
     const startingBallSpeed = ball.movementSpeed
+
+    assertIsNotNull(ctx)
     while (true) {
         const newTimestamp = performance.now()
         deltaTimeSeconds = (newTimestamp - timestamp) / 1000
         timestamp = newTimestamp
 
         if (state === gameState.Start || state === gameState.RoundEnd) {
-            await initRound(playerOne, playerTwo, startingBallSpeed)
+            await initRound(playerOne, playerTwo, startingBallSpeed, ctx, ball)
             state = gameState.ActiveRound
         }
-        draw()
+        draw(ctx, ball, playerOne)
         moveBall(canvas, ball, playerOne, playerTwo)
         if (ballExitsLeftSide()) {
             console.log("GOAL FOR PLAYER ONE")
@@ -264,22 +313,10 @@ async function game(state: gameState) {
     }
 }
 
-function drawPoint(radius: number, x: number, y: number, color: string) {
-	assertIsNotNull(ctx)
-	ctx.beginPath()
-	ctx.arc(x, y, radius, 0, Math.PI * 2, true)
-	ctx.closePath()
-	ctx.fillStyle = color
-	ctx.fill()
-}
-
-function draw() {
+function draw(ctx: CanvasRenderingContext2D, ball: Ball, playerOne: PlayerPaddle) {
     assertIsNotNull(ctx)
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     ball.draw(ctx)
-	ball.drawHitbox(ctx, "#000000")
-    // ball.drawHitbox()
-    // drawRay()
     playerOne.draw(canvas, ctx, deltaTimeSeconds)
     playerTwo.draw(canvas, ctx, deltaTimeSeconds)
 }
@@ -291,7 +328,7 @@ async function sleep(ms: number): Promise<void> {
 }
 
 let timestamp = performance.now()
-let deltaTimeSeconds: number = 0
+let deltaTimeSeconds = 0
 const canvas = document.createElement('canvas')
 const ctx = canvas.getContext("2d")
 assertIsNotNull(ctx)
@@ -304,10 +341,10 @@ canvas.addEventListener("keydown", handleKeyDown)
 canvas.addEventListener("keyup", handleKeyUp)
 const main = document.getElementById('main')
 
-const ball = new Ball(0, 0, {x: 1, y: 1}, 15, 3.5, "#a31621")
+const ball = new Ball(0, 0, {x: 1, y: 1}, 15, 2, "#a31621", 0, 7.5)
 const playerTwo = new PlayerPaddle(40, 40, 20, 150, 1000, "#08A4BD")
 const playerOne = new PlayerPaddle(canvas.width - 40, 40, 20, 150, 1000, "#08A4BD") 
-let state = gameState.Start
+const state = gameState.Start
 
 assertIsNotNull(main)
 main.insertAdjacentElement('afterend', canvas)
