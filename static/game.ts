@@ -1,6 +1,7 @@
 import { Ball } from './ball.js'
 import { PlayerPaddle, player_paddle } from './playerPaddle.js'
 import { Point, Vector2, assertIsNotNull, lineLineIntersection } from './lib.js'
+import { Player } from './player.js'
 
 function handleKeyDown(key: KeyboardEvent) {
     switch (key.key) {
