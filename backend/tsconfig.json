@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "target": "ES2022", //ES2022 latest version of JS
+    "module": "NodeNext", //ESNext latest module system
+	"moduleResolution": "NodeNext",
+    "rootDir": "./src",
+	"outDir": "./build"
+  }
+}
