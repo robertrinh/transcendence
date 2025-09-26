@@ -4,9 +4,16 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=production #TODO fix an env file
+      - DB_PATH=/app/database/transcendence.db
     ports:
       - 3000:3000
+    volumes:
+      - database:/app/database
     restart: always
+    networks:
+      - transcendence
 
   frontend:
     container_name: frontend
@@ -18,9 +25,16 @@ services:
     depends_on:
       - backend
     restart: always
+    networks:
+      - transcendence
 
-# to add in service: volumes(sqllite) + env file 
-
+volumes:
+  database:
+    name: transcendence_database
+    driver: local
+    
 networks:
   transcendence:
     driver: bridge
+  
+# to add in service: env file 
