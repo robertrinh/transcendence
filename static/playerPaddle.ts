@@ -28,7 +28,7 @@ export class PlayerPaddle
         return false
     }
 
-    private moveUp(canvas: HTMLCanvasElement, deltaTimeSeconds: number) {
+    moveUp(canvas: HTMLCanvasElement, deltaTimeSeconds: number) {
         const newY = this.y - this.yVector * deltaTimeSeconds
 
         if (this.hasVerticalCollision(canvas, newY)) {
@@ -37,7 +37,7 @@ export class PlayerPaddle
         this.y = newY
     }
 
-    private moveDown(canvas: HTMLCanvasElement, deltaTimeSeconds: number) {
+    moveDown(canvas: HTMLCanvasElement, deltaTimeSeconds: number) {
         const newY = this.y + this.yVector * deltaTimeSeconds
 
         if (this.hasVerticalCollision(canvas, newY)) {
