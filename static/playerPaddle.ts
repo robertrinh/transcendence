@@ -67,6 +67,6 @@ export namespace player_paddle
         Bottom,
         Left,
         Right,
-        Error
+        None
     } 
 }
