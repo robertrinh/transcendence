@@ -342,6 +342,9 @@ async function game() {
         }
         if (app.state === gameState.ActiveRound) {
             draw(canvas, ctx, ball, playerOne, playerTwo)
+            if (!playerTwo.humanControlled) {
+                playerTwo.ai.update(deltaTimeSeconds, ball, canvas, playerTwo.paddle, playerOne.paddle, ctx)
+            }
             moveBall(canvas, ball, playerOne.paddle, playerTwo.paddle)
             if (ballExitsLeftSide()) {
                 playerOne.roundScore++
@@ -376,6 +379,10 @@ async function sleep(ms: number): Promise<void> {
     )
 }
 
+function aiAction() {
+    // can only check once a second
+}
+
 let timestamp = performance.now()
 let deltaTimeSeconds = 0
 let spacePressed = false
@@ -392,8 +399,8 @@ canvas.addEventListener("keyup", handleKeyUp)
 const main = document.getElementById('main')
 
 const ball = new Ball(0, 0, {x: 1, y: 1}, 15, 2, "#a31621", 0, 7.5)
-const playerTwo = new Player(40, 40, 20, 150, 1000, "#08A4BD")
-const playerOne = new Player(canvas.width - 40, 40, 20, 150, 1000, "#08A4BD") 
+const playerTwo = new Player(40, 40, 20, 150, 1000, "#08A4BD", false, canvas)
+const playerOne = new Player(canvas.width - 40, 40, 20, 150, 1000, "#08A4BD", true, canvas) 
 const app = {state: gameState.Start}
 
 assertIsNotNull(main)
