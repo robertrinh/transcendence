@@ -5,12 +5,16 @@
   "scripts": {
     "build": "tsc",
     "start": "node build/index.js",
-    "dev": "tsc && node build/index.js"
+    "dev": "tsc && node build/index.js",
+    "test": "npm run build && node --test build/**/*.test.js",
+    "test:watch": "npm run build && node --test --watch build/**/*.test.js",
+    "test:integration": "npm run build && node --test build/**/*.integration.test.js",
+    "test:ci": "npm run build && node --test --reporter=junit build/**/*.test.js > test-results.xml"
   },
   "dependencies": {
     "fastify": "5.5.0",
-	"@fastify/static": "8.2.0",
-	"better-sqlite3": "^12.4.1"
+    "@fastify/static": "8.2.0",
+    "better-sqlite3": "^12.4.1"
   },
   "devDependencies": {
     "typescript": "5.9.2",
