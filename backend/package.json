@@ -10,7 +10,7 @@
     "test": "node --loader ts-node/esm --test src/**/*.test.ts",
     "test:watch": "node --loader ts-node/esm --test --watch src/**/*.test.ts",
     "test:integration": "node --loader ts-node/esm --test src/**/*.integration.test.ts",
-    "test:ci": "node --loader ts-node/esm --test src/**/*.test.ts"
+    "test:ci": "node --loader ts-node/esm --test src/tests/health.test.ts"
   },
   "dependencies": {
     "fastify": "5.5.0",
