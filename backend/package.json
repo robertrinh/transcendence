@@ -5,11 +5,12 @@
   "scripts": {
     "build": "tsc",
     "start": "node build/index.js",
-    "dev": "tsc && node build/index.js",
-    "test": "npm run build && node --test build/**/*.test.js",
-    "test:watch": "npm run build && node --test --watch build/**/*.test.js",
-    "test:integration": "npm run build && node --test build/**/*.integration.test.js",
-    "test:ci": "npm run build && node --test --reporter=junit build/**/*.test.js > test-results.xml"
+    "start:dev": "ts-node src/index.ts",
+    "dev": "ts-node src/index.ts",
+    "test": "node --loader ts-node/esm --test src/**/*.test.ts",
+    "test:watch": "node --loader ts-node/esm --test --watch src/**/*.test.ts",
+    "test:integration": "node --loader ts-node/esm --test src/**/*.integration.test.ts",
+    "test:ci": "node --loader ts-node/esm --test src/**/*.test.ts"
   },
   "dependencies": {
     "fastify": "5.5.0",
@@ -17,8 +18,9 @@
     "better-sqlite3": "^12.4.1"
   },
   "devDependencies": {
-    "typescript": "5.9.2",
+	"typescript": "5.9.2",
     "@types/node": "24.3.1",
-    "@tsconfig/node24": "24.0.1"
+    "@tsconfig/node24": "24.0.1",
+    "ts-node": "^10.9.2"
   }
 }
