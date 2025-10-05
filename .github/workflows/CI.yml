@@ -71,22 +71,11 @@ jobs:
           cd backend
           npm ci
 
-      - name: Run backend build
-        run: |
-          cd backend
-          npm run build
-
       - name: Run backend tests
         run: |
           cd backend
           npm run test:ci
-      
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-results
-          path: backend/test-results.xml
+  
 
   # Job 3: Docker build + Integration testing
   docker-tests:
