@@ -1,0 +1,18 @@
+{
+	"compilerOptions": {
+		"target": "ES2020",       // Modern JS output
+		"module": "ESnext", //makes it possible to import smaller bundles
+		"moduleResolution": "Node",
+		"jsx": "react-jsx",       // Use the new JSX transform
+		"esModuleInterop": true, //syntax for import commonjs modules
+		"strict": true, //type checking 
+		//not needed with vite
+		// "baseUrl": "./src",
+		// "rootDir": "./src",
+		// "outDir": "./build",
+		"lib": ["DOM", "DOM.Iterable", "ES2020"]
+	},
+	"include": ["src/**/*"],
+	//not really needed with vite but good for clarity
+  	"exclude": ["node_modules", "dist"]
+}
