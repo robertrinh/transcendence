@@ -1,5 +1,4 @@
 import Fastify from 'fastify'
-import FastifyStatic from '@fastify/static'
 import { initDatabase } from './database.js'
 
 const fastify = Fastify({
@@ -7,15 +6,6 @@ const fastify = Fastify({
 })
 
 const db = initDatabase()
-
-const path = "/app/"
-fastify.register(FastifyStatic, {
-	root: path
-})
-
-fastify.get('/', async function (request, reply) {
-	return reply.sendFile('index.html')
-})
 
 // API Health check
 fastify.get('/api/health', async (request, reply) => {
