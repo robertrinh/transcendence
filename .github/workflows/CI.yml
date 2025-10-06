@@ -21,7 +21,7 @@ jobs:
     name: Code Quality check
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -57,7 +57,7 @@ jobs:
     needs: lint #needs is for running this test sequentially
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -84,7 +84,7 @@ jobs:
       needs: [lint, test]
       steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
