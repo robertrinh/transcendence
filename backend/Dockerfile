@@ -18,9 +18,9 @@ RUN apk add --no-cache sqlite python3 make g++
 RUN mkdir -p /app/database
 
 # Set proper permissions for database directory
-RUN chown -R node:node /app/database
 COPY dump.sql ./
 RUN sqlite3 ./database/db.sqlite < dump.sql
+RUN chown -R node:node /app/database
 
 #### BACKEND ####
 # Copy TypeScript source files
