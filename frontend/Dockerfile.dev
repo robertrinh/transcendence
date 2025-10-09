@@ -13,9 +13,6 @@ RUN npm install
 # Copy all frontend files
 COPY . .
 
-# Builds the frontend, no server just static files (uncomment for production)
-# RUN npm run build
-
 # Expose port 80
 EXPOSE 8080
 
