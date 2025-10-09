@@ -1,13 +1,8 @@
 import Fastify from 'fastify'
-import FastifyStatic from '@fastify/static'
 import databaseRoutes from './database.js'
 
 const fastify = Fastify({
   logger: true
-})
-
-fastify.register(FastifyStatic, {
-	root: "/app/"
 })
 
 fastify.register(

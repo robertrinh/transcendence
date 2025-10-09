@@ -1,10 +1,24 @@
 {
+  "name": "frontend",
+  "type": "module",
   "dependencies": {
-    "@tailwindcss/cli": "4.1.13",
-    "http-server": "^14.1.1"
+    "http-server": "^14.1.1",
+	"react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.24.1"
+  },
+  "devDependencies": {
+	"@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+	"typescript": "^5.2.2",
+	"tailwindcss": "^3.4.1",
+	"postcss": "^8.4.39",
+	"autoprefixer": "^10.4.19",
+	"vite": "^5.3.3",
+	"@vitejs/plugin-react": "^4.0.0"
   },
   "scripts": {
-    "build": "npx @tailwindcss/cli -i ./static/stylesheet.css -o ./static/output.css",
-    "start": "npx http-server -p 80"
+    "dev": "vite",
+    "build": "vite build"
   }
 }

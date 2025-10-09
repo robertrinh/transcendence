@@ -5,7 +5,7 @@ FROM node:alpine
 WORKDIR /app
 
 # Copy package.json for npm install
-COPY package.json ./
+COPY package.json package-lock.json ./
 
 # Install dependencies (including better-sqlite3)
 RUN npm install

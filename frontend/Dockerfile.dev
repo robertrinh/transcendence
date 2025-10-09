@@ -5,7 +5,7 @@ FROM node:alpine
 WORKDIR /app
 
 # Copy package.json for npm install
-COPY package.json ./
+COPY package.json package-lock.json ./
 
 # Install dependencies
 RUN npm install
@@ -13,11 +13,8 @@ RUN npm install
 # Copy all frontend files
 COPY . .
 
-# Build CSS with TailwindCSS
-RUN npm run build
-
 # Expose port 80
-EXPOSE 80
+EXPOSE 8080
 
 # Start simple HTTP server
-CMD ["npm", "start"]
+CMD ["npm", "run", "dev"]

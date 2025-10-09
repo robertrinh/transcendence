@@ -1,48 +1,8 @@
-<!DOCTYPE html>
-<html lang="en-US">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
-    <link href="./static/output.css" rel="stylesheet" />
-    <title>Home</title>
-  </head>
+<!doctype html>
+<html lang="en">
+<title> Transcendence </title>
   <body>
-    <header class="w-full bg-[#00487c] p-5">
-      <nav class="w-full">
-        <ul class="flex justify-evenly w-full">
-          <li><a href="#home" class="transition-all delay-150 ease-in hover:text-[#0496ff] font-[Montserrat] font-sans font-medium text-base text-[#edf0f1]">Home</a></li>
-          <li><a href="#game" class="transition-all delay-150 ease-in hover:text-[#0496ff] font-[Montserrat] font-sans font-medium text-base text-[#edf0f1]">Game</a></li>
-          <li><a href="#leaderboard" class="transition-all delay-150 ease-in hover:text-[#0496ff] font-[Montserrat] font-sans font-medium text-base text-[#edf0f1]">Leaderboard</a></li>
-          <li><a href="#register" class="transition-all delay-150 ease-in hover:text-[#0496ff] font-[Montserrat] font-sans font-medium text-base text-[#edf0f1]">Register</a></li>
-        </ul>
-      </nav>
-    </header>
-    
-    <main class="p-5">
-      <div id="status" class="mb-4 p-3 bg-gray-100 rounded">
-        <h2 class="font-bold">Backend Status:</h2>
-        <p id="backend-status">Checking...</p>
-      </div>
-    </main>
-
-    <script>
-      // test backend connection with api/health
-      async function checkBackendStatus() {
-        try {
-          const backendUrl = 'http://localhost:3000/api/health';
-          
-          const response = await fetch(backendUrl);
-          const data = await response.json();
-          document.getElementById('backend-status').textContent = 
-            `${data.message}`;
-        } catch (error) {
-          document.getElementById('backend-status').textContent = 
-            `Backend not reachable: ${error.message}`;
-        }
-      }
-      
-      // check status on page load
-      checkBackendStatus();
-    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
