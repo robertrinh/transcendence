@@ -1,5 +1,5 @@
-# Use lightweight Node.js image
-FROM node:alpine
+# Use lightweight Node.js image with specific version (better-sqlite3 requires 24.x)
+FROM node:24-alpine
 
 # Set working directory
 WORKDIR /app
