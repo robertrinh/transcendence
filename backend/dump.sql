@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS avatars (
 
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY,
-    username TEXT
+    username TEXT,
     password TEXT,
     created_at TEXT,
     avatar_id INTEGER,
