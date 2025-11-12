@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS avatars (
 
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY,
-    username TEXT
+    username TEXT,
     password TEXT,
     created_at TEXT,
     avatar_id INTEGER,
@@ -31,4 +31,12 @@ CREATE TABLE IF NOT EXISTS tournaments (
     round_type TEXT,
     FOREIGN KEY (game_id) REFERENCES games(id)
 );
+
+-- I need some test users: delete afterwards :)
+INSERT INTO users (username, password) VALUES 
+    ('robert', 'hatesSQL'),
+    ('rutger', 'thenotvimzelaar1'),
+    ('ellen', 'ourSPAlegend'),
+	('joao', 'designking');
+
 COMMIT;

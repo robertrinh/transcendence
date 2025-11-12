@@ -1,7 +1,8 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify'
 import Database from 'better-sqlite3';
 
-const db = new Database('./database/db.sqlite')
+//* Needs export as the database instance so it can be used in other routes
+export const db = new Database('./database/transcendence.db')
 
 export default async function databaseRoutes (
   fastify: FastifyInstance,
