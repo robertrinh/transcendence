@@ -13,11 +13,13 @@
     "test:ci": "node --loader ts-node/esm --test src/tests/health.test.ts"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "better-sqlite3": "^12.4.1",
     "fastify": "5.5.0"
   },
   "devDependencies": {
     "@tsconfig/node24": "24.0.1",
+    "@types/bcrypt": "^6.0.0",
     "@types/node": "24.3.1",
     "ts-node": "^10.9.2",
     "typescript": "5.9.2"
