@@ -3,6 +3,7 @@ import { PlayerPaddle, player_paddle } from './playerPaddle.js'
 import { Point, Vector2, assertIsNotNull, lineLineIntersection } from './lib.js'
 import { Player } from './player.js'
 
+export default async function gameInit () {
 function handleKeyDown(key: KeyboardEvent) {
     switch (key.key) {
         case "ArrowDown":
@@ -404,5 +405,7 @@ const playerOne = new Player(canvas.width - 40, 40, 20, 150, 1000, "#08A4BD", tr
 const app = {state: gameState.Start}
 
 assertIsNotNull(main)
+canvas.style.visibility = 'visible'
 main.insertAdjacentElement('afterend', canvas)
 await game()
+}
