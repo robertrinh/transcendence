@@ -1,5 +1,7 @@
-import React from 'react'
+import React, {useEffect} from 'react'
 import Button from '../components/button.jsx'
+import gameInit from '../static/game.js'
+import GameUI from '../components/gameUI.js'
 
 const ws = new WebSocket("ws://localhost:8081")
 ws.onopen = function(ev) {
@@ -38,9 +40,16 @@ function removeElementById(elementId: string) {
 }
 
 export default function Game() {
+  // useEffect(() => {
+  //   async function cheese() {
+  //     await gameInit()
+  //   }
+  //   cheese()
+  // })
   return (
-    <main className='w-80 m-auto my-4'>
-      <h1 className=" text-4xl font-bold font-montserrat">Game Page</h1>
+    <main className='w-80% m-auto my-4' id='main'>
+      <GameUI></GameUI>
+      {/* <h1 className=" text-4xl font-bold font-montserrat">Game Page</h1>
       <div id='lobby-menu'>
         <div className='py-4'>
           <Button
@@ -94,7 +103,7 @@ export default function Game() {
           ws.send(JSON.stringify(message))
         }}
         />
-      </div>
+      </div> */}
     </main>
   )
 }
