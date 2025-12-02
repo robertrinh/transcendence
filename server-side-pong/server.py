@@ -27,22 +27,23 @@ async def handler(websocket):
         except json.decoder.JSONDecodeError as e:
             print(e)
             return
-        print(message_content)
+        print(f"connected: {CONNECTED}")
+        print(f"message_content: {message_content}")
         message_type = message_content['type']
         if message_type == 'REQ_LOBBY':
             lobby_id = 'ABCDEF'
-            LOBBIES[lobby_id] = [websocket]
             response = {'type': 'LOBBY_ID', 'lobby_id': lobby_id}
             await websocket.send(json.dumps(response))
         elif message_type == 'JOIN_LOBBY':
-            print(message_content)
-            print(LOBBIES)
-            players = LOBBIES.setdefault(message_content['lobby_id'], [websocket])
-            print(players)
-            if len(players) == 1:
-                asyncio.create_task(game_loop(message_content['lobby_id']))
+            lobby_id = message_content['lobby_id']
+            print(f"LOBBIES: {LOBBIES}")
+            players = LOBBIES.get(lobby_id)
+            if players == None:
+                LOBBIES.setdefault(lobby_id, [websocket])
+                asyncio.create_task(game_loop(lobby_id))
             else:
                 players.append(websocket)
+                print(f"after appending: {LOBBIES}")
 
 async def main():
     async with serve(handler, "127.0.0.1", 8081) as server:
