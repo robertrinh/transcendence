@@ -3,7 +3,7 @@ import { PlayerPaddle, player_paddle } from './playerPaddle.js'
 import { Point, Vector2, assertIsNotNull, lineLineIntersection } from './lib.js'
 import { Player } from './player.js'
 
-export default async function gameInit () {
+export default async function gameInit (gameMode: string, socket?: WebSocket, lobbyID?: string) {
 function handleKeyDown(key: KeyboardEvent) {
     switch (key.key) {
         case "ArrowDown":
@@ -384,15 +384,25 @@ function aiAction() {
     // can only check once a second
 }
 
+if (gameMode === "online") {
+    if (socket === undefined) {
+        throw Error("socket cannot be null if gameMode is online")
+    }
+    socket.onmessage = function(ev) {
+        console.log("Hello from game.ts")
+        console.log(ev)
+    }
+}
+
 let timestamp = performance.now()
 let deltaTimeSeconds = 0
 let spacePressed = false
-const canvas = document.createElement('canvas')
+const canvas = document.getElementById('game-canvas') as HTMLCanvasElement
 const ctx = canvas.getContext("2d")
 assertIsNotNull(ctx)
-canvas.setAttribute("id", "canvas")
+// canvas.setAttribute("id", "canvas")
 canvas.setAttribute("tabindex", "0")
-canvas.setAttribute("class", "m-auto my-8 overflow-hidden bg-white")
+// canvas.setAttribute("class", "m-auto my-8 overflow-hidden bg-white")
 canvas.setAttribute("width", "1024")
 canvas.setAttribute("height", "768")
 canvas.addEventListener("keydown", handleKeyDown)
@@ -400,12 +410,14 @@ canvas.addEventListener("keyup", handleKeyUp)
 const main = document.getElementById('main')
 
 const ball = new Ball(0, 0, {x: 1, y: 1}, 15, 2, "#a31621", 0, 7.5)
-const playerTwo = new Player(40, 40, 20, 150, 1000, "#08A4BD", false, canvas)
+const humanControlled = gameMode === 'multiplayer'
+const playerTwo = new Player(40, 40, 20, 150, 1000, "#08A4BD", humanControlled, canvas)
 const playerOne = new Player(canvas.width - 40, 40, 20, 150, 1000, "#08A4BD", true, canvas) 
 const app = {state: gameState.Start}
 
 assertIsNotNull(main)
-canvas.style.visibility = 'visible'
+// canvas.style.display = 'none'
 main.insertAdjacentElement('afterend', canvas)
+console.log(`GAMING MODE: ${gameMode}`)
 await game()
 }

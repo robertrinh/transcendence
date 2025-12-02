@@ -1,23 +1,10 @@
-import React, {useEffect} from 'react'
+import React, {useState} from 'react'
 import Button from '../components/button.jsx'
 import gameInit from '../static/game.js'
 import GameUI from '../components/gameUI.js'
+import GameCanvas from '../components/gameCanvas.js'
 
-const ws = new WebSocket("ws://localhost:8081")
-ws.onopen = function(ev) {
-  console.log("[connection opened]\n")
-}
-ws.onclose = function(ev) {
-  console.log("[connection closed]\n")
-}
-ws.onmessage = function(ev) {
-  console.log(`[message received] ${ev.data}\n`)
-  const JSONObject = JSON.parse(ev.data)
-  console.log(JSONObject)
-}
-ws.onerror = function(ev) {
-  console.log(`[error] ${ev}\n`)
-}
+
 
 function onClick() {
 
@@ -40,15 +27,52 @@ function removeElementById(elementId: string) {
 }
 
 export default function Game() {
-  // useEffect(() => {
-  //   async function cheese() {
-  //     await gameInit()
-  //   }
-  //   cheese()
-  // })
+  const [gameMode, setGameMode] = useState("none")
+  const [socket, setSocket] = useState<WebSocket | null>(null)
+  const [lobbyID, setLobbyID] = useState("none")
+
+  function updateGameMode(gameMode: string) {
+    console.log("Selected mode: ", gameMode)
+    setGameMode(gameMode)
+  }
+
+  function connectToServer(jsonMessage: any) {
+    if (socket !== null) {
+      return
+    }
+    const ws = new WebSocket("ws://localhost:8081")
+    setSocket(ws)
+
+    ws.onopen = function(ev) {
+      console.log("[connection opened]\n")
+      ws.send(jsonMessage)
+    }
+    ws.onclose = function(ev) {
+      console.log("[connection closed]\n")
+    }
+    ws.onmessage = function(ev) {
+      console.log(`[message received] ${ev.data}\n`)
+      const JSONObject = JSON.parse(ev.data)
+      console.log(JSONObject)
+      switch (JSONObject.type) {
+        case "LOBBY_ID":
+          // paste the lobby id to the page
+          const inputEle = document.getElementById("req-lobby-id") as HTMLInputElement | null
+          if (inputEle === null) {
+            throw Error("inputEle cannot be null")
+          }
+          inputEle.value = JSONObject.lobby_id
+      }
+    }
+    ws.onerror = function(ev) {
+      console.log(`[error] ${ev}\n`)
+    }
+  }
+
   return (
     <main className='w-80% m-auto my-4' id='main'>
-      <GameUI></GameUI>
+      <GameUI onGameModeSelect={updateGameMode} onConnectToServer={connectToServer} socket={socket}></GameUI>
+      {gameMode !== "none" && <GameCanvas mode={gameMode} socket={socket}></GameCanvas>}
       {/* <h1 className=" text-4xl font-bold font-montserrat">Game Page</h1>
       <div id='lobby-menu'>
         <div className='py-4'>
