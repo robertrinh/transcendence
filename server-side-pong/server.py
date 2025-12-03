@@ -2,6 +2,8 @@ import asyncio
 import json
 from websockets import broadcast
 from websockets.asyncio.server import serve
+from ball import Ball, Vector2
+import game
 
 TICK = 1 / 66
 CONNECTED = []
@@ -15,8 +17,10 @@ async def game_loop(lobby_id: str):
         message = {'type': 'LOBBY_WAIT'}
         broadcast(lobby_players, json.dumps(message))
         await asyncio.sleep(5)
+    
+    ball = Ball(game.ARENA_WIDTH / 2, game.ARENA_HEIGHT / 2, Vector2(1, 0), 4, 8, 15)
     while True:
-        broadcast(lobby_players, "TICK UPDATE")
+        broadcast(lobby_players, json.dumps(game.form_game_state(ball)))
         await asyncio.sleep(TICK)
 
 async def handler(websocket):
