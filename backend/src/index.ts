@@ -1,6 +1,7 @@
 import Fastify from 'fastify'
 import databaseRoutes from './database.js'
 import usersRoutes from './routes/users.js'
+import authRoutes from './routes/auth.js'
 
 const fastify = Fastify({
   logger: true
@@ -17,6 +18,13 @@ fastify.register(
   usersRoutes, {
     prefix: "/api"
 })
+
+//* Auth routes
+fastify.register(
+	authRoutes, {
+		prefix: "/api"
+	}
+)
 
 //* API Health check
 fastify.get('/api/health', async (request, reply) => {
