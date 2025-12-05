@@ -1,8 +1,3 @@
-// import Fastify from 'fastify'
-// import atatabaseRoutes from './database.js'
-// //chat
-// import { sendMessage, getMessages, joinChat, leaveChat, getOnlineUsers } from './controllers/chatcontrollers.js';
-
 import fastify from 'fastify';
 import databaseRoutes from './database.js';
 import { register, login, logout, validateSession } from './controllers/authcontrollers.js';
@@ -10,12 +5,6 @@ import { getMessages } from './controllers/chatcontrollers.js';
 import usersRoutes from './routes/users.js';
 
 const server = fastify({ logger: true });
-
-//* Database utility routes (e.g. testing/debugging)
-// server.register(
-//   databaseRoutes, {
-//     prefix: "/api/db"
-// })
 
 //* User logic routes
 server.register(
@@ -34,65 +23,6 @@ server.get('/api/health', async (request, reply) => {
         totalMessages: chatMessages.length
     };
 });
-
-// //* API Health check
-// server.get('/api/health', async (request, reply) => {
-//   return { status: 'OK', message: 'Backend API is running', database: 'SQLite3 is connected' }
-// })
-// const fastify = Fastify({
-//   logger: true,
-//   disableRequestLogging: false
-// })
-
-// //Register cors
-// await fastify.register(import('@fastify/cors'), {
-//   origin: true, // Allow all origins in development
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-//   allowedHeaders: ['Content-Type', 'Authorization']
-// });
-
-// // Add request logging
-// fastify.addHook('onRequest', async (request, reply) => {
-//     console.log(`${request.method} ${request.url}`);
-// });
-
-// // Register your database plugin
-// await fastify.register(databaseRoutes, { prefix: '/api/db' });
-
-// // Authentication routes
-// fastify.post('/api/auth/register', register);
-// fastify.post('/api/auth/login', login);
-// fastify.post('/api/auth/logout', logout);
-// fastify.get('/api/auth/validate', validateSession);
-
-// //chat routes
-// fastify.post('/api/chat/messages', sendMessage);
-// fastify.get('/api/chat/messages', getMessages);
-// fastify.post('/api/chat/join', joinChat);
-// fastify.delete('/api/chat/leave/:userId?', leaveChat);
-// fastify.get('/api/chat/users', getOnlineUsers);
-
-// fastify.register(
-//   databaseRoutes, {
-//     prefix: "/api/db"
-// })
-
-// // API Health check
-// fastify.get('/api/health', async (request, reply) => {
-//   return { status: 'OK', message: 'Backend API is running', database: 'SQLite3 is connected' }
-// })
-
-// // Start server
-// fastify.listen({ port: 3000, host: '0.0.0.0' }, (err, address) => {
-//   if (err) {
-//     console.error(err)
-//     process.exit(1)
-//   }
-//   console.log(`Backend API listening at ${address}`)
-// })
-
-
-
 
 // Store active SSE connections and messages
 const sseConnections = new Map<string, any>();
