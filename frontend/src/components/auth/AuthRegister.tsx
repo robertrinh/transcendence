@@ -178,14 +178,14 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
             // Try backend container first, fallback to localhost
             let response;
             try {
-                response = await fetch(`http://backend:3000/api/auth/register`, {
+                response = await fetch(`/api/auth/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password, email }),
                 });
             } catch (backendError) {
                 console.log('Backend container not reachable, trying localhost...');
-                response = await fetch(`http://localhost:3000/api/auth/register`, {
+                response = await fetch(`/api/auth/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password, email }),
