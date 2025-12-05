@@ -70,7 +70,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, setCurrentView, use
                             <span className="text-sm">Welcome, {user.username}!</span>
                             <button
                                 onClick={onLogout}
-                                className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm transition-colors"
+                                className="bg-rose-500 hover:bg-rose-600 px-3 py-1 rounded text-sm transition-colors"
                             >
                                 Logout
                             </button>
