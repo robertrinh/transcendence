@@ -35,9 +35,9 @@ const ChatMiniWindow: React.FC<ChatMiniWindowProps> = ({ user }) => {
         { id: '3', username: 'charlie', message: 'How is everyone doing?', timestamp: new Date() },
     ]);
     const [newMessage, setNewMessage] = useState('');
-    const [connected, setConnected] = useState(true);
+    const [connected] = useState(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    
+
     // Social features state
     const [activeTab, setActiveTab] = useState<TabMode>('chat');
     const [chatMode, setChatMode] = useState<ChatMode>('public');
@@ -47,7 +47,7 @@ const ChatMiniWindow: React.FC<ChatMiniWindowProps> = ({ user }) => {
         { id: '2', username: 'bob', isOnline: false },
     ]);
     const [blockedUsers, setBlockedUsers] = useState<string[]>([]);
-    const [onlineUsers, setOnlineUsers] = useState<string[]>(['alice', 'bob', 'charlie', 'david']);
+    const [onlineUsers] = useState<string[]>(['alice', 'bob', 'charlie', 'david']);
 
     // Filter messages based on blocked users and chat mode
     const filteredMessages = messages.filter(message => {
