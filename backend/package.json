@@ -8,8 +8,11 @@
     "build": "tsc",
     "start": "node build/index.js",
     "dev": "tsc --watch & node --watch build/index.js",
-    "test": "jest"
-  },
+    "test": "jest",
+	"test:watch": "node --loader ts-node/esm --test --watch src/**/*.test.ts",
+    "test:integration": "node --loader ts-node/esm --test src/**/*.integration.test.ts",
+    "test:ci": "node --loader ts-node/esm --test src/tests/health.test.ts"
+},
   "dependencies": {
     "better-sqlite3": "^12.4.1",
 	"@types/better-sqlite3":"^7.6.13",
