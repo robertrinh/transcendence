@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import MainLayout from './components/Layout/MainLayout';
 
 // Import your views
@@ -110,4 +110,5 @@ export function App() {
             </MainLayout>
         </div>
     );
+
 }
