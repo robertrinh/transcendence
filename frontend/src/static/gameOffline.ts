@@ -2,6 +2,7 @@ import { Ball } from './ball.js'
 import { PlayerPaddle, player_paddle } from './playerPaddle.js'
 import { Point, Vector2, assertIsNotNull, lineLineIntersection } from './lib.js'
 import { Player } from './player.js'
+import { gameInstance } from './game.js'
 
 export async function gameOfflineLobby(gameMode: string, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
     function handleKeyDown(key: KeyboardEvent) {
@@ -328,7 +329,7 @@ export async function gameOfflineLobby(gameMode: string, canvas: HTMLCanvasEleme
         let playerTwoGameScore = 0
 
         assertIsNotNull(ctx)
-        while (true) {
+        while (gameInstance.runGame === true) {
             const newTimestamp = performance.now()
             deltaTimeSeconds = (newTimestamp - timestamp) / 1000
             timestamp = newTimestamp

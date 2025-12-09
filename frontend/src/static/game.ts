@@ -2,9 +2,34 @@ import { assertIsNotNull } from './lib.js'
 import { gameOnlineLobby } from './gameOnline.js'
 import { gameOfflineLobby } from './gameOffline.js'
 
+class GameState {
+    runGame = true
+
+    stopGame() {
+        this.runGame = false
+        console.log("Stopping game...")
+        const canvasEle = document.getElementById("game-canvas")
+        if (canvasEle !== null) {
+            canvasEle.remove()
+        }
+    }
+
+    startGame() {
+        this.runGame = true
+        console.log("Starting game...")
+    }
+}
+
+export const gameInstance = new GameState
+
 export default async function gameInit (gameMode: string, socket?: WebSocket) {
-    const canvas = document.getElementById('game-canvas') as HTMLCanvasElement | null
-    assertIsNotNull(canvas)
+    let canvas = document.getElementById('game-canvas') as HTMLCanvasElement | null
+    if (canvas === null) {
+        canvas = document.createElement("canvas")
+        assertIsNotNull(canvas)
+        canvas.setAttribute("id", "game-canvas")
+        canvas.setAttribute("class", "m-auto my-8 overflow-hidden bg-white border-4 border-indigo-500")
+    }
     const ctx = canvas.getContext("2d")
     assertIsNotNull(ctx)
     canvas.setAttribute("tabindex", "0")
