@@ -5,7 +5,6 @@ import GameCanvas from '../components/gameCanvas.js'
 export default function Game() {
   const [gameMode, setGameMode] = useState("none")
   const [socket, setSocket] = useState<WebSocket | null>(null)
-  const [lobbyID, setLobbyID] = useState("none")
 
   function updateGameMode(gameMode: string) {
     console.log("Selected mode: ", gameMode)
@@ -19,11 +18,11 @@ export default function Game() {
     const ws = new WebSocket("ws://localhost:8081")
     setSocket(ws)
 
-    ws.onopen = function(ev) {
+    ws.onopen = function() {
       console.log("[connection opened]\n")
       ws.send(jsonMessage)
     }
-    ws.onclose = function(ev) {
+    ws.onclose = function() {
       console.log("[connection closed]\n")
     }
     ws.onmessage = function(ev) {

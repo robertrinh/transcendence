@@ -42,7 +42,6 @@ function validateJoinLobby(lobbyID: string): string {
     return lobbyEle.value
 }
 
-const buttonStyle = "bg-indigo-500 text-white py-2 px-8 uppercase rounded-xl"
 export default function GameUI({onGameModeSelect, onConnectToServer, socket}: GameUI) {
     return (
         <div id="game-ui" className='m-auto my-8 bg-white border-4 border-indigo-500 w-[1024px] h-[768px] flex'>

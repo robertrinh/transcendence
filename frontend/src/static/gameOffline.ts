@@ -303,7 +303,7 @@ export async function gameOfflineLobby(gameMode: string, canvas: HTMLCanvasEleme
         ctx.fillText(playerOneRoundScore.toString(), canvas.width * 0.75, canvas.height * 0.1)
     }
 
-    function waitGameStart(spacePressed: boolean, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, state: gameState,
+    function waitGameStart(spacePressed: boolean, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D,
         playerOne: Player, playerTwo: Player
     ) {
         ctx.font = "48px sans-serif"
@@ -323,10 +323,6 @@ export async function gameOfflineLobby(gameMode: string, canvas: HTMLCanvasEleme
     async function game() {
         const startingBallSpeed = ball.movementSpeed
         const roundMax = 3
-        let playerOneRoundScore = 0
-        let playerOneGameScore = 0
-        let playerTwoRoundScore = 0
-        let playerTwoGameScore = 0
 
         assertIsNotNull(ctx)
         while (gameInstance.runGame === true) {
@@ -336,7 +332,7 @@ export async function gameOfflineLobby(gameMode: string, canvas: HTMLCanvasEleme
 
             if (app.state === gameState.GameEnd || app.state === gameState.Start) {
                 ctx.clearRect(0, 0, canvas.width, canvas.height)
-                waitGameStart(spacePressed, canvas, ctx, app.state, playerOne, playerTwo)
+                waitGameStart(spacePressed, canvas, ctx, playerOne, playerTwo)
             }
             if (app.state === gameState.RoundEnd) {
                 await initRound(canvas, playerOne, playerTwo, startingBallSpeed, ctx, ball)
@@ -345,7 +341,7 @@ export async function gameOfflineLobby(gameMode: string, canvas: HTMLCanvasEleme
             if (app.state === gameState.ActiveRound) {
                 draw(canvas, ctx, ball, playerOne, playerTwo)
                 if (!playerTwo.humanControlled) {
-                    playerTwo.ai.update(deltaTimeSeconds, ball, canvas, playerTwo.paddle, playerOne.paddle, ctx)
+                    playerTwo.ai.update(deltaTimeSeconds, ball, canvas, playerTwo.paddle, ctx)
                 }
                 moveBall(canvas, ball, playerOne.paddle, playerTwo.paddle)
                 if (ballExitsLeftSide()) {

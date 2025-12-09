@@ -1,5 +1,3 @@
-import React from 'react'
-
 interface Button {
     id: string
     className: string

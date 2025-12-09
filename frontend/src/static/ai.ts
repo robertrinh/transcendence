@@ -93,7 +93,7 @@ export class AI
         return targetPoint.y + offset
     }
 
-    update(deltaTimeSeconds: number, ball: Ball, canvas: HTMLCanvasElement, paddle: PlayerPaddle, playerOnePaddle: PlayerPaddle, ctx: CanvasRenderingContext2D) {
+    update(deltaTimeSeconds: number, ball: Ball, canvas: HTMLCanvasElement, paddle: PlayerPaddle, ctx: CanvasRenderingContext2D) {
         this.moveToTargetPoint(paddle, canvas, deltaTimeSeconds)
         this.timeSinceLastAction += deltaTimeSeconds
         if (this.timeSinceLastAction < 1) {
