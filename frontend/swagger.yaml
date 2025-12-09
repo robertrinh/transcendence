@@ -1,0 +1,65 @@
+openapi: 3.0.4
+info:
+  title: ft_transcendence API
+  version: 0.0.0
+
+servers:
+  - url: http://localhost:3000/api
+    description: The backend server
+
+
+paths:
+  /users:
+    get:
+      summary: Get all users
+      tags:
+      - users
+      responses:
+        "200":
+          description: A JSON object
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  users:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        username:
+                          type: string
+
+    post:
+      summary: Creates a new user
+      tags:
+      - users
+
+  /users/{userId}:
+    get:
+      summary: Get the specified user
+      tags:
+      - users
+      parameters:
+        - in: path
+          name: userId
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user to get
+      responses:
+        "200":
+
+    delete:
+      summary: Delete the specified user
+      tags:
+      - users
+
+    put:
+      summary: Update the specified user
+      tags:
+      - users
