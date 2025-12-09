@@ -7,13 +7,13 @@ export default async function usersRoutes (
 ) {
 
 	//* Gets ALL users
-	fastify.get('/users', async (request, reply) => {
+	fastify.get('/', async (request, reply) => {
 		const users = db.prepare('SELECT id, username FROM users').all()
 		return { success: true, users }
 	})
 
 	//* Gets a single userID
-	fastify.get('/users/:id', async (request, reply) => {
+	fastify.get('/:id', async (request, reply) => {
 		const { id } = request.params as { id: string }
 		const user = db.prepare('SELECT id, username FROM users WHERE id = ?').get(id)
 
@@ -27,7 +27,7 @@ export default async function usersRoutes (
 	
 	//* Creates a new user
 	//TODO Password hashing, this is a security hazard lol
-	fastify.post('/users', async (request, reply) => {
+	fastify.post('/', async (request, reply) => {
 		const { username, password } = request.body as { username: string, password: string}
 
 		if (!username || !password){
@@ -45,7 +45,7 @@ export default async function usersRoutes (
 	})
 
 	//* Updates a user
-	fastify.put('/users/:id', async (request, reply) => {
+	fastify.put('/:id', async (request, reply) => {
 		const { id } = request.params as { id: string }
 		const { username, password } = request.body as { username: string, password: string }
 
@@ -59,7 +59,7 @@ export default async function usersRoutes (
 	})
 
 	//* Deletes a user
-	fastify.delete('/users/:id', async (request, reply) => {
+	fastify.delete('/:id', async (request, reply) => {
 		const { id } = request.params as { id: string }
 		
 		const result = db.prepare('DELETE FROM users WHERE id = ?').run(id)
