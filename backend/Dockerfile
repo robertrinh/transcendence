@@ -1,34 +1,35 @@
-# Use lightweight Node.js image
+# Use lightweight Node.js image with specific version (better-sqlite3 requires 24.x)
 FROM node:24-alpine
 
 # Set working directory
 WORKDIR /app
 
-# Copy package.json for npm install
-COPY package.json package-lock.json ./
-
-# Install dependencies (including better-sqlite3)
-RUN npm install
-
-#### DATABASE ####
-# Install build dependencies for better-sqlite3
+# Install build dependencies for better-sqlite3 BEFORE npm install
 RUN apk add --no-cache sqlite python3 make g++
 
+# Copy package.json for npm install
+COPY package*.json ./
+# package-lock.json ./
+
+# Install dependencies (including better-sqlite3)
+RUN npm config list
+RUN npm install --verbose --no-optional
+
+#### DATABASE ####
+
 # Create directory for Docker volume mount point
+RUN npm cache clean --force
 RUN mkdir -p /app/database
 
 # Set proper permissions for database directory
 COPY dump.sql ./
-RUN sqlite3 ./database/db.sqlite < dump.sql
+RUN sqlite3 ./database/transcendence.db < dump.sql
 RUN chown -R node:node /app/database
 
 #### BACKEND ####
 # Copy TypeScript source files
 COPY src/ ./src/
 COPY tsconfig.json ./
-
-# Create directory for Docker volume mount point
-RUN mkdir -p /app/database
 
 # Build TypeScript to JavaScript
 RUN npm run build
