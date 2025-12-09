@@ -147,6 +147,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                 Tournaments
                             </button>
 
+                            <button
+                                onClick={() => setCurrentView('api-documentation')}
+                                className={`px-4 py-2 rounded-md border-2 transition-colors backdrop-blur-sm ${
+                                    currentView === 'api-documentation' 
+                                        ? 'bg-gray-900/80 text-white border-gray-900/80' 
+                                        : 'bg-white/30 text-gray-900 border-gray-900/50 hover:bg-white/40'
+                                }`}
+                            >
+                                API Documentation
+                            </button>
+
                             {/* Show profile only if logged in */}
                             {user && (
                                 <button

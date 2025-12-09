@@ -14,6 +14,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, setCurrentView, use
         { id: 'chat', label: 'Chat' },
         { id: 'leaderboard', label: 'Leaderboard' },
         { id: 'register', label: 'Register' },
+        { id: 'api', label: 'API documentation' }
     ];
 
     return (
