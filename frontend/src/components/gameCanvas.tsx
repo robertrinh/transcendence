@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react'
+import {useEffect} from 'react'
 import gameInit from '../static/game.js'
 
 interface GameCanvas {
