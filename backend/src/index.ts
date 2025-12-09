@@ -11,7 +11,16 @@ export const chatMessages: any[] = new Array<any>;
 
 const server = fastify({ logger: true });
 
+server.addHook('preHandler', async (req, reply) => {
+    if (req.url.startsWith("/api")) {
+        console.log(`preHandler hook fired on ${req.routeOptions.url}`)
+        reply.header("access-control-allow-origin", "*")
+        reply.header("access-control-allow-methods", "GET")
+        reply.header("access-control-allow-headers", "*")
+        return
     }
+    return null
+})
 
 server.register(
     genericRoutes, {
