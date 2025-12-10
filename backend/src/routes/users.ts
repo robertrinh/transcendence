@@ -28,25 +28,6 @@ export default async function usersRoutes (
 		return { success: true, user }
 	})
 	
-	//* Creates a new user
-	fastify.post('/users', async (request, reply) => {
-		const { username, password } = request.body as { username: string, password: string}
-
-		if (!username || !password){
-			return reply.code(400).send({
-				success: false,
-				error: 'Username and password are required'
-			})
-		} //TODO check for other validations e.g. length or duplicate username, maybe different function?
-		const hashedPassword = await bcrypt.hash(password, 10)
-		const result = db.prepare('INSERT INTO users (username, password) VALUES (?, ?)').run(username, hashedPassword)
-		return { 
-			success: true,
-			userID: result.lastInsertRowid, 
-			message: 'User created, welcome to the game!',
-		}
-	})
-
 	//* Updates a user
 	fastify.put('/users/:id', async (request, reply) => {
 		const { id } = request.params as { id: string }
