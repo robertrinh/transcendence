@@ -8,14 +8,17 @@ WORKDIR /app
 RUN apk add --no-cache sqlite python3 make g++
 
 # Copy package.json for npm install
-COPY package.json package-lock.json ./
+COPY package*.json ./
+# package-lock.json ./
 
 # Install dependencies (including better-sqlite3)
-RUN npm install
+RUN npm config list
+RUN npm install --verbose --no-optional
 
 #### DATABASE ####
 
 # Create directory for Docker volume mount point
+RUN npm cache clean --force
 RUN mkdir -p /app/database
 
 # Set proper permissions for database directory
