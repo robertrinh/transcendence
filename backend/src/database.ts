@@ -3,11 +3,15 @@ import Database from 'better-sqlite3';
 import { createHash, randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { existsSync, mkdirSync } from 'node:fs';
+import bcrypt from 'bcrypt';
 
-// Utility functions for authentication (MOVED TO TOP)
-export const hashPassword = (password: string): string => {
-    return createHash('sha256').update(password).digest('hex');
-};
+export const hashPassword = async (password: string): Promise<string> => {
+	return bcrypt.hash(password, 10);
+}
+
+export const comparePassword = async (password: string, hashedPassword: string): Promise<boolean> => {
+	return bcrypt.compare(password, hashedPassword);
+}
 
 export const generateSessionId = (): string => {
     return randomUUID();
