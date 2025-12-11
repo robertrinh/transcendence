@@ -4,6 +4,8 @@ import usersRoutes from './routes/users.js';
 import authenticationRoutes from './routes/authentication.js';
 import chatRoutes from './routes/chat.js';
 import genericRoutes from './routes/generic.js';
+import gamesRoutes from './routes/games.js';
+import tournamentsRoutes from './routes/tournaments.js';
 import fastifyStatic from '@fastify/static';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path'
@@ -49,6 +51,18 @@ server.register(
 server.register(
     chatRoutes, {
         prefix: '/api/chat'
+    }
+)
+
+server.register(
+    gamesRoutes, {
+        prefix: '/api/games'
+    }
+)
+
+server.register(
+    tournamentsRoutes, {
+        prefix: '/api/tournaments'
     }
 )
 
