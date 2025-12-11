@@ -31,10 +31,4 @@ export default async function genericRoutes (
             }
         };
     });
-
-    fastify.get('/swagger.json', async (request, reply) => {
-        return {
-            
-        }
-    })
 }
