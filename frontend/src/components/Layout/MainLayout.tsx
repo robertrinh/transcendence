@@ -280,7 +280,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
             <main className="flex-1 flex min-h-0 overflow-hidden">
                 {/* LEFT SIDE - Main Content */}
                 <div className="flex-1 p-4 border-r border-white/20 overflow-hidden">
-                    <div id="main-container" className="bg-white/50 backdrop-blur-sm rounded-lg shadow-sm border border-white/20 h-full overflow-hidden">
+                    <div className="bg-white/50 backdrop-blur-sm rounded-lg shadow-sm border border-white/20 h-full overflow-hidden">
                         <div className="h-full overflow-y-auto">
                             {children}
                         </div>
