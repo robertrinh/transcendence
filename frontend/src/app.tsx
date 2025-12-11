@@ -8,7 +8,6 @@ import Leaderboard from './views/leaderboard';
 import Profile from './views/profile';
 import Tournaments from './views/tournaments';
 import NotFound from './views/notfound';
-import ApiDocumentation from './views/api-documenation';
 
 interface User {
     id: string;
@@ -84,8 +83,6 @@ export function App() {
                 return <Profile user={user} />;
             case 'tournaments':
                 return <Tournaments user={user} />;
-            case 'api-documentation':
-                return <ApiDocumentation/>
             default:
                 return <NotFound />;
         }
