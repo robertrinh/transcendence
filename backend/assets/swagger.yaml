@@ -7,8 +7,19 @@ servers:
   - url: http://localhost:3000/
     description: The backend server
 
-
 paths:
+  /health:
+    get:
+      summary: Health check the base api
+      tags:
+      - general
+
+  /:
+    get:
+      summary: Root endpoint for the api
+      tags:
+      - general
+
   /users:
     get:
       summary: Get all users
@@ -16,28 +27,34 @@ paths:
       - users
       responses:
         "200":
-          description: A JSON object
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  users:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: integer
-                        username:
-                          type: string
+                $ref: "components.json#/components/responseBodies/getUsers200"
 
     post:
       summary: Creates a new user
       tags:
       - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "components.json#/components/requestBodies/postUsersBody"
+
+      responses:
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "components.json#/components/responseBodies/postUsers400"
+
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "components.json#/components/responseBodies/postUsers200"
 
   /users/{userId}:
     get:
@@ -45,21 +62,208 @@ paths:
       tags:
       - users
       parameters:
-        - in: path
-          name: userId
-          schema:
-            type: integer
-          required: true
-          description: Numeric ID of the user to get
+        - $ref: "components.json#/components/parameters/userIdPath"
+
       responses:
         "200":
+          content:
+            application/json:
+              schema:
+                $ref: "components.json#/components/responseBodies/getUserByID200"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "components.json#/components/responseBodies/getUserByID404"
 
     delete:
       summary: Delete the specified user
       tags:
       - users
+      parameters:
+        - $ref: "components.json#/components/parameters/userIdPath"
+
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "components.json#/components/responseBodies/deleteUserByID200"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "components.json#/components/responseBodies/deleteUserByID404"
 
     put:
       summary: Update the specified user
       tags:
       - users
+      parameters:
+        - $ref: "components.json#/components/parameters/userIdPath"
+
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "components.json#/components/responseBodies/deleteUserByID200"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "components.json#/components/responseBodies/deleteUserByID404"
+  
+  /auth/register:
+    post:
+      summary: Attempt to register a user
+      tags:
+      - authentication
+
+  /auth/login:
+    post:
+      summary: Attempt to login a user
+      tags:
+      - authentication
+
+  /auth/logout:
+    post:
+      summary: Attempt to logout a user
+      tags:
+      - authentication
+
+  /auth/validate:
+    get:
+      summary: Check if a session is valid
+      tags:
+      - authentication
+
+  /chat/stream:
+    get:
+      summary: Server-Sent Events (SSE) endpoint to enable real-time chat
+      tags:
+      - chat
+ 
+  /chat/join:
+    post:
+      summary: Endpoint for joining the chat
+      tags:
+      - chat
+
+  /chat/send:
+    post:
+      summary: Endpoint for sending a message
+      tags:
+      - chat
+  
+  /chat/messages:
+    get:
+      summary: Request all chat messages
+      tags:
+      - chat
+
+  /chat/status:
+    get:
+      summary: Endpoint to receive the active chat connections and users
+      tags:
+      - chat
+
+  /db/health:
+    get:
+      summary: Health check the database
+      tags:
+      - database
+
+  /db/test:
+    get:
+      summary: Test the database
+      tags:
+      - database
+
+  /db/reinit:
+    get:
+      summary: Health check the database
+      tags:
+      - database
+
+  /db/tables:
+    get:
+      summary: Get all tables
+      tags:
+      - database
+
+  /db/tables?tablename={tableName}:
+    get:
+      summary: Get the specified table
+      tags:
+      - database
+
+  /db/clear:
+    get:
+      summary: Wipe the database (for development purposes)
+      tags:
+      - database
+
+  /games:
+    get:
+      summary: Lists all games
+      tags:
+      - games
+      deprecated: true
+
+    post:
+      summary: Create a new game
+      tags:
+      - games
+      deprecated: true
+
+  /games/{gameId}:
+    get:
+      summary: Get the specified game
+      tags:
+      - games
+      deprecated: true
+
+    delete:
+      summary: Delete the specified game
+      tags:
+      - games
+      deprecated: true
+
+    put:
+      summary: Update the specified game
+      tags:
+      - games
+      deprecated: true
+
+  /tournaments:
+    get:
+      summary: Lists all tournaments
+      tags:
+      - tournaments
+      deprecated: true
+
+    post:
+      summary: Create a new tournament
+      tags:
+      - tournaments
+      deprecated: true
+
+  /tournaments/{tournamentId}:
+    get:
+      summary: Get the specified tournament
+      tags:
+      - tournaments
+      deprecated: true
+
+    delete:
+      summary: Delete the specified tournament
+      tags:
+      - tournaments
+      deprecated: true
+
+    put:
+      summary: Update the specified tournament
+      tags:
+      - tournaments
+      deprecated: true
