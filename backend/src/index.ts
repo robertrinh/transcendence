@@ -19,8 +19,7 @@ const server = fastify({ logger: true });
 
 // For serving Swagger UI
 server.register(fastifyStatic, {
-    root: path.resolve(__dirname, '../assets'),
-    prefix: '/assets/'
+    root: path.resolve(__dirname, '../assets')
 })
 
 server.register(
