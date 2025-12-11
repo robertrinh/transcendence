@@ -31,6 +31,9 @@ RUN chown -R node:node /app/database
 COPY src/ ./src/
 COPY tsconfig.json ./
 
+# Copy public backend assets
+COPY assets/ ./assets
+
 # Build TypeScript to JavaScript
 RUN npm run build
 

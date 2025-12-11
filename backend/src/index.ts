@@ -1,25 +1,26 @@
-import fastify, {preHandlerHookHandler} from 'fastify';
+import fastify from 'fastify';
 import databaseRoutes from './routes/database.js';
 import usersRoutes from './routes/users.js';
 import authenticationRoutes from './routes/authentication.js';
 import chatRoutes from './routes/chat.js';
 import genericRoutes from './routes/generic.js';
+import fastifyStatic from '@fastify/static';
+import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path'
+import path from 'node:path';
 
 // Store active SSE connections and messages
 export const sseConnections = new Map<string, any>();
 export const chatMessages: any[] = new Array<any>;
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 const server = fastify({ logger: true });
 
-server.addHook('preHandler', async (req, reply) => {
-    if (req.url.startsWith("/api")) {
-        console.log(`preHandler hook fired on ${req.routeOptions.url}`)
-        reply.header("access-control-allow-origin", "*")
-        reply.header("access-control-allow-methods", "GET")
-        reply.header("access-control-allow-headers", "*")
-        return
-    }
-    return null
+// For serving Swagger UI
+server.register(fastifyStatic, {
+    root: path.resolve(__dirname, '../assets'),
+    prefix: '/assets/'
 })
 
 server.register(
