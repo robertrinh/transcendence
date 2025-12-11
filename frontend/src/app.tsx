@@ -33,7 +33,7 @@ export function App() {
                 return;
             }
 
-            const response = await fetch(`http://localhost:3000/api/auth/validate?sessionId=${sessionId}`);
+            const response = await fetch(`/api/auth/validate?sessionId=${sessionId}`);
             if (response.ok) {
                 const data = await response.json();
                 setUser(data.user);
@@ -56,7 +56,7 @@ export function App() {
         try {
             const sessionId = localStorage.getItem('sessionId');
             if (sessionId) {
-                await fetch('http://localhost:3000/api/auth/logout', {
+                await fetch('/api/auth/logout', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ sessionId }),
