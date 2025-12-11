@@ -75,6 +75,7 @@ CREATE TABLE IF NOT EXISTS chat_users (
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
+-- Not sure if this table is required because, tournaments contain games and games contain users
 CREATE TABLE IF NOT EXISTS tournament_participants (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	tournament_id INTEGER NOT NULL,
