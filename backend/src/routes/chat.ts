@@ -160,7 +160,7 @@ export default async function chatRoutes (
     fastify.get('/messages', getMessages);
 
     // Chat status endpoint
-    fastify.get('/api/chat/status', async (request, reply) => {
+    fastify.get('/status', async (request, reply) => {
         const activeUsers = Array.from(sseConnections.values())
             .filter(conn => conn.username)
             .map(conn => ({
