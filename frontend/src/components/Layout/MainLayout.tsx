@@ -13,7 +13,7 @@ interface MainLayoutProps {
     user: User | null;
     currentView: string;
     setCurrentView: (view: string) => void;
-    onLogin: (userData: User, sessionId: string) => void;
+    onLogin: (userData: User, token: string) => void;
     onLogout: () => void;
     children?: React.ReactNode;
 }
@@ -31,8 +31,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     const authPanelRef = useRef<HTMLDivElement>(null);
     const authButtonRef = useRef<HTMLButtonElement>(null);
 
-    const handleLoginSuccess = (userData: User, sessionId: string) => {
-        onLogin(userData, sessionId);
+    const handleLoginSuccess = (userData: User, token: string) => {
+        onLogin(userData, token);
         setShowAuthPanel(false);
     };
 

@@ -1,5 +1,8 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify'
 import { db } from '../database.js'
+import bcrypt from 'bcrypt'
+
+//* curl http://localhost:3000/api/db/tables?tablename=users for testing hashed passwords
 
 export default async function usersRoutes (
 	fastify: FastifyInstance,
@@ -25,31 +28,13 @@ export default async function usersRoutes (
 		return { success: true, user }
 	})
 	
-	//* Creates a new user
-	//TODO Password hashing, this is a security hazard lol
-	fastify.post('/users', async (request, reply) => {
-		const { username, password } = request.body as { username: string, password: string}
-
-		if (!username || !password){
-			return reply.code(400).send({
-				success: false,
-				error: 'Username and password are required'
-			})
-		} //TODO check for other validations e.g. length or duplicate username, maybe different function?
-		const result = db.prepare('INSERT INTO users (username, password) VALUES (?, ?)').run(username, password)
-		return { 
-			success: true,
-			userID: result.lastInsertRowid, 
-			message: 'User created, welcome to the game!',
-		}
-	})
-
 	//* Updates a user
 	fastify.put('/users/:id', async (request, reply) => {
 		const { id } = request.params as { id: string }
 		const { username, password } = request.body as { username: string, password: string }
 
-		const result = db.prepare(' UPDATE users SET username = ?, password = ? WHERE id = ?').run(username, password, id)
+		const hashedPassword = await bcrypt.hash(password, 10)
+		const result = db.prepare(' UPDATE users SET username = ?, password = ? WHERE id = ?').run(username, hashedPassword, id)
 		if (result.changes == 0) 
 			return reply.code(404).send({ success: false, error: 'User not found' }) //TODO check
 		return { 
