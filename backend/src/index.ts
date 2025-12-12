@@ -1,3 +1,4 @@
+import dotenv from 'dotenv/config';
 import fastify from 'fastify';
 import databaseRoutes from './database.js';
 import { getMessages } from './controllers/chatcontrollers.js';

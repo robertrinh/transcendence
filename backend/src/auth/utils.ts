@@ -1,4 +1,5 @@
 import jwt, { SignOptions } from 'jsonwebtoken'
+import dotenv from 'dotenv/config'
 
 /**
  * JWT_SECRET: The secret key used to sign tokens. In production, this should
@@ -7,7 +8,7 @@ import jwt, { SignOptions } from 'jsonwebtoken'
  * JWT_EXPIRES_IN: How long until the token expires. After expiration,
  * the user must log in again.
  */
-const JWT_SECRET = process.env.JWT_SECRET || 'insert-secret-jwt-here'
+const JWT_SECRET = process.env.JWT_SECRET as string || 'insert-secret-jwt-here'
 const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || '7d') as SignOptions['expiresIn']
 
 /**
