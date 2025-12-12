@@ -53,7 +53,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
 
         try {
             console.log('Connecting to SSE stream...');
-            const eventSource = new EventSource('http://localhost:3000/api/chat/stream');
+            const eventSource = new EventSource('/api/chat/stream');
             eventSourceRef.current = eventSource;
 
             eventSource.onopen = () => {
@@ -129,7 +129,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
 
     const joinChat = async (connId: string) => {
         try {
-            const response = await fetch('http://localhost:3000/api/chat/join', {
+            const response = await fetch('/api/chat/join', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -153,7 +153,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
 
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:3000/api/chat/send', {
+            const response = await fetch('/api/chat/send', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
