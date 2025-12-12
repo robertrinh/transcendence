@@ -38,7 +38,7 @@ const Login: React.FC<LoginProps> = ({
         setError('');
 
         try {
-            console.log('Attempting login with:', { username, password });
+            console.log('Attempting login with:', { username });
             console.log('API URL:', `${API_URL}/api/auth/login`);
 
             // Try backend container first, fallback to localhost
