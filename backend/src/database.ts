@@ -13,10 +13,6 @@ export const comparePassword = async (password: string, hashedPassword: string):
 	return bcrypt.compare(password, hashedPassword);
 }
 
-export const generateSessionId = (): string => {
-    return randomUUID();
-};
-
 // Ensure database directory exists
 const dbDir = path.resolve('./database');
 if (!existsSync(dbDir)) {

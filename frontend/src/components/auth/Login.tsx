@@ -7,7 +7,7 @@ interface User {
 }
 
 interface LoginProps {
-    onLoginSuccess: (userData: User, sessionId: string) => void;
+    onLoginSuccess: (userData: User, token: string) => void;
     onSwitchToRegister?: () => void;
     isInPanel?: boolean;  // ← NEW: Add panel mode support
 }
@@ -63,7 +63,7 @@ const Login: React.FC<LoginProps> = ({
             console.log('Response data:', data);
 
             if (response.ok) {
-                onLoginSuccess(data.user, data.sessionId);
+                onLoginSuccess(data.user, data.token);
                 // Clear form
                 setUsername('');
                 setPassword('');
