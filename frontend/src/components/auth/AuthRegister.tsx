@@ -35,7 +35,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
         setError('');
 
         try {
-            console.log('Attempting registration with:', { username, password, email });
+            console.log('Attempting registration with:', { username, email });
             console.log('API URL:', `${API_URL}/api/auth/register`);
             
             // Try backend container first, fallback to localhost

@@ -1,8 +1,9 @@
+import dotenv from 'dotenv/config';
 import fastify from 'fastify';
 import databaseRoutes from './database.js';
-import { register, login, logout, validateSession } from './controllers/authcontrollers.js';
 import { getMessages } from './controllers/chatcontrollers.js';
 import usersRoutes from './routes/users.js';
+import authRoutes from './routes/auth.js';
 
 const server = fastify({ logger: true });
 
@@ -11,6 +12,13 @@ server.register(
   usersRoutes, {
     prefix: "/api"
 })
+
+//* Auth routes
+server.register(
+	authRoutes, {
+		prefix: "/api"
+	}
+)
 
 // Health check
 server.get('/api/health', async (request, reply) => {
@@ -27,15 +35,6 @@ server.get('/api/health', async (request, reply) => {
 // Store active SSE connections and messages
 const sseConnections = new Map<string, any>();
 const chatMessages: any[] = [];
-
-// Import route functions
-
-
-// Authentication routes
-server.post('/api/auth/register', register);
-server.post('/api/auth/login', login);
-server.post('/api/auth/logout', logout);
-server.get('/api/auth/validate', validateSession);
 
 // SSE endpoint for real-time chat
 server.get('/api/chat/stream', async (request, reply) => {
