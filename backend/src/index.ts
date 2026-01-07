@@ -1,11 +1,19 @@
 import dotenv from 'dotenv/config';
 import fastify from 'fastify';
+import swagger from '@fastify/swagger';
+import swaggerUI from '@fastify/swagger-ui';
 import databaseRoutes from './database.js';
 import { getMessages } from './controllers/chatcontrollers.js';
 import usersRoutes from './routes/users.js';
 import authRoutes from './routes/auth.js';
 
 const server = fastify({ logger: true });
+
+//register the swaggerUI
+server.register(swagger);
+server.register(swaggerUI, {
+    routePrefix: "/docs"
+});
 
 //* User logic routes
 server.register(
