@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS avatars (
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
+    nickname TEXT UNIQUE,
+    display_name TEXT,
     password TEXT NOT NULL,  -- Fixed: was missing comma
     created_at DATETIME DEFAULT (datetime('now')),
     avatar_id INTEGER,

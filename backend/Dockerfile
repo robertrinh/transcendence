@@ -37,6 +37,11 @@ RUN npm run build
 # Expose port 3000 for API
 EXPOSE 3000
 
+# upload dir
+RUN mkdir -p /app/uploads/avatars
+RUN chown -R node:node /app/uploads
+RUN chmod 755 /app/uploads/avatars
+
 USER node
 # Start the compiled JavaScript server
 CMD ["npm", "start"]
