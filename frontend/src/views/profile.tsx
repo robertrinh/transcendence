@@ -201,9 +201,9 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
             const data = await response.json();
             
             if (response.ok) {
-                fetchProfile(); // Refresh profile to show new avatar
                 setAvatarFile(null);
                 setPreviewUrl(null);
+                await fetchProfile(); // Refresh profile to show new avatar
                 alert('Avatar updated successfully!');
             } else {
                 alert(data.error || 'Failed to upload avatar');
@@ -239,6 +239,24 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
         }
     };
 
+    // Helper function to get avatar URL
+    const getAvatarUrl = (avatarPath?: string): string | null => {
+        if (!avatarPath) return null;
+        
+        // Extract filename from path if it contains /uploads/avatars/
+        if (avatarPath.includes('/uploads/avatars/')) {
+            const filename = avatarPath.split('/').pop();
+            return `/api/avatars/${filename}`;
+        }
+        
+        // If it's already just a filename
+        if (!avatarPath.includes('/')) {
+            return `/api/avatars/${avatarPath}`;
+        }
+        
+        return `/api/avatars/${avatarPath}`;
+    };
+
     // Loading state display
     if (loading && !profileData) {
         return (
@@ -254,6 +272,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
     }
 
     const displayUser = profileData || user;
+    const avatarUrl = getAvatarUrl(displayUser.avatar_url);
 
     return (
         <div className="p-6">
@@ -284,7 +303,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
                                 />
                             ) : displayUser.avatar_url ? (
                                 <img 
-                                    src={displayUser.avatar_url} 
+                                    src={avatarUrl} 
                                     alt="Avatar"
                                     className="w-full h-full object-cover"
                                 />

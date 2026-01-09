@@ -172,13 +172,6 @@ export default async function usersRoutes (
     options: FastifyPluginOptions
 ) {
 
-    // Register multipart for file uploads
-    fastify.register(import('@fastify/multipart'), {
-        limits: {
-            fileSize: 5 * 1024 * 1024 // 5MB limit
-        }
-    })
-
     //* Gets ALL users
     fastify.get('/users', async (request, reply) => {
         const users = db.prepare(`
@@ -225,13 +218,10 @@ export default async function usersRoutes (
         // Calculate win rate
         // const winRate = user.total_games > 0 ? ((user.wins / user.total_games) * 100).toFixed(1) : '0'
         
-        // return { 
-        //     success: true, 
-        //     user: {
-        //         ...user,
-        //         winRate: `${winRate}%`
-        //     }
-        // }
+        return { 
+            success: true, 
+            user
+        }
     })
 
     //* Get current user's profile (authenticated)
@@ -259,13 +249,10 @@ export default async function usersRoutes (
 
         // const winRate = user.total_games > 0 ? ((user.wins / user.total_games) * 100).toFixed(1) : '0'
         
-        // return { 
-        //     success: true, 
-        //     user: {
-        //         ...user,
-        //         winRate: `${winRate}%`
-        //     }
-        // }
+        return { 
+            success: true, 
+            user
+        }
     })
 
     //* Update user profile
@@ -368,10 +355,8 @@ export default async function usersRoutes (
             await pipeline(data.file, createWriteStream(filePath))
 
             // Save avatar to database
-            const avatarPath = `/uploads/avatars/${fileName}`
             const insertAvatar = db.prepare('INSERT INTO avatars (path, name) VALUES (?, ?)')
-            const avatarResult = insertAvatar.run(avatarPath, data.filename || 'avatar')
-            
+            const avatarResult = insertAvatar.run(fileName, fileName) 
             // Update user's avatar_id
             const updateUser = db.prepare('UPDATE users SET avatar_id = ? WHERE id = ?')
             updateUser.run(avatarResult.lastInsertRowid, request.user!.userId)
@@ -379,7 +364,7 @@ export default async function usersRoutes (
             return {
                 success: true,
                 message: 'Avatar uploaded successfully',
-                avatarUrl: avatarPath
+                avatarUrl: fileName
             }
         } catch (error) {
             console.error('Avatar upload error:', error)

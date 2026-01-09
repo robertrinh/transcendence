@@ -240,25 +240,38 @@
 
 // start();
 
-import dotenv from 'dotenv/config';
 import fastify from 'fastify';
+import dotenv from 'dotenv/config';
 import databaseRoutes from './database.js';
 import { getMessages } from './controllers/chatcontrollers.js';
 import usersRoutes from './routes/users.js';
 import authRoutes from './routes/auth.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import multipart from '@fastify/multipart';                    // NEW: add multipart
+import fastifyStatic from '@fastify/static';                   // NEW: add static serve
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const server = fastify({ logger: true });
 
-// Register static file serving for uploads
-server.register(import('@fastify/static'), {
-    root: path.join(__dirname, '..', 'uploads'),
-    prefix: '/uploads/',
+// Register multipart FIRST                                    // NEW
+await server.register(multipart, {
+    limits: { fileSize: 5 * 1024 * 1024 }                     // NEW: 5MB limit
 });
+
+// // Register static file serving for uploads
+// server.register(import('@fastify/static'), {
+//     root: path.join(__dirname, '..', 'uploads'),
+//     prefix: '/uploads/',
+// });
+
+await server.register(fastifyStatic, {
+    root: path.join(__dirname, '..', 'uploads', 'avatars'),   // FIXED: point to avatars folder
+    prefix: '/api/avatars/',                                  // FIXED: serve at /api/avatars/
+})
 
 //* User logic routes
 server.register(
