@@ -16,7 +16,7 @@ export default async function twofaRoutes(
 
 		//* Store secret in database
 		db.prepare('UPDATE users SET two_factor_secret = ? WHERE username = ?').run(secret, username);
-		return { success: true, qrCode }
+		return reply.code(200).send({ success: true, qrCode, message: 'QR code generated, scan it with your authenticator app' })
 	})
 
 	//* Enable 2FA
@@ -55,7 +55,7 @@ export default async function twofaRoutes(
 		
 		//* update database to enable 2FA
 		db.prepare('UPDATE users SET two_factor_enabled = 1 WHERE id = ?').run(userId);
-		return { success: true, message: '2FA enabled successfully' };
+		return reply.code(200).send({ success: true, message: '2FA enabled successfully' });
 	})
 
 	//* disable 2FA
@@ -83,6 +83,6 @@ export default async function twofaRoutes(
 		//* update database to disable 2FA
 		db.prepare('UPDATE users SET two_factor_enabled = 0, two_factor_secret = NULL WHERE id = ?').run(userId);
 
-		return { success: true, message: '2FA disabled successfully' };
+		return reply.code(200).send({ success: true, message: '2FA disabled successfully' });
 	})
 }
