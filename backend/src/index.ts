@@ -7,6 +7,9 @@ import genericRoutes from './routes/generic.js';
 import gamesRoutes from './routes/games.js';
 import tournamentsRoutes from './routes/tournaments.js';
 import fastifyStatic from '@fastify/static';
+import swagger from '@fastify/swagger'
+import swaggerUI from '@fastify/swagger-ui'
+
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path'
 import path from 'node:path';
@@ -22,6 +25,20 @@ const server = fastify({ logger: true });
 // For serving Swagger UI
 server.register(fastifyStatic, {
     root: path.resolve(__dirname, '../assets')
+})
+
+server.register(swagger, {
+  openapi: {
+    info: {
+      title: 'Swagger API',
+      description: 'Backend API documentation',
+      version: '1.0.0'
+    }
+  }
+})
+
+server.register(swaggerUI, {
+  routePrefix: '/docs'
 })
 
 server.register(
@@ -70,7 +87,7 @@ const start = async () => {
     try {
         await server.listen({ port: 3000, host: '0.0.0.0' });
         console.log('🚀 Backend server running on http://0.0.0.0:3000');
-        console.log('📝 API Documentation available at http://localhost:3000');
+        console.log('📝 API Documentation available at http://localhost:3000/docs');
         console.log('🌐 Frontend should be accessible at http://localhost:8080');
         console.log('📡 SSE Chat endpoint: http://localhost:3000/api/chat/stream');
     } catch (err) {
