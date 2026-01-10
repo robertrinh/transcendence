@@ -32,11 +32,13 @@ CREATE TABLE IF NOT EXISTS games (
 	FOREIGN KEY (player1_id) REFERENCES users(id) ON DELETE SET NULL,
 	FOREIGN KEY (player2_id) REFERENCES users(id) ON DELETE SET NULL,
 	FOREIGN KEY (winner_id) REFERENCES users(id) ON DELETE SET NULL
+	UNIQUE(player1_id, player2_id)
+
 );
 
 CREATE TABLE IF NOT EXISTS tournaments (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	game_id INTEGER,
+	game_id INTEGER, --only necessary if we implement another game than pong
 	name TEXT NOT NULL,
 	description TEXT,
 	max_participants INTEGER DEFAULT 8,
