@@ -2,6 +2,7 @@ import { ApiError } from '../Errors/errors.js';
 import { userService } from '../services/userService.js'
 import { FastifyRequest, FastifyReply } from 'fastify';
 
+
 export const userController = {
 	getAllUsers: async () => {
 		const users = userService.fetchAllUsers();
@@ -19,9 +20,6 @@ export const userController = {
 	//TODO Password hashing, this is a security hazard lol
 	createUser: async (req: FastifyRequest, reply: FastifyReply) => {
 		const { username, password } = req.body as { username: string, password: string}
-		if (!username || !password) {
-			throw new ApiError(400, 'username and password are required');
-		} //TODO check for other validations e.g. length or duplicate username, maybe different function?
 		userService.addUser(username, password);
 		return {success: true, message: 'User created, welcome to the game!'};
 	},

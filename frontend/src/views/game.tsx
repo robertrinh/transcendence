@@ -1,30 +1,54 @@
-import React from 'react';
+import {useState} from 'react'
+import GameUI from '../components/gameUI.js'
+import GameCanvas from '../components/gameCanvas.js'
 
-export const Game: React.FC = () => {
-    return (
-        <div className="container mx-auto px-4 py-8">
-            <h1 className="text-4xl font-bold text-center mb-8">Pong Game</h1>
-            <div className="max-w-4xl mx-auto">
-                <div className="bg-white rounded-lg shadow-md p-6 text-center">
-                    <h2 className="text-2xl font-semibold mb-4">Game Coming Soon!</h2>
-                    <p className="text-gray-600 mb-6">
-                        The Pong game is currently under development. 
-                        Soon you'll be able to play real-time multiplayer matches here!
-                    </p>
-                    <div className="bg-gray-200 rounded-lg p-8 mb-6">
-                        <div className="text-gray-500 text-lg">🏓</div>
-                        <p className="text-gray-500 mt-2">Game Canvas Placeholder</p>
-                    </div>
-                    <button 
-                        className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition-colors"
-                        disabled
-                    >
-                        Start Game (Coming Soon)
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
+export default function Game() {
+  const [gameMode, setGameMode] = useState("none")
+  const [socket, setSocket] = useState<WebSocket | null>(null)
 
-export default Game;
+  function updateGameMode(gameMode: string) {
+    console.log("Selected mode: ", gameMode)
+    setGameMode(gameMode)
+  }
+
+  function connectToServer(jsonMessage: any) {
+    if (socket !== null) {
+      return
+    }
+    const ws = new WebSocket("ws://localhost:8081")
+    setSocket(ws)
+
+    ws.onopen = function() {
+      console.log("[connection opened]\n")
+      ws.send(jsonMessage)
+    }
+    ws.onclose = function() {
+      console.log("[connection closed]\n")
+    }
+    ws.onmessage = function(ev) {
+      console.log(`[message received] ${ev.data}\n`)
+      const JSONObject = JSON.parse(ev.data)
+      console.log(JSONObject)
+      switch (JSONObject.type) {
+        case "LOBBY_ID":
+          // paste the lobby id to the page
+          const inputEle = document.getElementById("req-lobby-id") as HTMLInputElement | null
+          if (inputEle === null) {
+            throw Error("inputEle cannot be null")
+          }
+          inputEle.value = JSONObject.lobby_id
+      }
+    }
+    ws.onerror = function(ev) {
+      console.log(`[error] ${ev}\n`)
+    }
+  }
+
+  return (
+    <main className='w-80% m-auto my-4' id='main'>
+      <h1 className="text-4xl font-bold text-center mb-8">Pong Game</h1>
+      <GameUI onGameModeSelect={updateGameMode} onConnectToServer={connectToServer} socket={socket}></GameUI>
+      {gameMode !== "none" && <GameCanvas mode={gameMode} socket={socket}></GameCanvas>}
+    </main>
+  )
+}

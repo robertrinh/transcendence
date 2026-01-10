@@ -1,5 +1,6 @@
 import { db } from '../database.js'
 import { dbError } from '../Errors/dbErrors.js'
+import bcrypt from 'bcrypt'
 
 export const userService = {
 
@@ -13,7 +14,8 @@ export const userService = {
 
 	addUser: (username: string, password: string) => {
 		try {
-			db.prepare('INSERT INTO users (username, password) VALUES (?, ?)').run(username, password)
+			const hashedPassword = bcrypt.hash(password, 10)
+			db.prepare('INSERT INTO users (username, password) VALUES (?, ?)').run(username, hashedPassword)
 		}
 		catch (err: any) {
 			dbError(err);
@@ -21,7 +23,8 @@ export const userService = {
 	},
 
 	updateUser: (id: number, username: string, password: string) => {
-		return db.prepare(' UPDATE users SET username = ?, password = ? WHERE id = ?').run(username, password, id)
+		const hashedPassword = bcrypt.hash(password, 10)
+		return db.prepare(' UPDATE users SET username = ?, password = ? WHERE id = ?').run(username, hashedPassword, id)
 	},
 
 	deleteUser: (id: number) => {

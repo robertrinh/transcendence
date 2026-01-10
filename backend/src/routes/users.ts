@@ -3,6 +3,8 @@ import { userController } from '../controllers/userController.js'
 import { IDSchema } from '../schemas/generic.schema.js'
 import { userBody } from '../schemas/users.schema.js'
 
+//* curl http://localhost:3000/api/db/tables?tablename=users for testing hashed passwords
+
 export default async function usersRoutes (
 	fastify: FastifyInstance,
 	options: FastifyPluginOptions

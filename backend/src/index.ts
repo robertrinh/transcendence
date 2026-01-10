@@ -1,7 +1,7 @@
+import dotenv from 'dotenv/config';
 import fastify from 'fastify';
 import databaseRoutes from './routes/database.js';
 import usersRoutes from './routes/users.js';
-import authenticationRoutes from './routes/authentication.js';
 import chatRoutes from './routes/chat.js';
 import genericRoutes from './routes/generic.js';
 import gamesRoutes from './routes/games.js';
@@ -9,6 +9,9 @@ import tournamentsRoutes from './routes/tournaments.js';
 import fastifyStatic from '@fastify/static';
 import swagger from '@fastify/swagger'
 import swaggerUI from '@fastify/swagger-ui'
+// import database from './database.js';
+import { getMessages } from './controllers/chatcontrollers.js';
+import authRoutes from './routes/auth.js';
 
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path'
@@ -53,17 +56,18 @@ server.register(
     prefix: '/api/users'
 })
 
+//* Auth routes
+server.register(
+	authRoutes, {
+		prefix: "/api"
+	}
+)
+
 // Register database routes
 server.register(
     databaseRoutes, {
         prefix: '/api/db'
 });
-
-server.register(
-    authenticationRoutes, {
-        prefix: '/api/auth'
-    }
-)
 
 server.register(
     chatRoutes, {

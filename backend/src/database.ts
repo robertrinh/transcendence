@@ -1,16 +1,16 @@
 import Database from 'better-sqlite3';
-import { createHash, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { existsSync, mkdirSync } from 'node:fs';
+import bcrypt from 'bcrypt';
 
-// Utility functions for authentication (MOVED TO TOP)
-export const hashPassword = (password: string): string => {
-    return createHash('sha256').update(password).digest('hex');
-};
+export const hashPassword = async (password: string): Promise<string> => {
+	return bcrypt.hash(password, 10);
+}
 
-export const generateSessionId = (): string => {
-    return randomUUID();
-};
+export const comparePassword = async (password: string, hashedPassword: string): Promise<boolean> => {
+	return bcrypt.compare(password, hashedPassword);
+}
 
 // Ensure database directory exists
 const dbDir = path.resolve('./database');
@@ -51,7 +51,7 @@ export const initializeDatabase = () => {
             // Create a test user for development (password is 'admin123')
             const adminCheck = db.prepare('SELECT COUNT(*) as count FROM users WHERE username = ?').get('admin') as { count: number };
             if (adminCheck.count === 0) {
-                const adminPassword = hashPassword('admin123'); // Now this function is available!
+                const adminPassword = bcrypt.hashSync('admin123', 10); // Sync for one-time init
                 const insertAdmin = db.prepare('INSERT INTO users (username, password, email) VALUES (?, ?, ?)');
                 insertAdmin.run('admin', adminPassword, 'admin@transcendence.local');
                 console.log('✅ Default admin user created (username: admin, password: admin123)');
