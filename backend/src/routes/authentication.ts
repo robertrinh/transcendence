@@ -6,8 +6,20 @@ export default async function authenticationRoutes (
 	options: FastifyPluginOptions
 ) {
     // Authentication routes
-    fastify.post('/register', register);
-    fastify.post('/login', login);
-    fastify.post('/logout', logout);
-    fastify.get('/validate', validateSession);
+    fastify.post('/register', {
+		schema: {
+			tags: ['auth']
+		}}, register);
+    fastify.post('/login', {
+		schema: {
+			tags: ['auth']
+		}}, login);
+    fastify.post('/logout', {
+		schema: {
+			tags: ['auth']
+		}}, logout);
+    fastify.get('/validate', {
+		schema: {
+			tags: ['auth']
+		}}, validateSession);
 }

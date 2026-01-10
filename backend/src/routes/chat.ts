@@ -29,7 +29,10 @@ export default async function chatRoutes (
 	options: FastifyPluginOptions
 ) {
     // SSE endpoint for real-time chat
-    fastify.get('/stream', async (request, reply) => {
+    fastify.get('/stream', {
+		schema: {
+			tags: ['chat']
+		}}, async (request, reply) => {
         const connectionId = Date.now().toString() + Math.random().toString();
         console.log(`New SSE connection: ${connectionId}`);
 
@@ -91,7 +94,10 @@ export default async function chatRoutes (
     });
 
     // Join chat endpoint
-    fastify.post('/join', async (request, reply) => {
+    fastify.post('/join', {
+		schema: {
+			tags: ['chat']
+		}}, async (request, reply) => {
         const { connectionId, userId, username } = request.body as any;
         
         const connection = sseConnections.get(connectionId);
@@ -114,7 +120,10 @@ export default async function chatRoutes (
     });
 
     // Send message endpoint
-    fastify.post('/send', async (request, reply) => {
+    fastify.post('/send', {
+		schema: {
+			tags: ['chat']
+		}}, async (request, reply) => {
         try {
             const { connectionId, message } = request.body as any;
             
@@ -157,10 +166,16 @@ export default async function chatRoutes (
     });
 
     // Get messages (HTTP endpoint for initial load)
-    fastify.get('/messages', getMessages);
+    fastify.get('/messages', {
+		schema: {
+			tags: ['chat']
+		}}, getMessages);
 
     // Chat status endpoint
-    fastify.get('/status', async (request, reply) => {
+    fastify.get('/status', {
+		schema: {
+			tags: ['chat']
+		}}, async (request, reply) => {
         const activeUsers = Array.from(sseConnections.values())
             .filter(conn => conn.username)
             .map(conn => ({

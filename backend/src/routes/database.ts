@@ -8,7 +8,10 @@ export default async function databaseRoutes (
 ) {
     
     // Health check endpoint
-    fastify.get('/health', async (request, reply) => {
+    fastify.get('/health', {
+		schema: {
+			tags: ['db']
+		}}, async (request, reply) => {
         try {
             const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
             const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
@@ -30,7 +33,10 @@ export default async function databaseRoutes (
     });
 
     // Reinitialize database endpoint (for debugging)
-    fastify.get('/reinit', async (request, reply) => {
+    fastify.get('/reinit', {
+		schema: {
+			tags: ['db']
+		}}, async (request, reply) => {
         try {
             console.log('🔄 Manual database reinitialization requested...');
             const success = initializeDatabase();
@@ -48,7 +54,10 @@ export default async function databaseRoutes (
     });
 
     // Get table data endpoint
-    fastify.get('/tables', async (request, reply) => {
+    fastify.get('/tables', {
+		schema: {
+			tags: ['db']
+		}}, async (request, reply) => {
         try {
             const query = request.query as Record<string, unknown>;
             const tablename = query.tablename;
@@ -92,7 +101,10 @@ export default async function databaseRoutes (
     });
 
     // Database test endpoint
-    fastify.get('/test', async (request, reply) => {
+    fastify.get('/test', {
+		schema: {
+			tags: ['db']
+		}}, async (request, reply) => {
         try {
             const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
             const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
@@ -117,7 +129,10 @@ export default async function databaseRoutes (
     });
 
     // Clear all data endpoint (for development)
-    fastify.delete('/clear', async (request, reply) => {
+    fastify.delete('/clear', {
+		schema: {
+			tags: ['db']
+		}}, async (request, reply) => {
         try {
             const clearQueries = [
                 'DELETE FROM tournament_participants',
