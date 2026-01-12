@@ -13,22 +13,96 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
         key.preventDefault()
     }
 
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height)
-        ball.draw(ctx)
-        requestAnimationFrame(draw)
+    class Point {
+        x: number
+        y: number
+
+        constructor(x: number, y: number) {
+            this.x = x
+            this.y = y
+        }
     }
 
+    function pointSubtract(a: Point, b: Point): Point {
+        return new Point((a.x - b.x), (a.y - b.y))
+    }
+
+    const serverTick = 1 / 10
+    const clientTick = 1 / 60
+
+    function moveBall(canvas: HTMLCanvasElement, ball: Ball): void {
+        if (interpVelocity === undefined) {
+            return
+        }
+        ball.x += interpVelocity.x * clientTick * (deltaTimeMS / 100)
+        ball.y += interpVelocity.y * clientTick * (deltaTimeMS / 100)
+    }
+
+    let deltaTimeMS: number
+    let fpsInterval: number, startTime, now, then: number
+
+    function startAnimate(fps: number) {
+        fpsInterval = 1000 / fps
+        then = window.performance.now()
+        startTime = then
+        draw(startTime)
+    }
+
+    function draw(newTime: DOMHighResTimeStamp) {
+        requestAnimationFrame(draw)
+        now = newTime
+        deltaTimeMS = now - then
+        if (deltaTimeMS > fpsInterval) {
+            then = now - (deltaTimeMS % fpsInterval)
+            ctx.clearRect(0, 0, canvas.width, canvas.height)
+            ball.draw(ctx)
+            moveBall(canvas, ball)
+        }
+    }
+
+    let interpVelocity: Point
+
+    function gameSockOnMessage(event: MessageEvent) {
+        const JSONObject = JSON.parse(event.data)
+        console.log(JSONObject.type)
+        switch (JSONObject.type) {
+            case "STATE":
+                interpVelocity = pointSubtract(new Point(JSONObject.ball.x, JSONObject.ball.y), new Point(ball.x, ball.y))
+                interpVelocity.x = interpVelocity.x / serverTick
+                interpVelocity.y = interpVelocity.y / serverTick
+                console.log(`ball x:${ball.x} y:${ball.y} vec_x:${ball.dirVector.x} vec_y:${ball.dirVector.y}`)
+                break
+            case "LOBBY_WAIT":
+                console.log("Waiting for other players to connect...")
+                break
+            default:
+                console.log(`Unrecognized message type: ${JSONObject.type}`)
+        }
+    }
+
+    function gameSockOnOpen() {
+        gameSocket.send(JSON.stringify({type: 'READY'}))
+    }
+
+    let gameSocket: WebSocket
+
     socket.onmessage = function(ev) {
-      const JSONObject = JSON.parse(ev.data)
-      switch (JSONObject.type) {
-        case "STATE":
-            ball.x = JSONObject.ball.x
-            ball.y = JSONObject.ball.y
+        const JSONObject = JSON.parse(ev.data)
+        console.log(`Message received: ${JSONObject}`)
+        console.log(JSONObject.type)
+        switch (JSONObject.type) {
+            case "REDIRECT":
+                socket.close()
+                console.log(`Creating a new socket to connect ${JSONObject.ip}:${JSONObject.port}`)
+                gameSocket = new WebSocket(`ws://${JSONObject.ip}:${JSONObject.port}`)
+                gameSocket.onmessage = gameSockOnMessage
+                gameSocket.onopen = gameSockOnOpen
+                break
+            default:
       }
     }
     
     canvas.addEventListener("keydown", handleKeyDown)
-    const ball = new Ball(0, 0, {x: 1, y: 1}, 15, 2, "#a31621", 0, 7.5)
-    requestAnimationFrame(draw)
+    const ball = new Ball(canvas.width / 2, canvas.height / 2, {x: 1, y: 1}, 15, 2, "#a31621", 0, 7.5)
+    startAnimate(60)
 }
