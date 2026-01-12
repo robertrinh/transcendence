@@ -15,6 +15,7 @@ class Vector2:
         self.x = self.x / magnitude
         self.y = self.y / magnitude
 
+
 class Ball:
     shape: pygame.Rect
     dir_vect: Vector2
@@ -32,10 +33,18 @@ class Ball:
         self.max_speed = max_speed
         self.speed_incr = 0
         self.radius_px = radius_px
-    
+
     def increase_speed(self):
         if self.movement_speed < self.max_speed:
             self.movement_speed += 0.5 * pow(1.2, self.speed_incr)
             self.speed_incr += 1
         if self.movement_speed > self.max_speed:
             self.movement_speed = self.max_speed
+
+    def draw(self, surface: pygame.Surface):
+        pygame.draw.circle(surface, (151, 3, 204), (
+            self.shape.x + self.radius_px,
+            self.shape.y + self.radius_px
+            ),
+            self.radius_px
+        )
