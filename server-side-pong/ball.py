@@ -1,4 +1,6 @@
+import pygame
 from math import pow
+
 
 class Vector2:
     x: int
@@ -7,24 +9,24 @@ class Vector2:
     def __init__(self, x: int, y: int):
         self.x = x
         self.y = y
-    
+
     def normalize(self):
         magnitude = pow(self.x, 2) + pow(self.y, 2)
         self.x = self.x / magnitude
         self.y = self.y / magnitude
 
 class Ball:
-    x: int
-    y: int
+    shape: pygame.Rect
     dir_vect: Vector2
     movement_speed: int
     max_speed: int
     speed_incr: int
     radius_px: int
 
-    def __init__(self, x: int, y: int, dir_vect: Vector2, movement_speed: int, max_speed: int, radius_px: int):
-        self.x = x
-        self.y = y
+    def __init__(
+            self, x: int, y: int, dir_vect: Vector2, movement_speed: int,
+            max_speed: int, radius_px: int):
+        self.shape = pygame.Rect(x, y, radius_px * 2, radius_px * 2)
         self.dir_vect = dir_vect
         self.movement_speed = movement_speed
         self.max_speed = max_speed
