@@ -128,7 +128,7 @@ async def game_loop():
         conv_ball_speed, conv_ball_speed * 2, BALL_RADIUS)
     while True:
         broadcast(PLAYERS, json.dumps(form_game_state(ball)))
-        await asyncio.sleep(60/TICK)
+        await asyncio.sleep(TICK/1000)
 
 
 async def main(child_conn: connection.Connection, ip: str, lobby_id: str):

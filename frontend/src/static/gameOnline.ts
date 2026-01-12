@@ -27,15 +27,16 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
         return new Point((a.x - b.x), (a.y - b.y))
     }
 
-    const serverTick = 1 / 10
-    const clientTick = 1 / 60
+    const serverTick = 1000 / 10
+    const clientTick = 1000 / 60
 
     function moveBall(canvas: HTMLCanvasElement, ball: Ball): void {
         if (interpVelocity === undefined) {
             return
         }
-        ball.x += interpVelocity.x * clientTick * (deltaTimeMS / 100)
-        ball.y += interpVelocity.y * clientTick * (deltaTimeMS / 100)
+        const updateDelta = clientTick * (1 + (deltaTimeMS / 1000))
+        ball.x += interpVelocity.x * updateDelta
+        ball.y += interpVelocity.y * updateDelta
     }
 
     let deltaTimeMS: number
@@ -68,9 +69,8 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
         switch (JSONObject.type) {
             case "STATE":
                 interpVelocity = pointSubtract(new Point(JSONObject.ball.x, JSONObject.ball.y), new Point(ball.x, ball.y))
-                interpVelocity.x = interpVelocity.x / serverTick
-                interpVelocity.y = interpVelocity.y / serverTick
-                console.log(`ball x:${ball.x} y:${ball.y} vec_x:${ball.dirVector.x} vec_y:${ball.dirVector.y}`)
+                interpVelocity.x /= serverTick
+                interpVelocity.y /= serverTick
                 break
             case "LOBBY_WAIT":
                 console.log("Waiting for other players to connect...")
