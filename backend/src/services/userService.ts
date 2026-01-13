@@ -12,9 +12,9 @@ export const userService = {
 		return db.prepare('SELECT id, username FROM users WHERE id = ?').get(id)
 	},
 
-	addUser: (username: string, password: string) => {
+	addUser: async (username: string, password: string) => {
 		try {
-			const hashedPassword = bcrypt.hash(password, 10)
+			const hashedPassword = await bcrypt.hash(password, 10)
 			db.prepare('INSERT INTO users (username, password) VALUES (?, ?)').run(username, hashedPassword)
 		}
 		catch (err: any) {
@@ -22,8 +22,8 @@ export const userService = {
 		}
 	},
 
-	updateUser: (id: number, username: string, password: string) => {
-		const hashedPassword = bcrypt.hash(password, 10)
+	updateUser: async (id: number, username: string, password: string) => {
+		const hashedPassword = await bcrypt.hash(password, 10)
 		return db.prepare(' UPDATE users SET username = ?, password = ? WHERE id = ?').run(username, hashedPassword, id)
 	},
 

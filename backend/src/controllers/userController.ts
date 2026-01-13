@@ -20,7 +20,7 @@ export const userController = {
 	//TODO Password hashing, this is a security hazard lol
 	createUser: async (req: FastifyRequest, reply: FastifyReply) => {
 		const { username, password } = req.body as { username: string, password: string}
-		userService.addUser(username, password);
+		await userService.addUser(username, password);
 		return {success: true, message: 'User created, welcome to the game!'};
 	},
 	
@@ -28,7 +28,10 @@ export const userController = {
 	updateUser: async (req: FastifyRequest, reply: FastifyReply) => {
 		const { id } = req.params as { id: number }
 		const { username, password } = req.body as { username: string, password: string }
-		const result = userService.updateUser(id, username, password);
+		if (req.user!.userId !== Number(id)) {
+			throw new ApiError(403, 'Stay away from other profiles!! you are only allowed to edit your own');
+		}
+		const result = await userService.updateUser(id, username, password);
 		if (result.changes == 0)
 			throw new ApiError(404, 'User not found', 'USER_NOT_FOUND');
 		return { 
@@ -39,6 +42,9 @@ export const userController = {
 
 	deleteUser: async (req: FastifyRequest, reply: FastifyReply) => {
 		const { id } = req.params as { id: number }
+		if (req.user!.userId !== Number(id)) {
+			throw new ApiError(403, 'Stay away from other profiles!! You cannot banish others to the shadow realm');
+		}
 		const result = userService.deleteUser(id);
 		if (result.changes == 0)
 			throw new ApiError(404, 'User not found', 'USER_NOT_FOUND');
