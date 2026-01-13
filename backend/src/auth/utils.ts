@@ -22,7 +22,6 @@ export interface TokenPayload {
 	username: string
 }
 
-//* Generates a JWT token
 export function generateToken(userId: number, username: string): string {
 	const payload: TokenPayload = { userId, username }
 
@@ -35,8 +34,11 @@ export function verifyToken(token: string): TokenPayload | null {
 		const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload
 		return decoded
 	} catch (error) {
-		//* token is invalid or expired
-		//* throw errors such as: TokenExpiredError, JsonWebTokenError
+		if (error instanceof jwt.TokenExpiredError) {
+			console.log('Token expired at:', error.expiredAt)
+		} else if (error instanceof jwt.JsonWebTokenError) {
+			console.log('Invalid token:', error.message)
+		}
 		return null
 	}
 }
