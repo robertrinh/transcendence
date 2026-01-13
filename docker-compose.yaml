@@ -26,12 +26,15 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.real
     ports:
-      - 8080:8080
+      - 80:80
+      - "443:443"
     depends_on:
       - backend
     restart: always
     networks:
       - transcendence
+    volumes:
+      - ./frontend/nginx/certs:/etc/nginx/certs:ro
 
 volumes:
   database:
