@@ -352,8 +352,10 @@ export async function gameOfflineLobby(gameMode: string, canvas: HTMLCanvasEleme
         assertIsNotNull(ctx)
         ctx.clearRect(0, 0, canvas.width, canvas.height)
         ball.draw(ctx)
-        playerOne.paddle.draw(canvas, ctx, deltaTimeSeconds)
-        playerTwo.paddle.draw(canvas, ctx, deltaTimeSeconds)
+        playerOne.paddle.draw(ctx)
+        playerOne.paddle.update(canvas, deltaTimeSeconds)
+        playerTwo.paddle.draw(ctx)
+        playerTwo.paddle.update(canvas, deltaTimeSeconds)
         drawPlayerScores(canvas, ctx, playerOne.roundScore, playerTwo.roundScore)
     }
 
