@@ -4,10 +4,14 @@ import pygame
 class PlayerPaddle:
     shape: pygame.Rect
     y_vector: float
+    color: pygame.Color
 
-    def __init__(self, y_vector: float, shape: pygame.Rect):
+    def __init__(
+            self, y_vector: float, shape: pygame.Rect,
+            color: pygame.Color):
         self.y_vector = y_vector
         self.shape = shape
+        self.color = color
 
     def move_up(self):
         pos_x, pos_y = self.shape.topleft
@@ -22,3 +26,6 @@ class PlayerPaddle:
         if new_shape.collidepoint(self.shape.bottomleft[0], arena_height):
             return
         self.shape = new_shape
+
+    def draw(self, surface: pygame.Surface):
+        pygame.draw.rect(surface, self.color, self.shape)
