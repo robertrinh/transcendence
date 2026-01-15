@@ -66,6 +66,9 @@ export default async function usersRoutes (
 			})
 		}
 		
+		if (request.user!.userId !== Number(id)) {
+			return reply.code(403).send({ success: false, error: 'Stay away from other profiles!! You cannot banish others to the shadow realm'})
+		}	
 		const result = db.prepare('DELETE FROM users WHERE id = ?').run(id)
 		if (result.changes == 0)
 			return reply.code(404).send({ success: false, error: 'User not found'})
