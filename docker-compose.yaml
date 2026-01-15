@@ -8,7 +8,7 @@ services:
       - NODE_ENV=production #TODO fix an env file
       - DB_PATH=/app/database/transcendence.db
     ports:
-      - 3000:3000
+      - 3000:3000 #only expose internally?
     volumes:
       - database:/app/database
     restart: always
@@ -27,6 +27,7 @@ services:
       dockerfile: Dockerfile.real
     ports:
       - "8080:8080"
+      - "8443:8443"
     depends_on:
       - backend
     restart: always
