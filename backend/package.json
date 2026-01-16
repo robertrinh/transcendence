@@ -11,7 +11,7 @@
     "test": "jest",
 	"test:watch": "node --loader ts-node/esm --test --watch src/**/*.test.ts",
     "test:integration": "node --loader ts-node/esm --test src/**/*.integration.test.ts",
-    "test:ci": "node --loader ts-node/esm --test src/tests/health.test.ts"
+    "test:ci": "node --loader ts-node/esm --test src/tests/*.test.ts"
 },
   "dependencies": {
     "@types/jsonwebtoken": "^9.0.10",
