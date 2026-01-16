@@ -4,6 +4,7 @@ import databaseRoutes from './database.js';
 import { getMessages } from './controllers/chatcontrollers.js';
 import usersRoutes from './routes/users.js';
 import authRoutes from './routes/auth.js';
+import twofaRoutes from './routes/2fa.js';
 
 const server = fastify({ logger: true });
 
@@ -16,6 +17,13 @@ server.register(
 //* Auth routes
 server.register(
 	authRoutes, {
+		prefix: "/api"
+	}
+)
+
+//* 2FA routes
+server.register(
+	twofaRoutes, {
 		prefix: "/api"
 	}
 )

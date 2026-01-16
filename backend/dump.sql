@@ -11,11 +11,13 @@ CREATE TABLE IF NOT EXISTS avatars (
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,  -- Fixed: was missing comma
+    password TEXT NOT NULL,
     created_at DATETIME DEFAULT (datetime('now')),
     avatar_id INTEGER,
-    email TEXT,              -- Added for auth
-    last_login DATETIME,         -- Added for auth tracking
+    email TEXT,
+    last_login DATETIME,
+    two_factor_secret TEXT,              -- 2FA TOTP secret key
+    two_factor_enabled BOOLEAN DEFAULT 0, -- to check if 2FA is enabled
     FOREIGN KEY(avatar_id) REFERENCES avatars(id)
 );
 
