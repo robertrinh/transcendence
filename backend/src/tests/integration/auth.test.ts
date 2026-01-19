@@ -177,7 +177,7 @@ test('POST /auth/logout: successful logout', async () => {
 //* ======================== Token validation tests ========================
 
 test('GET /auth/validate: valid token', async () => {
-	const response = await api('auth/validate', {
+	const response = await api('/auth/validate', {
 		method: 'GET',
 		headers: {
 			'Authorization': `Bearer ${token}`
@@ -191,7 +191,7 @@ test('GET /auth/validate: valid token', async () => {
 })
 
 test('GET /auth/validate: invalid token', async () => {
-	const response = await api('auth/validate', {
+	const response = await api('/auth/validate', {
 		method: 'GET',
 		headers: {
 			'Authorization': `Bearer no.token.lol`	
@@ -206,7 +206,7 @@ test('GET /auth/validate: invalid token', async () => {
 })
 
 test('GET /auth/validate: no token provided', async () => {
-	const response = await api('auth/validate', {
+	const response = await api('/auth/validate', {
 		method: 'GET',
 		headers: {
 			'Authorization': ''
