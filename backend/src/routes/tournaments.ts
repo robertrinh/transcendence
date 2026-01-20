@@ -27,12 +27,12 @@ export default async function tournamentsRoutes (
 		}
 	}, tournamentController.getTournamentByID)
 
-    fastify.put('/:id', {
-		schema: {
-			tags: ['tournaments'],
-			params: IDSchema
-		}
-	}, tournamentController.putTournament)
+    // fastify.put('/:id', {
+	// 	schema: {
+	// 		tags: ['tournaments'],
+	// 		params: IDSchema
+	// 	}
+	// }, tournamentController.putTournament)
 
     fastify.delete('/:id', {
 		schema: {
@@ -49,6 +49,13 @@ export default async function tournamentsRoutes (
 		}
 	}, tournamentController.joinTournament)
 
+	fastify.put('/:id/start', {
+		schema: {
+			tags: ['tournaments'],
+			params: IDSchema,
+		}
+	}, tournamentController.startTournament)
+
 	fastify.delete('/:id/leave', {
 		schema: {
 			tags: ['tournaments'],
@@ -63,4 +70,11 @@ export default async function tournamentsRoutes (
 			params: IDSchema
 		}
 	}, tournamentController.getTournamentParticipants)
+
+	fastify.get('/:id/games', {
+		schema: {
+			tags: ['tournaments'],
+			params: IDSchema
+		}
+	}, tournamentController.getTournamentGames)
 }

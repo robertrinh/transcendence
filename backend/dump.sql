@@ -26,13 +26,14 @@ CREATE TABLE IF NOT EXISTS games (
 	winner_id INTEGER,
 	score_player1 INTEGER DEFAULT 0,
 	score_player2 INTEGER DEFAULT 0,
+	tournament_id INTEGER,
 	status TEXT DEFAULT 'pending',
 	created_at DATETIME DEFAULT (datetime('now')),
 	finished_at DATETIME,
 	FOREIGN KEY (player1_id) REFERENCES users(id) ON DELETE SET NULL,
 	FOREIGN KEY (player2_id) REFERENCES users(id) ON DELETE SET NULL,
-	FOREIGN KEY (winner_id) REFERENCES users(id) ON DELETE SET NULL
-	UNIQUE(player1_id, player2_id)
+	FOREIGN KEY (winner_id) REFERENCES users(id) ON DELETE SET NULL,
+	FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE SET NULL
 
 );
 
@@ -42,7 +43,7 @@ CREATE TABLE IF NOT EXISTS tournaments (
 	name TEXT NOT NULL,
 	description TEXT,
 	max_participants INTEGER DEFAULT 8,
-	status TEXT DEFAULT 'open',
+    status TEXT CHECK (status IN ('open', 'ongoing', 'finished', 'cancelled')) DEFAULT 'open',
 	created_at DATETIME DEFAULT (datetime('now')),
 	start_date DATETIME,
 	end_date DATETIME,
