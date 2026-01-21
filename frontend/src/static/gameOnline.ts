@@ -4,6 +4,8 @@ import { PlayerPaddle } from './playerPaddle.js'
 export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, socket: WebSocket) {
     const p1Color = "#5885A2"
     const p2Color = "#B8383B"
+    const ballRadius = 15
+    const ballSize = ballRadius * 2
 
     function handleKeyDown(key: KeyboardEvent) {
         switch (key.key) {
@@ -167,10 +169,10 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
                 playerID = JSONObject.player_id as number
                 // move paddle to the right side
                 if (playerID === 2) {
-                    playerOne.x = canvas.width-70
-                    playerOne.y = 50
-                    playerTwo.x = 40
-                    playerTwo.y = 50
+                    playerOne.x = canvas.width-playerOne.width
+                    playerOne.y = 0
+                    playerTwo.x = 0
+                    playerTwo.y = 0
                 }
                 console.log(`You are player ${playerID}`)
                 gameSocket.send(JSON.stringify({type: 'READY'}))
@@ -206,7 +208,7 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
     canvas.addEventListener("keyup", handleKeyUp)
     const paddleMoveUnits = 30
     const ball = new Ball(canvas.width / 2, canvas.height / 2, {x: 1, y: 1}, 15, 2, "#a31621", 0, 7.5)
-    const playerOne = new PlayerPaddle(40, 50, 20, 150, paddleMoveUnits, p1Color)
-    const playerTwo = new PlayerPaddle(canvas.width - 70, 50, 20, 150, paddleMoveUnits, p2Color) 
+    const playerOne = new PlayerPaddle(0, 0, ballSize, ballSize * 4, paddleMoveUnits, p1Color)
+    const playerTwo = new PlayerPaddle(canvas.width - ballSize, 0, ballSize, ballSize * 4, paddleMoveUnits, p2Color) 
     startAnimate(60)
 }
