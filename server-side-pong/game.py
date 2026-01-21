@@ -19,6 +19,7 @@ READY_COUNT = 0
 TICK = 1000 / 10
 screen = None
 BALL_RADIUS = 15
+BALL_SIZE = BALL_RADIUS * 2
 
 # movement
 BALL_SPEED_UNITS_S = 500  # The ball speed in units per second
@@ -37,20 +38,163 @@ def in_vert_arena_bounds(x: int, radius_px: int) -> bool:
     return x >= 0 and x <= ARENA_WIDTH - radius_px * 2
 
 
-def move_ball(ball: Ball):
-    new_pos = Vector2(
-        ball.shape.x + (ball.dir_vect.x * ball.movement_speed),
-        ball.shape.y + (ball.dir_vect.y * ball.movement_speed))
-    print(f"dir_vect.x:{ball.dir_vect.x} dir_vect.y:{ball.dir_vect.y}")
-    print(f"new_pos x:{new_pos.x} y:{new_pos.y}")
-    if not in_vert_arena_bounds(new_pos.x, ball.radius_px):
-        print("vert_coll")
-        ball.dir_vect.x *= -1
-    if not in_hor_arena_bounds(new_pos.y, ball.radius_px):
-        print("hor_coll")
-        ball.dir_vect.y *= -1
-    ball.shape.x += ball.dir_vect.x * ball.movement_speed
-    ball.shape.y += ball.dir_vect.y * ball.movement_speed
+class Point:
+    x: float
+    y: float
+
+    def __init__(self, x: float, y: float):
+        self.x = x
+        self.y = y
+
+
+def line_line_intersect(p1: Point, p2: Point, p3: Point, p4: Point, side: str) -> None | tuple[Point, str]:
+    denom = ((p2.x - p1.x) * (p4.y - p3.y)) - ((p2.y - p1.y) * (p4.x - p3.x))
+    if denom == 0:
+        return None
+    dist1 = (((p1.y - p3.y) * (p4.x - p3.x)) - ((p1.x - p3.x) * (p4.y - p3.y))) / denom
+    dist2 = (((p1.y - p3.y) * (p2.x - p1.x)) - ((p1.x - p3.x) * (p2.y - p1.y))) / denom
+    if (dist1 >= 0 and dist1 <= 1) and (dist2 >= 0 and dist2 <= 1):
+        intersect_x = p1.x + (dist1 * (p2.x - p1.x))
+        intersect_y = p1.y + (dist1 * (p2.y - p1.y))
+        return (Point(intersect_x, intersect_y), side)
+    return None
+
+
+def handle_paddle_collision(
+        old_ball_pos: Point, new_ball_pos: Point,
+        player: PlayerPaddle, ball: Ball) -> None | tuple[Point, str]:
+    intersect = None
+    # moving left
+    if ball.dir_vect.x < 0:
+        intersect = line_line_intersect(
+            old_ball_pos,
+            new_ball_pos,
+            Point(
+                player.shape.topright[0] + ball.radius_px,
+                player.shape.topright[1] - ball.radius_px
+                ),
+            Point(
+                player.shape.bottomright[0] + ball.radius_px,
+                player.shape.bottomright[1] + ball.radius_px
+            ),
+            "right"
+        )
+    elif ball.dir_vect.x > 0:
+        intersect = line_line_intersect(
+            old_ball_pos,
+            new_ball_pos,
+            Point(
+                player.shape.topleft[0] - ball.radius_px,
+                player.shape.topleft[1] - ball.radius_px
+                ),
+            Point(
+                player.shape.bottomleft[0] - ball.radius_px,
+                player.shape.bottomleft[1] + ball.radius_px
+            ),
+            "left"
+        )
+    if intersect is None:
+        if ball.dir_vect.y < 0:
+            intersect = line_line_intersect(
+                old_ball_pos,
+                new_ball_pos,
+                Point(
+                    player.shape.bottomleft[0] - ball.radius_px,
+                    player.shape.bottomleft[1] + ball.radius_px
+                    ),
+                Point(
+                    player.shape.bottomright[0] + ball.radius_px,
+                    player.shape.bottomright[1] + ball.radius_px
+                ),
+                "bottom"
+            )
+        elif ball.dir_vect.y > 0:
+            intersect = line_line_intersect(
+                    old_ball_pos,
+                    new_ball_pos,
+                    Point(
+                        player.shape.topleft[0] - ball.radius_px,
+                        player.shape.topleft[1] - ball.radius_px
+                        ),
+                    Point(
+                        player.shape.topright[0] + ball.radius_px,
+                        player.shape.topright[1] - ball.radius_px
+                    ),
+                    "top"
+                )
+    return intersect
+
+
+def handle_court_collision(
+        old_ball_pos: Point, new_ball_pos: Point, ball: Ball
+        ) -> None | tuple[Point, str]:
+    intersect = None
+    if ball.dir_vect.y < 0:
+        intersect = line_line_intersect(
+            old_ball_pos,
+            new_ball_pos,
+            Point(-ball.radius_px, ball.radius_px),
+            Point(ARENA_WIDTH + ball.radius_px, ball.radius_px),
+            "top"
+        )
+    elif ball.dir_vect.y > 0:
+        intersect = line_line_intersect(
+                old_ball_pos,
+                new_ball_pos,
+                Point(-ball.radius_px, ARENA_HEIGHT - ball.radius_px),
+                Point(ARENA_WIDTH + ball.radius_px, ARENA_HEIGHT - ball.radius_px),
+                "bottom"
+            )
+    return intersect
+
+
+def move_ball(ball: Ball, player_one: PlayerPaddle, player_two: PlayerPaddle):
+    old_pos = Point(ball.shape.centerx, ball.shape.centery)
+    new_pos = Point(
+        ball.shape.centerx + (ball.dir_vect.x * ball.movement_speed),
+        ball.shape.centery + (ball.dir_vect.y * ball.movement_speed))
+    ball.shape.x = new_pos.x - ball.radius_px
+    ball.shape.y = new_pos.y - ball.radius_px
+    # Paddle collision
+    paddle = None
+    if ball.dir_vect.x < 0:
+        paddle = player_one
+    elif ball.dir_vect.x > 0:
+        paddle = player_two
+    if paddle is None:
+        return
+    paddle_intersect = handle_paddle_collision(old_pos, new_pos, paddle, ball)
+    if paddle_intersect is None:
+        # Court collision
+        court_pt = handle_court_collision(old_pos, new_pos, ball)
+        if court_pt is not None:
+            pt, side = court_pt
+            match side:
+                case "left" | "right":
+                    ball.dir_vect.x *= -1
+                    ball.shape.x = pt.x - ball.radius_px
+                case "bottom" | "top":
+                    ball.dir_vect.y *= -1
+                    ball.shape.y = pt.y - ball.radius_px
+        # Make sure the ball is not past the court lines
+        else:
+            if ball.dir_vect.y < 0 and ((new_pos.y - ball.radius_px) < 0):
+                ball.dir_vect.y = -ball.dir_vect.y
+                ball.shape.x = new_pos.x - ball.radius_px
+                ball.shape.y = 0
+            elif ball.dir_vect.y > 0 and ((new_pos.y + ball.radius_px) > ARENA_HEIGHT):
+                ball.dir_vect.y = -ball.dir_vect.y
+                ball.shape.x = new_pos.x - ball.radius_px
+                ball.shape.y = ARENA_HEIGHT - (ball.radius_px * 2)
+        return
+    paddle_point, side = paddle_intersect
+    match side:
+        case "left" | "right":
+            ball.dir_vect.x *= -1
+            ball.shape.x = paddle_point.x - ball.radius_px
+        case "bottom" | "top":
+            ball.dir_vect.y *= -1
+            ball.shape.y = paddle_point.y - ball.radius_px
 
 
 def random_ball_vec() -> Vector2:
@@ -60,7 +204,7 @@ def random_ball_vec() -> Vector2:
 
 
 def update(ball: Ball, player_one: PlayerPaddle, player_two: PlayerPaddle):
-    move_ball(ball)
+    move_ball(ball, player_one, player_two)
     process_input(player_one, player_two)
 
 
@@ -181,18 +325,16 @@ async def game_lobby():
         await asyncio.sleep(5)
     conv_ball_speed = (BALL_SPEED_UNITS_S / 1000) * TICK
     ball = Ball(
-        ARENA_WIDTH / 2,
-        ARENA_HEIGHT / 2,
-        random_ball_vec(),
         conv_ball_speed, conv_ball_speed * 2, BALL_RADIUS)
+    ball.set_start(ARENA_HEIGHT, ARENA_WIDTH, random_ball_vec())
     player_one = PlayerPaddle(
         PADDLE_SPEED_UNITS_S,
-        pygame.Rect(50, 50, 20, 150),
+        pygame.Rect(0, 0, BALL_SIZE, BALL_SIZE * 4),
         pygame.Color(55, 100, 40)
         )
     player_two = PlayerPaddle(
         PADDLE_SPEED_UNITS_S,
-        pygame.Rect(ARENA_WIDTH-70, 50, 20, 150),
+        pygame.Rect(ARENA_WIDTH-(BALL_SIZE), 0, BALL_SIZE, BALL_SIZE * 4),
         pygame.Color(55, 100, 40)
         )
     while True:
