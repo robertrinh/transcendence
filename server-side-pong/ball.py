@@ -25,14 +25,20 @@ class Ball:
     radius_px: int
 
     def __init__(
-            self, x: int, y: int, dir_vect: Vector2, movement_speed: int,
+            self, movement_speed: int,
             max_speed: int, radius_px: int):
-        self.shape = pygame.Rect(x, y, radius_px * 2, radius_px * 2)
-        self.dir_vect = dir_vect
+        self.shape = pygame.Rect(0, 0, radius_px * 2, radius_px * 2)
+        self.dir_vect = (0, 0)
         self.movement_speed = movement_speed
         self.max_speed = max_speed
         self.speed_incr = 0
         self.radius_px = radius_px
+
+    def set_start(
+            self, arena_height: int, arena_width: int, dir_vect: Vector2):
+        self.shape.x = (arena_width / 2) - self.radius_px
+        self.shape.y = (arena_height / 2) - self.radius_px
+        self.dir_vect = dir_vect
 
     def increase_speed(self):
         if self.movement_speed < self.max_speed:
