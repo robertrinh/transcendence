@@ -29,6 +29,9 @@ P2_INPUT = list()
 P1_LAST_TS = None
 P2_LAST_TS = None
 
+P1_SCORE = 0
+P2_SCORE = 0
+
 
 def in_hor_arena_bounds(y: int, radius_px: int) -> bool:
     return y >= 0 and y <= ARENA_HEIGHT - radius_px * 2
@@ -148,6 +151,26 @@ def handle_court_collision(
     return intersect
 
 
+def handle_score(ball: Ball):
+    scored = False
+    scored_by = None
+    if (ball.shape.x + ball.radius_px * 4) < 0:
+        scored = True
+        scored_by = "p2"
+        global P2_SCORE
+        P2_SCORE += 1
+    if (ball.shape.x - ball.radius_px * 4) > ARENA_WIDTH:
+        scored = True
+        scored_by = "p1"
+        global P1_SCORE
+        P1_SCORE += 1
+    if not scored:
+        return
+    message = {'type': 'SCORE', 'scored_by': scored_by}
+    broadcast(PLAYERS, json.dumps(message))
+    ball.set_start(ARENA_HEIGHT, ARENA_WIDTH, random_ball_vec())
+
+
 def move_ball(ball: Ball, player_one: PlayerPaddle, player_two: PlayerPaddle):
     old_pos = Point(ball.shape.centerx, ball.shape.centery)
     new_pos = Point(
@@ -206,6 +229,7 @@ def random_ball_vec() -> Vector2:
 def update(ball: Ball, player_one: PlayerPaddle, player_two: PlayerPaddle):
     move_ball(ball, player_one, player_two)
     process_input(player_one, player_two)
+    handle_score(ball)
 
 
 def draw(ball: Ball, player_one: PlayerPaddle, player_two: PlayerPaddle):
