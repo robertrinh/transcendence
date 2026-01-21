@@ -14,17 +14,15 @@ class PlayerPaddle:
         self.color = color
 
     def move_up(self):
-        pos_x, pos_y = self.shape.topleft
         new_shape = self.shape.move(0, -self.y_vector)
-        if new_shape.collidepoint(pos_x, 0):
-            return
+        if new_shape.y < 0:
+            new_shape.y = 0
         self.shape = new_shape
 
     def move_down(self, arena_height: int):
-        pos_x, pos_y = self.shape.topleft
         new_shape = self.shape.move(0, self.y_vector)
-        if new_shape.collidepoint(self.shape.bottomleft[0], arena_height):
-            return
+        if (new_shape.y + new_shape.height) > arena_height:
+            new_shape.y = arena_height - new_shape.height
         self.shape = new_shape
 
     def draw(self, surface: pygame.Surface):
