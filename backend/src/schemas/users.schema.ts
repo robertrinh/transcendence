@@ -5,7 +5,7 @@ export const userSchema = S.object()
 	.prop('username', S.string());
 
 export const userBody = S.object()
-	.prop('username', S.string().minLength(3).required())
+	.prop('username', S.string().required())
 	.prop('password', S.string().minLength(6).required());
 
 
