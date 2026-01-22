@@ -24,7 +24,6 @@ export default async function usersRoutes (
 			params: IDSchema
 		}}, userController.getUserByID);
 	
-	//TODO Password hashing, this is a security hazard lol
 	fastify.post('/', {
 		schema: {
 			tags: ['users'],
@@ -46,4 +45,5 @@ export default async function usersRoutes (
 			summary: 'Delete user',
 			params: IDSchema
 		}, preHandler: [authenticate] }, userController.deleteUser);
+
 }

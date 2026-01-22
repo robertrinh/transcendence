@@ -12,6 +12,7 @@ import swaggerUI from '@fastify/swagger-ui'
 // import database from './database.js';
 import { getMessages } from './controllers/chatcontrollers.js';
 import authRoutes from './routes/auth.js';
+import twofaRoutes from './routes/2fa.js';
 
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path'
@@ -63,6 +64,12 @@ server.register(
 	}
 )
 
+//* 2FA routes
+server.register(
+	twofaRoutes, {
+		prefix: "/api"
+	}
+)
 // Register database routes
 server.register(
     databaseRoutes, {
