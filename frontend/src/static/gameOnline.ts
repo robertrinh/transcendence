@@ -115,7 +115,7 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
 
     interface MoveTS {
         type: string,
-        timestamp: number
+        ts: number
     }
 
     function updatePendingMoves(lastServerTime: number) {
@@ -125,7 +125,8 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
         }
         while (i < pendingMoves.length) {
             const movePair = pendingMoves[i]
-            if (movePair.timestamp >= lastServerTime) {
+			console.log(`movePair.ts:${movePair.ts}`)
+            if (movePair.ts >= lastServerTime) {
                 break
             }
             if (movePair.type === 'MOVE_UP') {
