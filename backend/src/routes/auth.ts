@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify'
-import { db } from '../database.js'
+import { db } from '../databaseInit.js'
 import bcrypt from 'bcrypt'
 import { generateToken, verifyToken } from '../auth/utils.js'
 
@@ -7,7 +7,10 @@ export default async function authRoutes (
 	fastify: FastifyInstance,
 	options: FastifyPluginOptions
 ) {
-	fastify.post('/auth/login', async (request, reply) => {
+	fastify.post('/auth/login', {
+		schema: {
+			tags: ['auth']
+		}}, async (request, reply) => {
 		const { username, password } = request.body as { username: string, password: string}
 		if (!username || !password) {
 			return reply.code(400).send({
@@ -49,7 +52,10 @@ export default async function authRoutes (
 		})
 	})
 
-	fastify.post('/auth/register', async (request, reply) => {
+	fastify.post('/auth/register', {
+		schema: {
+			tags: ['auth']
+		}}, async (request, reply) => {
 		const { username, password, email } = request.body as { username: string, password: string, email: string }
 		if (!username || !password || !email) {
 			return reply.code(400).send({
@@ -90,9 +96,12 @@ export default async function authRoutes (
 		})
 	})
 
-	fastify.post('/auth/logout', async (request, reply) => {
-		return reply.code(200).send({ success: true, message: 'Logged out successfully' })
-	})
+		fastify.post('/auth/logout', {
+		schema: {
+			tags: ['auth']
+		}}, async (request, reply) => {
+			return { success: true, message: 'Logged out successfully' }
+		})
 		
 	fastify.get('/auth/validate', async (request, reply) => {
 		const authHeader = request.headers.authorization

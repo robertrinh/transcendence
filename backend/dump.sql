@@ -23,30 +23,33 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS games (
     id INTEGER PRIMARY KEY,
-    player1_id INTEGER,
-    player2_id INTEGER,
-	winner_id INTEGER,
+    player1_id INTEGER, --NULL for tournament placeholder games
+    player2_id INTEGER, --NULL for tournament placeholder games
 	score_player1 INTEGER DEFAULT 0,
 	score_player2 INTEGER DEFAULT 0,
-	status TEXT DEFAULT 'pending',
+	winner_id INTEGER,
+	tournament_id INTEGER, --NULL for single game
+    round INTEGER, --NULL for single game
+    status TEXT CHECK (status IN ('pending', 'ready', 'ongoing', 'finished', 'cancelled')) DEFAULT 'pending',
 	created_at DATETIME DEFAULT (datetime('now')),
 	finished_at DATETIME,
 	FOREIGN KEY (player1_id) REFERENCES users(id) ON DELETE SET NULL,
 	FOREIGN KEY (player2_id) REFERENCES users(id) ON DELETE SET NULL,
-	FOREIGN KEY (winner_id) REFERENCES users(id) ON DELETE SET NULL
+	FOREIGN KEY (winner_id) REFERENCES users(id) ON DELETE SET NULL,
+	FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE SET NULL
+
 );
 
 CREATE TABLE IF NOT EXISTS tournaments (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	game_id INTEGER,
 	name TEXT NOT NULL,
 	description TEXT,
 	max_participants INTEGER DEFAULT 8,
-	status TEXT DEFAULT 'open',
-	created_at DATETIME DEFAULT (datetime('now')),
-	start_date DATETIME,
-	end_date DATETIME,
-    FOREIGN KEY (game_id) REFERENCES games(id)
+    status TEXT CHECK (status IN ('open', 'ongoing', 'finished', 'cancelled')) DEFAULT 'open',
+	winner_id INTEGER,
+    created_at DATETIME DEFAULT (datetime('now')),
+	start_date DATETIME, --necessary?
+	end_date DATETIME
 );
 
 -- New tables for authentication, chat and messages
@@ -78,7 +81,7 @@ CREATE TABLE IF NOT EXISTS chat_users (
 );
 
 CREATE TABLE IF NOT EXISTS tournament_participants (
-	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	id INTEGER PRIMARY KEY AUTOINCREMENT, --what is this? 
 	tournament_id INTEGER NOT NULL,
 	user_id INTEGER NOT NULL,
 	joined_at DATETIME DEFAULT (datetime('now')),

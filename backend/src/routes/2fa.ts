@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { authenticator } from "otplib";
 import QRCode from "qrcode";
-import { db } from '../database.js'
+import { db } from '../databaseInit.js'
 import { authenticate } from "../auth/middleware.js";
 
 export default async function twofaRoutes(
