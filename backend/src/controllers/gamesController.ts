@@ -11,9 +11,10 @@ export const gamesController = {
 
 	createGame: async (req: FastifyRequest, reply: FastifyReply) => {
 		const { player1_id, player2_id } = req.body as { player1_id: number , player2_id: number }
-		gamesService.addGame(player1_id, player2_id);
-		return {success: true, message: 'Game created'};
-
+		if (player1_id === player2_id)
+			throw new ApiError(400, 'must be two different users');
+		const game = gamesService.addGame(player1_id, player2_id);
+		return {success: true, game, message: 'Game created'};
 	},
 
 	getGameByID: async (req: FastifyRequest, reply: FastifyReply) => {

@@ -24,10 +24,21 @@ export function registerErrorHandler(server: FastifyInstance) {
 		details: error.details
       });
 	}
-	//fastify validation errors
-	
-	//handle unexpected errors
-    return "From setErrorHandler: error handling the request"
+
+  if (error.validation) {
+      return reply.code(400).send({
+        statusCode: 400,
+        error: 'Fastify validation erorr',
+        message: error.message,
+        validation: error.validation
+      });
+  }
+
+  return reply.code(500).send({
+    statusCode: 500,
+    error: 'Internal Server Error',
+    message: 'From setErrorHandler: An unexpected error occurred'
+    });
 })
 }
 

@@ -17,14 +17,13 @@ export const userController = {
 		return { success: true, user }
 	},
 
-	//TODO Password hashing, this is a security hazard lol
 	createUser: async (req: FastifyRequest, reply: FastifyReply) => {
 		const { username, password } = req.body as { username: string, password: string}
 		await userService.addUser(username, password);
 		return {success: true, message: 'User created, welcome to the game!'};
 	},
 	
-	//what is this function actually used for? or how should this be made
+	//what is this function actually used for? or how should this be made // change avatar, password, nickname, full name
 	updateUser: async (req: FastifyRequest, reply: FastifyReply) => {
 		const { id } = req.params as { id: number }
 		const { username, password } = req.body as { username: string, password: string }

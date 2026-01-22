@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { tournamentController } from '../controllers/tournamentContr.js'
-import { IDSchema, successResponseSchema } from '../schemas/generic.schema.js'
-import { postTournamentSchemaBody, joinTournamentBody } from '../schemas/tournament.schema.js';
+import { IDSchema } from '../schemas/generic.schema.js'
+import { postTournamentSchemaBody, joinTournamentBody, tournamentResultSchema } from '../schemas/tournament.schema.js';
 
 export default async function tournamentsRoutes (
     fastify: FastifyInstance,
@@ -27,12 +27,14 @@ export default async function tournamentsRoutes (
 		}
 	}, tournamentController.getTournamentByID)
 
-    // fastify.put('/:id', {
-	// 	schema: {
-	// 		tags: ['tournaments'],
-	// 		params: IDSchema
-	// 	}
-	// }, tournamentController.putTournament)
+	//add handler for auth token! how to indentify the gameserver? 
+    fastify.put('/:id', {
+		schema: {
+			tags: ['tournaments'],
+			params: IDSchema,
+			body: tournamentResultSchema
+		}
+	}, tournamentController.updateTournament)
 
     fastify.delete('/:id', {
 		schema: {
@@ -48,13 +50,6 @@ export default async function tournamentsRoutes (
 			body: joinTournamentBody
 		}
 	}, tournamentController.joinTournament)
-
-	fastify.put('/:id/start', {
-		schema: {
-			tags: ['tournaments'],
-			params: IDSchema,
-		}
-	}, tournamentController.startTournament)
 
 	fastify.delete('/:id/leave', {
 		schema: {

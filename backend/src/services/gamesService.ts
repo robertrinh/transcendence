@@ -8,11 +8,9 @@ export const gamesService = {
 		return db.prepare('SELECT * FROM games').all();
 	},
 
-	//two users with the same id, should not work!
 	addGame: (player1_id: number, player2_id: number) => {
-		
 		try {
-			const result = db.prepare('INSERT INTO games (player1_id, player2_id) VALUES (?, ?)').run(player1_id, player2_id);
+			return db.prepare('INSERT INTO games (player1_id, player2_id) VALUES (?, ?)').run(player1_id, player2_id);
 		} 
 		catch (err: any) {
 			dbError(err);
@@ -32,7 +30,6 @@ export const gamesService = {
 	},
 
 	finishGame: (id:number, score_player1:number, score_player2:number, winner_id: number, finished_at: number) =>{
-		const status = 'finished'
-		return db.prepare(' UPDATE games SET winner_id = ?, score_player1 = ?, score_player2 = ?, finished_at = ?, status = ? WHERE id = ?').run(winner_id, score_player1, score_player2, finished_at, id, status)
+		return db.prepare(' UPDATE games SET winner_id = ?, score_player1 = ?, score_player2 = ?, finished_at = ?, status = ? WHERE id = ?').run(winner_id, score_player1, score_player2, finished_at, 'finished', id)
 	}
 }
