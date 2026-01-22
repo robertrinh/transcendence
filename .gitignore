@@ -2,4 +2,6 @@
 **/node_modules/
 package-lock.json
 .DS_Store
+database
 __pycache__
+frontend/nginx

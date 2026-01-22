@@ -1,0 +1,56 @@
+import { ApiError } from '../Errors/errors.js';
+import { userService } from '../services/userService.js'
+import { FastifyRequest, FastifyReply } from 'fastify';
+
+
+export const userController = {
+	getAllUsers: async () => {
+		const users = userService.fetchAllUsers();
+		return {success: true, users }
+	},
+
+	getUserByID: async (req: FastifyRequest, reply: FastifyReply) => {
+		const { id } = req.params as { id: number }
+		const user = userService.fetchUser(id);
+		if (!user)
+			throw new ApiError(404, 'User not found', 'USER_NOT_FOUND');
+		return { success: true, user }
+	},
+
+	createUser: async (req: FastifyRequest, reply: FastifyReply) => {
+		const { username, password } = req.body as { username: string, password: string}
+		await userService.addUser(username, password);
+		return {success: true, message: 'User created, welcome to the game!'};
+	},
+	
+	//what is this function actually used for? or how should this be made // change avatar, password, nickname, full name
+	updateUser: async (req: FastifyRequest, reply: FastifyReply) => {
+		const { id } = req.params as { id: number }
+		const { username, password } = req.body as { username: string, password: string }
+		if (req.user!.userId !== Number(id)) {
+			throw new ApiError(403, 'Stay away from other profiles!! you are only allowed to edit your own');
+		}
+		const result = await userService.updateUser(id, username, password);
+		if (result.changes == 0)
+			throw new ApiError(404, 'User not found', 'USER_NOT_FOUND');
+		return { 
+			success: true, 
+			message: 'User updated yagetme!' 
+		}
+	},
+
+	deleteUser: async (req: FastifyRequest, reply: FastifyReply) => {
+		const { id } = req.params as { id: number }
+		if (req.user!.userId !== Number(id)) {
+			throw new ApiError(403, 'Stay away from other profiles!! You cannot banish others to the shadow realm');
+		}
+		const result = userService.deleteUser(id);
+		if (result.changes == 0)
+			throw new ApiError(404, 'User not found', 'USER_NOT_FOUND');
+		return { 
+			success: true, 
+			message: 'User deleted (banished to the shadow realm)' 
+		}
+	}
+
+}

@@ -27,46 +27,50 @@ export function App() {
 
     const checkSession = async () => {
         try {
-            const sessionId = localStorage.getItem('sessionId');
-            if (!sessionId) {
+            const token = localStorage.getItem('token');
+            if (!token) {
                 setLoading(false);
                 return;
             }
 
-            const response = await fetch(`http://localhost:3000/api/auth/validate?sessionId=${sessionId}`);
+            const response = await fetch('/api/auth/validate', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             if (response.ok) {
                 const data = await response.json();
                 setUser(data.user);
             } else {
-                localStorage.removeItem('sessionId');
+                localStorage.removeItem('token');
             }
         } catch (error) {
             console.error('Session check failed:', error);
-            localStorage.removeItem('sessionId');
+            localStorage.removeItem('token');
         }
         setLoading(false);
     };
 
-    const handleLogin = (userData: User, sessionId: string) => {
-        localStorage.setItem('sessionId', sessionId);
+    const handleLogin = (userData: User, token: string) => {
+        localStorage.setItem('token', token);
         setUser(userData);
     };
 
     const handleLogout = async () => {
         try {
-            const sessionId = localStorage.getItem('sessionId');
-            if (sessionId) {
-                await fetch('http://localhost:3000/api/auth/logout', {
+            const token = localStorage.getItem('token');
+            if (token) {
+                await fetch('/api/auth/logout', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sessionId }),
+                    body: JSON.stringify({ token }),
                 });
             }
         } catch (error) {
             console.error('Logout failed:', error);
         }
         
-        localStorage.removeItem('sessionId');
+        localStorage.removeItem('token');
         setUser(null);
         setCurrentView('home');
     };
