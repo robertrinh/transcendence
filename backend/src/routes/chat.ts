@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { sseConnections, chatMessages } from '../index.js';
 import { getMessages } from '../controllers/chatcontrollers.js';
-import { db } from '../database.js'
+import { db } from '../databaseInit.js'
 
 // Function to broadcast messages via SSE
 function broadcastSSE(message: any, excludeConnectionId?: string) {

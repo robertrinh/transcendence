@@ -1,4 +1,4 @@
-import { db } from '../database.js'
+import { db } from '../databaseInit.js'
 import { dbError } from '../Errors/dbErrors.js'
 
 

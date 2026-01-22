@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify'
-import { db } from '../database.js'
+import { db } from '../databaseInit.js'
 import bcrypt from 'bcrypt'
 import { generateToken, verifyToken } from '../auth/utils.js'
 

@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import { db, initializeDatabase } from '../database.js'
+import { db, initializeDatabase } from '../databaseInit.js'
 
 // Database routes plugin
 export default async function databaseRoutes (

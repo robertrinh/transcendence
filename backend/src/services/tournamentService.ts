@@ -1,4 +1,4 @@
-import { db } from '../database.js'
+import { db } from '../databaseInit.js'
 import { ApiError } from '../Errors/errors.js'
 import { dbError } from '../Errors/dbErrors.js'
 import { Tournament,  TournamentParticipant, Game } from '../types/tournament.types.js';
