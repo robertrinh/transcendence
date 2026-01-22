@@ -76,7 +76,7 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
     const serverTick = 1000 / 10
     const clientTick = 1000 / 60
 
-    function moveBall(canvas: HTMLCanvasElement, ball: Ball): void {
+    function moveBall(ball: Ball): void {
         if (interpVelocity === undefined) {
             return
         }
@@ -103,7 +103,7 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
             processMovement(1 + (deltaTimeMS / 1000))
             then = now - (deltaTimeMS % fpsInterval)
             ctx.clearRect(0, 0, canvas.width, canvas.height)
-            moveBall(canvas, ball)
+            moveBall(ball)
             ball.draw(ctx)
             playerOne.draw(ctx)
             playerTwo.draw(ctx)
