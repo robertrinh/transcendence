@@ -15,7 +15,9 @@ export default function Game() {
     if (socket !== null) {
       return
     }
-    const ws = new WebSocket("ws://localhost:8081")
+    const serverHostname = import.meta.env.VITE_SERVER_HOSTNAME as string
+    const gameServerPort = import.meta.env.VITE_GAME_SERVER_PORT as string
+    const ws = new WebSocket(`ws://${serverHostname}:${gameServerPort}`)
     setSocket(ws)
 
     ws.onopen = function() {

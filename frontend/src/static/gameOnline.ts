@@ -195,8 +195,9 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
         switch (JSONObject.type) {
             case "REDIRECT":
                 socket.close()
-                console.log(`Creating a new socket to connect ${JSONObject.ip}:${JSONObject.port}`)
-                gameSocket = new WebSocket(`ws://${JSONObject.ip}:${JSONObject.port}`)
+                const serverHostname = import.meta.env.VITE_SERVER_HOSTNAME as string
+                console.log(`Creating a new socket to connect ${serverHostname}:${JSONObject.port}`)
+                gameSocket = new WebSocket(`ws://${serverHostname}:${JSONObject.port}`)
                 gameSocket.onmessage = gameSockOnMessage
                 gameSocket.onopen = gameSockOnOpen
                 break

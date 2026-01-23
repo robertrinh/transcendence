@@ -13,6 +13,8 @@ RUN npm install
 # Copy all frontend files
 COPY . .
 
+RUN chmod u+x create-env.sh && ./create-env.sh
+
 # Expose port 80
 EXPOSE 8080
 

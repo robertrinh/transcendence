@@ -28,6 +28,8 @@ services:
       - /app/node_modules #for hot reload, anonymos volume to avoid node_modules conflicts from container and host
     environment:
       - CHOKIDAR_USEPOLLING=true  # file watching
+      - SERVER_HOSTNAME=${SERVER_HOSTNAME}
+      - GAME_SERVER_PORT=${GAME_SERVER_PORT}
     depends_on:
       - backend
     restart: always
