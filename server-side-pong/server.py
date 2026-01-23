@@ -8,9 +8,8 @@ from websockets.asyncio.server import serve
 from gameinstance import GameInstance
 from game import game_process
 
-# change to envvar
-IP = "127.0.0.1"
-PORT = 8081
+IP = "0.0.0.0"
+PORT = 8081  # change to envvar
 
 CONNECTED = set()
 LOBBIES: [GameInstance] = []
@@ -79,8 +78,7 @@ async def handler(websocket: ServerConnection):
 async def main(ip: str, port: int):
     rand.seed(time())
     async with serve(handler, ip, port) as server:
-        server_port = server.sockets[0].getsockname()[1]
-        print(f"Lobby server is listening on port: {server_port}")
+        print(f"Lobby server is listening on: {ip}:{port}")
         # asyncio.create_task(reap_children())
         await server.serve_forever()
 
