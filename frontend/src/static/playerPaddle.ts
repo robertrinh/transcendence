@@ -46,16 +46,19 @@ export class PlayerPaddle
         this.y = newY
     }
 
-    draw(canvas: HTMLCanvasElement, canvasCtx: CanvasRenderingContext2D, deltaTimeSeconds: number) {
-        canvasCtx.fillStyle = this.color
-        canvasCtx.fillRect(this.x, this.y, this.width, this.height)
-        canvasCtx.fillStyle = "#ffffff"
+    update(canvas: HTMLCanvasElement, deltaTimeSeconds: number) {
         if (this.downPressed) {
             this.moveDown(canvas, deltaTimeSeconds)
         }
         if (this.upPressed) {
             this.moveUp(canvas, deltaTimeSeconds)
         }
+    }
+
+    draw(canvasCtx: CanvasRenderingContext2D) {
+        canvasCtx.fillStyle = this.color
+        canvasCtx.fillRect(this.x, this.y, this.width, this.height)
+        canvasCtx.fillStyle = "#ffffff"
     }
 }
 
