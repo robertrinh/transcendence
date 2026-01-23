@@ -145,7 +145,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
                 setAvatarFile(null);
                 setPreviewUrl(null);
                 await fetchProfile(); // Refresh profile to show new avatar
-                alert('Avatar updated successfully!');
+                // alert('Avatar updated successfully!');
             } else {
                 alert(data.error || 'Failed to upload avatar');
             }

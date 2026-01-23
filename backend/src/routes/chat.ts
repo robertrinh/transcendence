@@ -199,7 +199,7 @@ export default async function chatRoutes (
     	fastify: FastifyInstance,
     	options: FastifyPluginOptions
     ) {
-    fastify.get('/api/chat/stream', async (request, reply) => {
+    fastify.get('/stream', async (request, reply) => {
     try {
         // CHANGED: Get token from query parameter (EventSource limitation)
         const token = (request.query as any).token;
@@ -289,7 +289,7 @@ export default async function chatRoutes (
 });
 
 // CHANGED: Join chat endpoint with JWT verification
-fastify.post('/api/chat/join', async (request, reply) => {
+fastify.post('/join', async (request, reply) => {
     try {
         // CHANGED: Get token from Authorization header
         const authHeader = request.headers.authorization;
@@ -333,7 +333,7 @@ fastify.post('/api/chat/join', async (request, reply) => {
 });
 
 // CHANGED: Send message endpoint with JWT verification
-fastify.post('/api/chat/send', async (request, reply) => {
+fastify.post('/send', async (request, reply) => {
     try {
         // CHANGED: Get token from Authorization header
         const authHeader = request.headers.authorization;
@@ -424,13 +424,13 @@ function broadcastSSE(message: any, excludeConnectionId?: string) {
 }
 
 // Get messages (HTTP endpoint for initial load)
-fastify.get('/api/chat/messages', getMessages);
+fastify.get('/messages', getMessages);
 
 // Register database routes
 // await fastify.register(databaseRoutes, { prefix: '/api/db' });
 
 // Chat status endpoint
-fastify.get('/api/chat/status', async (request, reply) => {
+fastify.get('/status', async (request, reply) => {
     const activeUsers = Array.from(sseConnections.values())
         .filter(conn => conn.username)
         .map(conn => ({
