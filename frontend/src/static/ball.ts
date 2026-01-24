@@ -26,11 +26,16 @@ export class Ball
 
 	draw(ctx: CanvasRenderingContext2D) {
 		assertIsNotNull(ctx)
+		if (this.dirVector.x > 0) {
+			this.color = "#B8383B"
+		} else if (this.dirVector.x < 0) {
+			this.color = "#5885A2"
+		}
+        ctx.fillStyle = this.color
         ctx.beginPath()
         ctx.arc(this.x + this.radius, this.y + this.radius, 
 			this.radius, 0, Math.PI * 2, true)
         ctx.closePath()
-        ctx.fillStyle = this.color
         ctx.fill()
 	}
 

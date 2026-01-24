@@ -81,6 +81,11 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
             return
         }
         const updateDelta = clientTick * (1 + (deltaTimeMS / 1000))
+        if (interpVelocity.x < 0) {
+            ball.dirVector.x = -1
+        } else if (interpVelocity.x > 0) {
+            ball.dirVector.x = 1
+        }
         ball.x += interpVelocity.x * updateDelta
         ball.y += interpVelocity.y * updateDelta
     }
@@ -171,8 +176,10 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
                 if (playerID === 2) {
                     playerOne.x = canvas.width-playerOne.width
                     playerOne.y = 0
+                    playerOne.color = p2Color
                     playerTwo.x = 0
                     playerTwo.y = 0
+                    playerTwo.color = p1Color
                 }
                 console.log(`You are player ${playerID}`)
                 gameSocket.send(JSON.stringify({type: 'READY'}))
@@ -208,7 +215,7 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
     canvas.addEventListener("keydown", handleKeyDown)
     canvas.addEventListener("keyup", handleKeyUp)
     const paddleMoveUnits = 30
-    const ball = new Ball(canvas.width / 2, canvas.height / 2, {x: 1, y: 1}, 15, 2, "#a31621", 0, 7.5)
+    const ball = new Ball(canvas.width / 2, canvas.height / 2, {x: 1, y: 1}, 15, 2, "#ffffff", 0, 7.5)
     const playerOne = new PlayerPaddle(0, 0, ballSize, ballSize * 4, paddleMoveUnits, p1Color)
     const playerTwo = new PlayerPaddle(canvas.width - ballSize, 0, ballSize, ballSize * 4, paddleMoveUnits, p2Color) 
     startAnimate(60)
