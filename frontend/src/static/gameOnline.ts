@@ -77,17 +77,25 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
     const clientTick = 1000 / 60
 
     function moveBall(ball: Ball): void {
-        if (interpVelocity === undefined) {
+        if (interpVelocityBall === undefined) {
             return
         }
         const updateDelta = clientTick * (1 + (deltaTimeMS / 1000))
-        if (interpVelocity.x < 0) {
+        if (interpVelocityBall.x < 0) {
             ball.dirVector.x = -1
-        } else if (interpVelocity.x > 0) {
+        } else if (interpVelocityBall.x > 0) {
             ball.dirVector.x = 1
         }
-        ball.x += interpVelocity.x * updateDelta
-        ball.y += interpVelocity.y * updateDelta
+        ball.x += interpVelocityBall.x * updateDelta
+        ball.y += interpVelocityBall.y * updateDelta
+    }
+
+    function interpEnemy() {
+        if (interpVelocityEnemy === undefined) {
+            return
+        }
+        const updateDelta = clientTick * (1 + (deltaTimeMS / 1000))
+        playerTwo.y += interpVelocityEnemy.y * updateDelta
     }
 
     let deltaTimeMS: number
@@ -106,6 +114,7 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
         deltaTimeMS = now - then
         if (deltaTimeMS > fpsInterval) {
             processMovement(1 + (deltaTimeMS / 1000))
+            interpEnemy()
             then = now - (deltaTimeMS % fpsInterval)
             ctx.clearRect(0, 0, canvas.width, canvas.height)
             moveBall(ball)
@@ -115,7 +124,8 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
         }
     }
 
-    let interpVelocity: Point
+    let interpVelocityBall: Point
+    let interpVelocityEnemy: Point
     let pendingMoves = new Array<MoveTS>()
 
     interface MoveTS {
@@ -153,19 +163,22 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
         const ballServer = JSONObject.ball
         switch (JSONObject.type) {
             case "STATE":
-                interpVelocity = pointSubtract(new Point(ballServer.x, ballServer.y), new Point(ball.x, ball.y))
-                interpVelocity.x /= serverTick
-                interpVelocity.y /= serverTick
+                interpVelocityBall = pointSubtract(new Point(ballServer.x, ballServer.y), new Point(ball.x, ball.y))
+                interpVelocityBall.x /= serverTick
+                interpVelocityBall.y /= serverTick
                 if (playerID === 1) {
+                    interpVelocityEnemy = pointSubtract(new Point(p2Server.x, p2Server.y), new Point(playerTwo.x, playerTwo.y))
                     playerOne.x = p1Server.x
                     playerOne.y = p1Server.y
                     updatePendingMoves(p1Server.last_ts)
                 }
                 else {
+                    interpVelocityEnemy = pointSubtract(new Point(p1Server.x, p1Server.y), new Point(playerTwo.x, playerTwo.y))
                     playerOne.x = p2Server.x
                     playerOne.y = p2Server.y
                     updatePendingMoves(p2Server.last_ts)
                 }
+                interpVelocityEnemy.y /= serverTick
                 break
             case "LOBBY_WAIT":
                 console.log("Waiting for other players to connect...")
