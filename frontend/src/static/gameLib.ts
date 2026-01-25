@@ -31,3 +31,16 @@ export function applyBallVerticalBounce(canvas: HTMLCanvasElement, ball: Ball): 
         ball.dirVector.x = -ball.dirVector.x
     }
 }
+
+export function printText(ctx: CanvasRenderingContext2D, fontSizePX: number,
+    x: number, y: number, color: string, textStyle: string, text: Array<string>) {
+    const oldColor = ctx.fillStyle
+    let i = 0
+    for (const str of text) {
+        ctx.fillStyle = color
+        ctx.font = `${fontSizePX}px ${textStyle}`
+        ctx.fillText(str, x, y + (i * fontSizePX * 1.1))
+        i++
+    }
+    ctx.fillStyle = color
+}

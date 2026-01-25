@@ -1,5 +1,6 @@
 import { Ball } from './ball.js'
 import { PlayerPaddle } from './playerPaddle.js'
+import { printText } from './gameLib.js'
 
 export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, socket: WebSocket) {
     const p1Color = "#5885A2"
@@ -108,6 +109,9 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
         draw(startTime)
     }
 
+    let lastFPS = 0
+    let FPSUpdatePast = 0
+
     function draw(newTime: DOMHighResTimeStamp) {
         requestAnimationFrame(draw)
         now = newTime
@@ -121,6 +125,22 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
             ball.draw(ctx)
             playerOne.draw(ctx)
             playerTwo.draw(ctx)
+            let debugText: Array<string> = new Array()
+            if (FPSUpdatePast === 0 || FPSUpdatePast > 100) {
+                lastFPS = Math.floor(1000 / deltaTimeMS)
+                FPSUpdatePast = 0
+            }
+            FPSUpdatePast += deltaTimeMS
+            debugText.push(`FPS: ${lastFPS}`)
+            debugText.push(`ball.x: ${Number(ball.x).toFixed(3)}`)
+            debugText.push(`ball.y: ${Number(ball.y).toFixed(3)}`)
+            if (interpVelocityBall !== undefined) {
+                debugText.push(`ball interp.x: ${Number(interpVelocityBall.x).toFixed(3)}`)
+                debugText.push(`ball interp.y: ${Number(interpVelocityBall.y).toFixed(3)}`)
+            }
+            printText(ctx, 20, canvas.width * 0.025, canvas.height * 0.8,
+                "#d3d3d3", "sans-serif", debugText
+            )
         }
     }
 
@@ -155,6 +175,8 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
     }
 
     let playerID = 0 // playerID given by server
+    let scoreReceived = false
+    let scoreCounter = 0
 
     function gameSockOnMessage(event: MessageEvent) {
         const JSONObject = JSON.parse(event.data)
@@ -166,6 +188,17 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
                 interpVelocityBall = pointSubtract(new Point(ballServer.x, ballServer.y), new Point(ball.x, ball.y))
                 interpVelocityBall.x /= serverTick
                 interpVelocityBall.y /= serverTick
+                if (scoreReceived) {
+                    scoreCounter++
+                }
+                if (scoreCounter === 2) {
+                    interpVelocityBall.x = 0
+                    interpVelocityBall.y = 0
+                    ball.x = ballServer.x
+                    ball.y = ballServer.y
+                    scoreCounter = 0
+                    scoreReceived = false
+                }
                 if (playerID === 1) {
                     interpVelocityEnemy = pointSubtract(new Point(p2Server.x, p2Server.y), new Point(playerTwo.x, playerTwo.y))
                     playerOne.x = p1Server.x
@@ -196,6 +229,9 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
                 }
                 console.log(`You are player ${playerID}`)
                 gameSocket.send(JSON.stringify({type: 'READY'}))
+                break
+            case "SCORE":
+                scoreReceived = true
                 break
             default:
                 console.log(`Unrecognized message type: ${JSONObject.type}`)
