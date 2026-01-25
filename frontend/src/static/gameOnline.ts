@@ -7,6 +7,10 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
     const p2Color = "#B8383B"
     const ballRadius = 15
     const ballSize = ballRadius * 2
+    const paddleMoveUnits = 30
+    const targetFPS = 60
+    const serverTick = 1000 / 10
+    const clientTick = 1000 / targetFPS
 
     function handleKeyDown(key: KeyboardEvent) {
         switch (key.key) {
@@ -73,9 +77,6 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
     function pointSubtract(a: Point, b: Point): Point {
         return new Point((a.x - b.x), (a.y - b.y))
     }
-
-    const serverTick = 1000 / 10
-    const clientTick = 1000 / 60
 
     function moveBall(ball: Ball): void {
         if (interpVelocityBall === undefined) {
@@ -263,9 +264,8 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
     
     canvas.addEventListener("keydown", handleKeyDown)
     canvas.addEventListener("keyup", handleKeyUp)
-    const paddleMoveUnits = 30
     const ball = new Ball(canvas.width / 2, canvas.height / 2, {x: 1, y: 1}, 15, 2, "#ffffff", 0, 7.5)
     const playerOne = new PlayerPaddle(0, 0, ballSize, ballSize * 4, paddleMoveUnits, p1Color)
     const playerTwo = new PlayerPaddle(canvas.width - ballSize, 0, ballSize, ballSize * 4, paddleMoveUnits, p2Color) 
-    startAnimate(60)
+    startAnimate(targetFPS)
 }
