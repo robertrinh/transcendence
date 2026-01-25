@@ -1,6 +1,6 @@
 import { Ball } from './ball.js'
 import { PlayerPaddle } from './playerPaddle.js'
-import { printText } from './gameLib.js'
+import { printText, drawPlayerScores } from './gameLib.js'
 
 export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, socket: WebSocket) {
     const p1Color = "#5885A2"
@@ -11,6 +11,9 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
     const targetFPS = 60
     const serverTick = 1000 / 10
     const clientTick = 1000 / targetFPS
+
+    let p1Score = 0
+    let p2Score = 0
 
     function handleKeyDown(key: KeyboardEvent) {
         switch (key.key) {
@@ -126,6 +129,8 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
             ball.draw(ctx)
             playerOne.draw(ctx)
             playerTwo.draw(ctx)
+            drawPlayerScores(canvas, ctx, 48, "#36454f", "sans-serif",
+            p2Score, p1Score)
             let debugText: Array<string> = new Array()
             if (FPSUpdatePast === 0 || FPSUpdatePast > 100) {
                 lastFPS = Math.floor(1000 / deltaTimeMS)
@@ -233,6 +238,14 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
                 break
             case "SCORE":
                 scoreReceived = true
+                switch (JSONObject.scored_by) {
+                    case "p1":
+                        p1Score++
+                        break
+                    case "p2":
+                        p2Score++
+                        break
+                }
                 break
             default:
                 console.log(`Unrecognized message type: ${JSONObject.type}`)

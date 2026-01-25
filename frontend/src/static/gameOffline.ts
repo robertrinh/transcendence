@@ -3,7 +3,7 @@ import { PlayerPaddle, player_paddle } from './playerPaddle.js'
 import { Point, Vector2, assertIsNotNull, lineLineIntersection } from './lib.js'
 import { Player } from './player.js'
 import { gameInstance } from './game.js'
-import { applyBallHorizontalBounce } from './gameLib.js'
+import { applyBallHorizontalBounce, drawPlayerScores } from './gameLib.js'
 
 export async function gameOfflineLobby(gameMode: string, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
     function handleKeyDown(key: KeyboardEvent) {
@@ -281,14 +281,6 @@ export async function gameOfflineLobby(gameMode: string, canvas: HTMLCanvasEleme
         ActiveRound
     }
 
-    function drawPlayerScores(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, playerOneRoundScore: number, playerTwoRoundScore: number) {
-        ctx.font = "48px sans-serif"
-        ctx.textAlign = "center"
-        ctx.fillStyle = "#36454F"
-        ctx.fillText(playerTwoRoundScore.toString(), canvas.width * 0.25, canvas.height * 0.1)
-        ctx.fillText(playerOneRoundScore.toString(), canvas.width * 0.75, canvas.height * 0.1)
-    }
-
     function waitGameStart(spacePressed: boolean, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D,
         playerOne: Player, playerTwo: Player
     ) {
@@ -356,7 +348,8 @@ export async function gameOfflineLobby(gameMode: string, canvas: HTMLCanvasEleme
         playerOne.paddle.update(canvas, deltaTimeSeconds)
         playerTwo.paddle.draw(ctx)
         playerTwo.paddle.update(canvas, deltaTimeSeconds)
-        drawPlayerScores(canvas, ctx, playerOne.roundScore, playerTwo.roundScore)
+        drawPlayerScores(canvas, ctx, 48, "#36454f", "sans-serif",
+            playerOne.roundScore, playerTwo.roundScore)
     }
 
     async function sleep(ms: number): Promise<void> {

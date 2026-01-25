@@ -44,3 +44,24 @@ export function printText(ctx: CanvasRenderingContext2D, fontSizePX: number,
     }
     ctx.fillStyle = color
 }
+
+export function drawPlayerScores(
+    canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D,
+    fontSizePX: number, color: string, textStyle: string,
+    playerOneRoundScore: number, playerTwoRoundScore: number) {
+        const oldColor = ctx.fillStyle
+        const oldTextAlign = ctx.textAlign
+        ctx.font = `${fontSizePX}px ${textStyle}`
+        ctx.textAlign = "center"
+        ctx.fillStyle = color
+        ctx.fillText(
+            playerTwoRoundScore.toString(), canvas.width * 0.25,
+            canvas.height * 0.1
+        )
+        ctx.fillText(
+            playerOneRoundScore.toString(), canvas.width * 0.75,
+            canvas.height * 0.1
+        )
+        ctx.fillStyle = oldColor
+        ctx.textAlign = oldTextAlign
+    }
