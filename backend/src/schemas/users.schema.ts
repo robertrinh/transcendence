@@ -5,9 +5,21 @@ export const userSchema = S.object()
 	.prop('username', S.string());
 
 export const userBody = S.object()
-	.prop('username', S.string().required())
+	.prop('username', S.string().minLength(3).required())
+	.prop('email', S.string().format(S.FORMATS.EMAIL).required()) //check this
 	.prop('password', S.string().minLength(6).required());
 
+export const updateUser = S.object()
+	.prop('nickname', S.string())
+	.prop('display_name', S.string())
+	.prop('email', S.string().format(S.FORMATS.EMAIL))
+	.prop('password', S.string());
+
+export const imageSchema = S.object()
+	.prop('image', S.string()
+		.contentEncoding('base64')
+		.contentMediaType('image/jpeg')
+	);
 
 /*
 
