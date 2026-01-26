@@ -35,6 +35,7 @@ export default async function usersRoutes (
 		schema: {
 			tags: ['users'],
 			summary: 'Update user',
+			security: [{ bearerAuth: [] }],
 			params: IDSchema,
 			body: userBody
 		}, preHandler: [authenticate]} , userController.updateUser);

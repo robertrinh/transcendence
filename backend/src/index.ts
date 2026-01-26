@@ -37,7 +37,18 @@ server.register(swagger, {
       title: 'Swagger API',
       description: 'Backend API documentation',
       version: '1.0.0'
-    }
+    },
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          description: 'Enter your JWT token'
+        }
+      }
+    },
+    security: [{ bearerAuth: [] }]
   }
 })
 
