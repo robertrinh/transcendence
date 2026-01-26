@@ -27,7 +27,8 @@ function TwoFactorSetup() {
 			const data = await response.json();
 			if (response.ok && data.success) {
 				setQrCode(data.qrCode); //* qrCode is now a string, stored in state
-				setMessage(data.message);
+				//setMessage(data.message); //! add this in later, delete current message
+				setMessage("Setup c'est fini! move it around later Joao :D");
 			} else {
 				setError(data.error || 'Failed to setup 2FA');
 			}
