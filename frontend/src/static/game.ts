@@ -28,7 +28,7 @@ export default async function gameInit (gameMode: string, socket?: WebSocket) {
         canvas = document.createElement("canvas")
         assertIsNotNull(canvas)
         canvas.setAttribute("id", "game-canvas")
-        canvas.setAttribute("class", "m-auto my-8 overflow-hidden bg-white border-4 border-indigo-500")
+        canvas.setAttribute("class", "m-auto my-8 overflow-hidden bg-white border-4 border-indigo-500 w-[60%]")
     }
     const ctx = canvas.getContext("2d")
     assertIsNotNull(ctx)

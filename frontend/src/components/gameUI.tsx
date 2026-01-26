@@ -1,4 +1,5 @@
 import Button from "./button";
+import { useEffect } from "react";
 
 interface GameUI {
     onGameModeSelect: any
@@ -42,9 +43,30 @@ function validateJoinLobby(lobbyID: string): string {
     return lobbyEle.value
 }
 
+function resizeGameUI(gameUI: HTMLElement) {
+        const widthRatio = 0.75 // 4:3
+        gameUI.setAttribute("style", `height:${gameUI.offsetWidth * widthRatio}px`)
+        gameUI.style.height = String(gameUI.offsetWidth * widthRatio) + "px"
+}
+
 export default function GameUI({onGameModeSelect, onConnectToServer, socket}: GameUI) {
+    useEffect(() => {
+        const gameUI = document.getElementById("game-ui")
+        if (gameUI === null) {
+            return
+        }
+        resizeGameUI(gameUI)
+        window.addEventListener("resize", () => {
+            resizeGameUI(gameUI)
+        })
+        return () => {
+            removeEventListener("resize", () => {
+                resizeGameUI(gameUI)
+            })
+        }
+    }, [])
     return (
-        <div id="game-ui" className='m-auto my-8 bg-white border-4 border-indigo-500 w-[1024px] h-[768px] flex'>
+        <div id="game-ui" className='m-auto my-8 bg-white border-4 border-indigo-500 w-[60%] flex'>
             <div id="game-menu" className="m-auto w-[40%] h-[70%] flex flex-col gap-5">
                 <Button
                     id='btn-play-local'
