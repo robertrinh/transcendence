@@ -12,10 +12,10 @@ export const userService = {
 		return db.prepare('SELECT id, username FROM users WHERE id = ?').get(id)
 	},
 
-	addUser: async (username: string, password: string) => {
+	addUser: async (username: string, email: string, password: string) => {
 		try {
 			const hashedPassword = await bcrypt.hash(password, 10)
-			db.prepare('INSERT INTO users (username, password) VALUES (?, ?)').run(username, hashedPassword)
+			db.prepare('INSERT INTO users (username, email, password) VALUES (?, ?, ?)').run(username, email, hashedPassword)
 		}
 		catch (err: any) {
 			dbError(err);

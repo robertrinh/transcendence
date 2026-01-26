@@ -18,8 +18,8 @@ export const userController = {
 	},
 
 	createUser: async (req: FastifyRequest, reply: FastifyReply) => {
-		const { username, password } = req.body as { username: string, password: string}
-		await userService.addUser(username, password);
+		const { username, email, password } = req.body as { username: string, email: string, password: string}
+		await userService.addUser(username, email, password);
 		return {success: true, message: 'User created, welcome to the game!'};
 	},
 	
