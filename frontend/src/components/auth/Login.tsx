@@ -127,6 +127,18 @@ const Login: React.FC<LoginProps> = ({
                         </button>
                     </p>
                 )}
+					<div className="border-t border-gray-200 pt-3 mt-3">
+						<button
+							type="button"
+							disabled
+							className="w-full bg-gray-200 text-gray-500 p-2 rounded cursor-not-allowed text-sm"
+						>
+							Continue as Guest
+						</button>
+						<p className="text-xs text-gray-400 text-center mt-1">
+							Coming soon
+						</p>
+					</div>
 
                 {/* Quick login hint for development */}
                 <div className="border-t border-gray-200 pt-3">
@@ -199,6 +211,18 @@ const Login: React.FC<LoginProps> = ({
                         </button>
                     </p>
                 )}
+					<div className="mt-6 pt-6 border-t border-gray-200">
+						<button
+							type="button"
+							disabled
+							className="w-full bg-gray-200 text-gray-500 py-2 px-4 rounded-md cursor-not-allowed"
+						>
+							Continue as Guest
+						</button>
+						<p className="text-xs text-gray-400 text-center mt-2">
+							Guest mode coming soon!
+						</p>
+					</div>
 
                 {/* Quick login hint for development */}
                 <div className="mt-4 p-3 bg-gray-50 rounded text-center">
