@@ -215,8 +215,10 @@ const ChatMiniWindow: React.FC<ChatMiniWindowProps> = ({ user }) => {
             }
         } else if (confirmation.action === 'block' && confirmation.username) {
             if (!blockedUsers.includes(confirmation.username) && confirmation.username !== user.username) {
-                setBlockedUsers(prev => [...prev, confirmation.username]);
-                setFriends(prev => prev.filter(f => f.username !== confirmation.username));
+                // for type guard, avoid test error
+                const userToBlock = confirmation.username;
+                setBlockedUsers(prev => [...prev, userToBlock]);
+                setFriends(prev => prev.filter(f => f.username !== userToBlock));
                 const token = getToken();
                 if (token) {
                     fetch('/api/friends/block', {
@@ -225,7 +227,7 @@ const ChatMiniWindow: React.FC<ChatMiniWindowProps> = ({ user }) => {
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${token}`
                         },
-                        body: JSON.stringify({ username: confirmation.username })
+                        body: JSON.stringify({ username: userToBlock })
                     }).catch(error => console.error('Failed to block user:', error));
                 }
             }

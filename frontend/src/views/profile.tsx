@@ -181,8 +181,8 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
     };
 
     // Helper function to get avatar URL
-    const getAvatarUrl = (avatarPath?: string): string | null => {
-        if (!avatarPath) return null;
+    const getAvatarUrl = (avatarPath?: string): string | undefined => {
+        if (!avatarPath) return undefined;
         
         // Extract filename from path if it contains /uploads/avatars/
         if (avatarPath.includes('/uploads/avatars/')) {
@@ -244,7 +244,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
                                 />
                             ) : displayUser.avatar_url ? (
                                 <img 
-                                    src={avatarUrl} 
+                                    src={avatarUrl || undefined} 
                                     alt="Avatar"
                                     className="w-full h-full object-cover"
                                 />
