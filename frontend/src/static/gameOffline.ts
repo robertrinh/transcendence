@@ -3,6 +3,7 @@ import { PlayerPaddle, player_paddle } from './playerPaddle.js'
 import { Point, Vector2, assertIsNotNull, lineLineIntersection } from './lib.js'
 import { Player } from './player.js'
 import { gameInstance } from './game.js'
+import { applyBallHorizontalBounce } from './gameLib.js'
 
 export async function gameOfflineLobby(gameMode: string, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
     function handleKeyDown(key: KeyboardEvent) {
@@ -89,24 +90,9 @@ export async function gameOfflineLobby(gameMode: string, canvas: HTMLCanvasEleme
             ball.dirVector.x = 1
         }
     }
-    function ballInVerticalBounds(canvas: HTMLCanvasElement, ball: Ball): boolean {
-        if (
-            ball.y + (ball.dirVector.y * ball.movementSpeed) > canvas.height - ball.radius * 2 ||
-            ball.y + (ball.dirVector.y * ball.movementSpeed) < 0
-        ) {
-            return true
-        }
-        return false
-    }
-
-    function applyBallVerticalBounce(canvas: HTMLCanvasElement, ball: Ball): void {
-        if (ballInVerticalBounds(canvas, ball)) {
-            ball.dirVector.y = -ball.dirVector.y
-        }
-    }
 
     function moveBall(canvas: HTMLCanvasElement, ball: Ball, playerOne: PlayerPaddle, playerTwo: PlayerPaddle): void {
-        applyBallVerticalBounce(canvas, ball)
+        applyBallHorizontalBounce(canvas, ball)
         if (hasPlayerOneCollision(ball, playerOne) || hasPlayerTwoCollision(ball, playerTwo)) {
             ball.increaseSpeed()
         }
@@ -366,8 +352,10 @@ export async function gameOfflineLobby(gameMode: string, canvas: HTMLCanvasEleme
         assertIsNotNull(ctx)
         ctx.clearRect(0, 0, canvas.width, canvas.height)
         ball.draw(ctx)
-        playerOne.paddle.draw(canvas, ctx, deltaTimeSeconds)
-        playerTwo.paddle.draw(canvas, ctx, deltaTimeSeconds)
+        playerOne.paddle.draw(ctx)
+        playerOne.paddle.update(canvas, deltaTimeSeconds)
+        playerTwo.paddle.draw(ctx)
+        playerTwo.paddle.update(canvas, deltaTimeSeconds)
         drawPlayerScores(canvas, ctx, playerOne.roundScore, playerTwo.roundScore)
     }
 

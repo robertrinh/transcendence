@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { db } from '../database.js';
+import { db } from '../databaseInit.js';
 
 interface ChatMessage {
     id: string;

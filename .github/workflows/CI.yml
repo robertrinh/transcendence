@@ -108,7 +108,7 @@ jobs:
 
       - name: Run integration tests
         run: |
-          docker compose exec -T backend npm run test:integration || true
+          docker compose exec -T backend npm run test:integration
 
       - name: Collect logs
         if: failure()

@@ -11,6 +11,7 @@ services:
       - 3000:3000
     volumes:
       - database:/app/database
+      - ./backend/assets:/app/assets
     restart: always
     networks:
       - transcendence

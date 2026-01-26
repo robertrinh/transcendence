@@ -1,57 +1,88 @@
 import asyncio
 import json
-from websockets import broadcast
+import random as rand
+from time import time
+from multiprocessing import Process, Pipe
+from websockets import ServerConnection
 from websockets.asyncio.server import serve
-from ball import Ball, Vector2
-import game
+from gameinstance import GameInstance
+from game import game_process
 
-TICK = 1 / 66
-CONNECTED = []
-LOBBIES = {}
+# change to envvar
+IP = "127.0.0.1"
+PORT = 8081
 
-async def game_loop(lobby_id: str):
-    while True:
-        lobby_players = LOBBIES[lobby_id]
-        if len(lobby_players) == 2:
-            break
-        message = {'type': 'LOBBY_WAIT'}
-        broadcast(lobby_players, json.dumps(message))
-        await asyncio.sleep(5)
-    
-    ball = Ball(game.ARENA_WIDTH / 2, game.ARENA_HEIGHT / 2, Vector2(1, 0), 4, 8, 15)
-    while True:
-        broadcast(lobby_players, json.dumps(game.form_game_state(ball)))
-        await asyncio.sleep(TICK)
+CONNECTED = set()
+LOBBIES: [GameInstance] = []
 
-async def handler(websocket):
-    CONNECTED.append(websocket)
+
+def request_lobby_id() -> str:
+    hex = "0123456789abcdef"
+    lobby_id = []
+    for i in range(0, 10):
+        lobby_id.append(hex[rand.randint(0, 15)])
+    return "".join(lobby_id)
+
+
+def spawn_game_instance() -> GameInstance:
+    lobby_id = request_lobby_id()
+    parent_conn, child_conn = Pipe()
+    process = Process(target=game_process, args=(child_conn, IP, lobby_id))
+    process.start()
+    game_port = parent_conn.recv()
+    LOBBIES.append(GameInstance(lobby_id, process, game_port))
+    return LOBBIES[-1]
+
+
+async def reap_children():
+    for lobby in LOBBIES:
+        if not lobby.process.is_alive():
+            print(f"joining lobby {lobby.lobby_id}")
+            lobby.process.join()
+
+
+async def handler(websocket: ServerConnection):
+    CONNECTED.add(websocket)
     async for message in websocket:
         try:
             message_content = json.loads(message)
         except json.decoder.JSONDecodeError as e:
             print(e)
-            return
+            continue
         print(f"connected: {CONNECTED}")
+        print(f"lobbies: {LOBBIES}")
         print(f"message_content: {message_content}")
         message_type = message_content['type']
         if message_type == 'REQ_LOBBY':
-            lobby_id = 'ABCDEF'
-            response = {'type': 'LOBBY_ID', 'lobby_id': lobby_id}
+            game_instance = spawn_game_instance()
+            lobby_id = game_instance.lobby_id
+            response = {
+                'type': 'LOBBY_ID',
+                'lobby_id': lobby_id
+                }
             await websocket.send(json.dumps(response))
         elif message_type == 'JOIN_LOBBY':
             lobby_id = message_content['lobby_id']
-            print(f"LOBBIES: {LOBBIES}")
-            players = LOBBIES.get(lobby_id)
-            if players == None:
-                LOBBIES.setdefault(lobby_id, [websocket])
-                asyncio.create_task(game_loop(lobby_id))
-            else:
-                players.append(websocket)
-                print(f"after appending: {LOBBIES}")
+            for lobby in LOBBIES:
+                if lobby.lobby_id == lobby_id:
+                    response = {
+                        'type': 'REDIRECT',
+                        'ip': IP,
+                        'port': lobby.port 
+                    }
+                    await websocket.send(json.dumps(response))
+                    # should remove it from the main list
+                    await websocket.close()
+                    break
 
-async def main():
-    async with serve(handler, "127.0.0.1", 8081) as server:
+
+async def main(ip: str, port: int):
+    rand.seed(time())
+    async with serve(handler, ip, port) as server:
+        server_port = server.sockets[0].getsockname()[1]
+        print(f"Lobby server is listening on port: {server_port}")
+        # asyncio.create_task(reap_children())
         await server.serve_forever()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(main(IP, PORT))
