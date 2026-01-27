@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify'
 import { userController } from '../controllers/userController.js'
 import { IDSchema } from '../schemas/generic.schema.js'
-import { userBody } from '../schemas/users.schema.js'
+import { userBody, userParamSchema } from '../schemas/users.schema.js'
 import { authenticate } from '../auth/middleware.js'
 
 //* curl http://localhost:3000/api/db/tables?tablename=users for testing hashed passwords
@@ -31,6 +31,14 @@ export default async function usersRoutes (
             summary: 'Get user with token'
         }, preHandler: [authenticate] }, userController.getMyProfile);
     
+    fastify.get('/profile/:username', {
+        schema: {
+            security: [{ bearerAuth: [] }],
+            tags: ['users'],
+            summary: 'Get user profile by username',
+            params: userParamSchema
+        }, preHandler: [authenticate] }, userController.getUserProfileByUsername);    
+
     fastify.post('/', {
         schema: {
             tags: ['users'],

@@ -143,6 +143,31 @@ export const userController = {
             }
         },
 
+    //for profile view
+    getUserProfileByUsername: async (req: FastifyRequest, reply: FastifyReply) => {
+        const { username } = req.params as { username: string };
+        const user = userService.fetchPublicProfile(username) as any;
+
+        if (!user) {
+            throw new ApiError(404, 'User not found', 'USER_NOT_FOUND');
+        }
+        const winRate = user.total_games > 0
+            ? `${((user.wins / user.total_games) * 100).toFixed(1)}%`
+            : '0%';
+        const profile = {
+            id: user.id.toString(),
+            username: user.username,
+            nickname: user.nickname || null,
+            display_name: user.display_name || null,
+            avatar_url: user.avatar_url || null,
+            wins: user.wins || 0,
+            losses: user.losses || 0,
+            total_games: user.total_games || 0,
+            winRate
+        };
+        return { success : true, profile };
+    },
+
     deleteUser: async (req: FastifyRequest, reply: FastifyReply) => {
         const { id } = req.params as { id: number }
         if (req.user!.userId !== Number(id)) {

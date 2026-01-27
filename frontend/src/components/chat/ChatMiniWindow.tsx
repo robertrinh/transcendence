@@ -22,17 +22,24 @@ interface Friend {
 
 interface ChatMiniWindowProps {
     user: User;
+    navigateToUserProfile?: (username: string) => void; //new
 }
 
 type ChatMode = 'public' | 'private';
 type TabMode = 'chat' | 'friends' | 'blocked';
 
-const ChatMiniWindow: React.FC<ChatMiniWindowProps> = ({ user }) => {
+const ChatMiniWindow: React.FC<ChatMiniWindowProps> = ({ user, navigateToUserProfile }) => {
+      const viewUserProfile = (username: string) => {
+        if (navigateToUserProfile) {
+            navigateToUserProfile(username);
+        }
+    };
     // CHANGED: Start with empty messages - will be filled by SSE
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [connected, setConnected] = useState(false); // CHANGED: Track SSE connection
     const [connectionId, setConnectionId] = useState<string | null>(null); // NEW: Store connection ID
+    const [toast, setToast ] = useState<string | null>(null); // new for public profile
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const eventSourceRef = useRef<EventSource | null>(null); // NEW: Store EventSource ref
 
@@ -42,7 +49,7 @@ const ChatMiniWindow: React.FC<ChatMiniWindowProps> = ({ user }) => {
     const [privateChatWith, setPrivateChatWith] = useState<string>('');
     const [friends, setFriends] = useState<Friend[]>([]);
     const [blockedUsers, setBlockedUsers] = useState<string[]>([]);
-    const [onlineUsers] = useState<string[]>(['alice', 'bob', 'charlie', 'david']);
+    const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
 
     const [confirmation, setConfirmation] = useState<{
         action: 'remove' | 'block' | null;
@@ -95,6 +102,8 @@ const ChatMiniWindow: React.FC<ChatMiniWindowProps> = ({ user }) => {
                             console.log('🎯 Connected event:', data);
                             setConnectionId(data.connectionId);
                             joinChat(data.connectionId, token);
+                            if (data.onlineUsers)
+                                    setOnlineUsers(data.onlineUsers);
                             break;
 
                         case 'history':
@@ -127,14 +136,34 @@ const ChatMiniWindow: React.FC<ChatMiniWindowProps> = ({ user }) => {
                             break;
 
                         case 'user_joined':
+                            console.log('👥 User joined:', data);
+                            setMessages(prev => [...prev, {
+                                id: Date.now().toString(),
+                                username: '',
+                                message: data.message,
+                                timestamp: new Date(data.timestamp)
+                            }]);
+                            // NEW: Add user to online list
+                           if (data.username && data.username.trim() !== '') {
+                                setOnlineUsers(prev => {
+                                    if (prev.includes(data.username)) {
+                                        return prev; // Already exists, don't add
+                                    }
+                                    return [...prev, data.username];
+                                });
+                            }
+                            break;
                         case 'user_left':
                             console.log('👥 User event:', data);
                             setMessages(prev => [...prev, {
                                 id: Date.now().toString(),
-                                username: 'System',
+                                username: '',
                                 message: data.message,
                                 timestamp: new Date(data.timestamp)
                             }]);
+                            if (data.username && data.username.trim() !== '') {
+                                setOnlineUsers(prev => prev.filter(u => u !== data.username));
+                            }
                             break;
 
                         default:
@@ -349,8 +378,21 @@ const ChatMiniWindow: React.FC<ChatMiniWindowProps> = ({ user }) => {
         return usernames.filter(username => username !== user.username);
     };
 
+    const showToast = (message: string) => {
+        setToast(message);
+        setTimeout(() => setToast(null), 2000);
+    }
+
     return (
         <div className="h-full flex flex-col overflow-hidden">
+            {/* NEW: Toast notification - ADD THIS */}
+            {toast && (
+                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 animate-fade-in">
+                    <div className="bg-gray-800 text-white text-sm px-4 py-2 rounded-lg shadow-lg">
+                        {toast}
+                    </div>
+                </div>
+            )}
             {/* Confirmation Popup */}
             {confirmation.action && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -447,75 +489,85 @@ const ChatMiniWindow: React.FC<ChatMiniWindowProps> = ({ user }) => {
                     </div>
 
                     {/* Messages Area */}
-                    <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3">
-                        {filteredMessages.length === 0 ? (
-                            <div className="text-center text-gray-500 py-8">
-                                No messages yet. Start the conversation!
-                            </div>
-                        ) : (
-                            filteredMessages.map((message) => (
-                                <div key={message.id} className="text-sm group">
-                                    <div className="flex flex-col space-y-1">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center space-x-2">
-                                                <span className={`font-medium text-xs ${
-                                                    message.isPrivate ? 'text-purple-700' : 'text-blue-700'
-                                                }`}>
-                                                    {message.username}
-                                                    {message.isPrivate && (
-                                                        <span className="ml-1 text-purple-500">→ {message.toUser}</span>
-                                                    )}
-                                                </span>
-                                                <span className="text-xs text-gray-500">
-                                                    {message.timestamp.toLocaleTimeString([], { 
-                                                        hour: '2-digit', 
-                                                        minute: '2-digit' 
-                                                    })}
-                                                </span>
-                                            </div>
-                                            
-                                            {/* User Actions (show on hover) */}
-                                            {message.username !== user.username && (
-                                                <div className="opacity-0 group-hover:opacity-100 flex items-center space-x-1">
-                                                    {!friends.some(f => f.username === message.username) && (
-                                                        <button
-                                                            onClick={() => addFriend(message.username)}
-                                                            className="text-green-600 hover:text-green-800 text-xs bg-white/50 rounded px-1"
-                                                            title="Add friend"
-                                                        >
-                                                            +
-                                                        </button>
-                                                    )}
-                                                    {friends.some(f => f.username === message.username) && (
-                                                        <button
-                                                            onClick={() => startPrivateChat(message.username)}
-                                                            className="text-purple-600 hover:text-purple-800 text-xs bg-white/50 rounded px-1"
-                                                            title="Private message"
-                                                        >
-                                                            💬
-                                                        </button>
-                                                    )}
-                                                    <button
-                                                        onClick={() => confirmAction('block', message.username)}
-                                                        className="text-red-600 hover:text-red-800 text-xs bg-white/50 rounded px-1"
-                                                        title="Block user"
+                        <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3">
+                            {filteredMessages.length === 0 ? (
+                                <div className="text-center text-gray-500 py-8">
+                                    No messages yet. Start the conversation!
+                                </div>
+                            ) : (
+                                filteredMessages.map((message) => (
+                                    <div key={message.id} className="text-sm group">
+                                        <div className="flex flex-col space-y-1">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center space-x-2">
+                                                    <span 
+                                                        className={`font-medium text-xs cursor-pointer hover:underline ${
+                                                            message.isPrivate ? 'text-purple-700' : 'text-blue-700'
+                                                        }`}
+                                                        onClick={() => {
+                                                            if (message.username !== user.username) {
+                                                            viewUserProfile(message.username);
+                                                        } else {
+                                                            showToast("This is your own profile");
+                                                        }
+                                                    }}
+                                                        title={`View ${message.username}'s profile`}
                                                     >
-                                                        🚫
-                                                    </button>
+                                                        {message.username}
+                                                        {message.isPrivate && (
+                                                            <span className="ml-1 text-purple-500">→ {message.toUser}</span>
+                                                        )}
+                                                    </span>
+                                                    <span className="text-xs text-gray-500">
+                                                        {message.timestamp.toLocaleTimeString([], { 
+                                                            hour: '2-digit', 
+                                                            minute: '2-digit' 
+                                                        })}
+                                                    </span>
                                                 </div>
-                                            )}
-                                        </div>
-                                        <div className={`break-words pl-2 border-l-2 ${
-                                            message.isPrivate ? 'border-purple-300 text-purple-900 bg-purple-50/50' : 'border-blue-300 text-gray-900 bg-white/30'
-                                        } rounded-r px-2 py-1`}>
-                                            {message.message}
+                                                
+                                                {/* User Actions (show on hover) */}
+                                                {message.username !== user.username && (
+                                                    <div className="opacity-0 group-hover:opacity-100 flex items-center space-x-1">
+                                                        {!friends.some(f => f.username === message.username) && (
+                                                            <button
+                                                                onClick={() => addFriend(message.username)}
+                                                                className="text-green-600 hover:text-green-800 text-xs bg-white/50 rounded px-1"
+                                                                title="Add friend"
+                                                            >
+                                                                +
+                                                            </button>
+                                                        )}
+                                                        {friends.some(f => f.username === message.username) && (
+                                                            <button
+                                                                onClick={() => startPrivateChat(message.username)}
+                                                                className="text-purple-600 hover:text-purple-800 text-xs bg-white/50 rounded px-1"
+                                                                title="Private message"
+                                                            >
+                                                                💬
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            onClick={() => confirmAction('block', message.username)}
+                                                            className="text-red-600 hover:text-red-800 text-xs bg-white/50 rounded px-1"
+                                                            title="Block user"
+                                                        >
+                                                            🚫
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className={`break-words pl-2 border-l-2 ${
+                                                message.isPrivate ? 'border-purple-300 text-purple-900 bg-purple-50/50' : 'border-blue-300 text-gray-900 bg-white/30'
+                                            } rounded-r px-2 py-1`}>
+                                                {message.message}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))
-                        )}
-                        <div ref={messagesEndRef} />
-                    </div>
+                                ))
+                            )}
+                            <div ref={messagesEndRef} />
+                        </div>
 
                     {/* Message Input */}
                     <div className="border-t border-white/20 p-3 flex-shrink-0 bg-white/20 backdrop-blur-sm">
