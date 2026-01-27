@@ -63,7 +63,7 @@ export const tournamentService = {
 			throw new ApiError(404, 'game not found');
 		db.prepare('UPDATE games SET score_player1 = ?, score_player2 = ?, winner_id = ?, status = ? WHERE id = ?').run(score1, score2, winner_id, 'finished', game_id);
 
-		const nextGame = db.prepare('SELECT * FROM games WHERE tournament_id = ? AND round = ? AND (player1_id IS NULL OR player2_id IS NULL)').get(tournament_id, game.round! +1) as Game | undefined;
+		const nextGame = db.prepare('SELECT * FROM games WHERE tournament_id = ? AND round = ? AND (player1_id IS NULL OR player2_id IS NULL)').get(tournament_id, game.round! + 1) as Game | undefined;
 		if (nextGame)
 		{
 			if (nextGame.player1_id === null)
@@ -76,10 +76,6 @@ export const tournamentService = {
 			db.prepare('UPDATE tournaments SET status = ?, winner_id = ?, end_date = ? WHERE id = ?').run('finished', winner_id, Date(), tournament_id);
 			return {nextGame: null, tournamentFinished: true, message: 'tournament finished' }
 		}
-	},
-
-	finishTournament: (tournament_id: number) => {
-
 	},
 
 	leaveTournament: (tournament_id: number, user_id: number) => {

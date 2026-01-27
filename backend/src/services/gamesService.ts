@@ -8,7 +8,7 @@ export const gamesService = {
 		return db.prepare('SELECT * FROM games').all();
 	},
 
-	addGame: (player1_id: number, player2_id: number) => {
+	createGame: (player1_id: number, player2_id: number) => {
 		try {
 			return db.prepare('INSERT INTO games (player1_id, player2_id) VALUES (?, ?)').run(player1_id, player2_id);
 		} 

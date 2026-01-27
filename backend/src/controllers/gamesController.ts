@@ -13,7 +13,7 @@ export const gamesController = {
 		const { player1_id, player2_id } = req.body as { player1_id: number , player2_id: number }
 		if (player1_id === player2_id)
 			throw new ApiError(400, 'must be two different users');
-		const game = gamesService.addGame(player1_id, player2_id);
+		const game = gamesService.createGame(player1_id, player2_id);
 		return {success: true, game, message: 'Game created'};
 	},
 
