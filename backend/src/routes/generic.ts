@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import { sseConnections, chatMessages } from '../index.js';
+// import { sseConnections, chatMessages } from '../index.js';
 
 export default async function genericRoutes (
 	fastify: FastifyInstance,
@@ -12,24 +12,24 @@ export default async function genericRoutes (
             timestamp: new Date().toISOString(),
             backend: 'running',
             database: 'connected',
-            activeConnections: sseConnections.size,
-            totalMessages: chatMessages.length
-        };
-    });
-
-    // Root endpoint
-    fastify.get('/', async (request, reply) => {
-        return { 
-            message: 'ft_transcendence Backend API',
-            status: 'running',
-            endpoints: {
-                health: '/api/health',
-                auth: '/api/auth/*',
-                chat: '/api/chat/*',
-                database: '/api/db/*',
-                chatStream: '/api/chat/stream (SSE)'
-            }
+            // activeConnections: sseConnections.size,
+            // totalMessages: chatMessages.length
         };
     });
 }
+//     // Root endpoint
+//     fastify.get('/', async (request, reply) => {
+//         return { 
+//             message: 'ft_transcendence Backend API',
+//             status: 'running',
+//             endpoints: {
+//                 health: '/api/health',
+//                 auth: '/api/auth/*',
+//                 chat: '/api/chat/*',
+//                 database: '/api/db/*',
+//                 chatStream: '/api/chat/stream (SSE)'
+//             }
+//         };
+//     });
+// }
 
