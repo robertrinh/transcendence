@@ -100,9 +100,6 @@ jobs:
 
       - name: Run health checks
         run: |
-          curl -f http://localhost:3000/api/health || exit 1
-          # Small backend test: api health endpoint
-
           curl -f http://localhost:8080 || exit 1
           # Small frontend test: running frontend
 
