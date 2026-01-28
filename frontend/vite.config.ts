@@ -14,7 +14,8 @@ export default defineConfig({
 		  },
 	  },
 	allowedHosts: [
-		".local"
+		".local",
+		".codam.nl"
 	]
   },
 })
