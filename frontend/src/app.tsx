@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import MainLayout from './components/Layout/MainLayout';
+import { verifyToken } from './config/api'  // NEW: import handshake
+import UserProfile from './components/chat/publicProfile';
 
 // Import your views
 import Home from './views/home';
@@ -9,22 +11,28 @@ import Profile from './views/profile';
 import Tournaments from './views/tournaments';
 import NotFound from './views/notfound';
 
+
 interface User {
     id: string;
     username: string;
     email?: string;
+    nickname?: string;
+    display_name?: string;
+    avatar_url?: string;
 }
 
 export function App() {
     const [user, setUser] = useState<User | null>(null);
     const [currentView, setCurrentView] = useState('home');
+    const [viewParams, setViewParams] = useState<any>(null); // new
     const [loading, setLoading] = useState(true);
 
-    // Check for existing session on startup (but don't require it)
+    // Check for existing session on startup
     useEffect(() => {
         checkSession();
     }, []);
 
+    // CHANGED: Replace this function
     const checkSession = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -33,14 +41,11 @@ export function App() {
                 return;
             }
 
-            const response = await fetch('/api/auth/validate', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setUser(data.user);
+            // CHANGED: Use verifyToken from api.ts instead
+            const userData = await verifyToken();
+            
+            if (userData) {
+                setUser(userData);
             } else {
                 localStorage.removeItem('token');
             }
@@ -62,8 +67,10 @@ export function App() {
             if (token) {
                 await fetch('/api/auth/logout', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token }),
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json' 
+                    },
                 });
             }
         } catch (error) {
@@ -73,6 +80,12 @@ export function App() {
         localStorage.removeItem('token');
         setUser(null);
         setCurrentView('home');
+    };
+
+    //new
+    const navigateToUserProfile = (username: string) => {
+        setCurrentView('userProfile');
+        setViewParams({ username });
     };
 
     const renderCurrentView = () => {
@@ -85,6 +98,12 @@ export function App() {
                 return <Leaderboard />;
             case 'profile':
                 return <Profile user={user} />;
+            case 'userProfile': // NEW: Handle user profile view
+                return viewParams?.username ? (
+                    <UserProfile username={viewParams.username} />
+                ) : (
+                    <NotFound />
+                );
             case 'tournaments':
                 return <Tournaments user={user} />;
             default:
@@ -100,8 +119,7 @@ export function App() {
         );
     }
 
-    // Always show the main app (no authentication gate)
-      return (
+    return (
         <div className="min-h-screen bg-gradient-to-b from-slate-800 via-blue-950 to-slate-950">
             <MainLayout
                 user={user}
@@ -109,10 +127,10 @@ export function App() {
                 setCurrentView={setCurrentView}
                 onLogin={handleLogin}
                 onLogout={handleLogout}
+                navigateToUserProfile={navigateToUserProfile} 
             >
                 {renderCurrentView()}
             </MainLayout>
         </div>
     );
-
 }

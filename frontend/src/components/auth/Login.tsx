@@ -126,14 +126,7 @@ const Login: React.FC<LoginProps> = ({
                             Register here
                         </button>
                     </p>
-                )}
-
-                {/* Quick login hint for development */}
-                <div className="border-t border-gray-200 pt-3">
-                    <p className="text-xs text-gray-500 text-center">
-                        Default admin: <code className="bg-gray-100 px-1 rounded">admin</code> / <code className="bg-gray-100 px-1 rounded">admin123</code>
-                    </p>
-                </div>
+                )}               
             </div>
         );
     }
@@ -199,13 +192,6 @@ const Login: React.FC<LoginProps> = ({
                         </button>
                     </p>
                 )}
-
-                {/* Quick login hint for development */}
-                <div className="mt-4 p-3 bg-gray-50 rounded text-center">
-                    <p className="text-xs text-gray-600">
-                        Default admin: <strong>admin</strong> / <strong>admin123</strong>
-                    </p>
-                </div>
             </div>
         </div>
     );
