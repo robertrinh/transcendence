@@ -1,11 +1,12 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify'
 import { db } from '../databaseInit.js'
 import bcrypt from 'bcrypt'
+import { authenticate } from '../auth/middleware.js'
 import { generateToken, verifyToken } from '../auth/utils.js'
 
 export default async function authRoutes (
-	fastify: FastifyInstance,
-	options: FastifyPluginOptions
+    fastify: FastifyInstance,
+    options: FastifyPluginOptions
 ) {
 	fastify.post('/auth/login', {
 		schema: {
@@ -118,3 +119,5 @@ export default async function authRoutes (
 		return reply.code(200).send({ success: true, user: payload })
 	})
 }
+
+
