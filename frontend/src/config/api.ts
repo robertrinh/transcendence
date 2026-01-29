@@ -20,7 +20,7 @@ export const verifyToken = async () => {
     }
 
     try {
-        const response = await fetch(`${API_BASE}/auth/verify`, {
+        const response = await fetch(`${API_BASE}/auth/validate`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,

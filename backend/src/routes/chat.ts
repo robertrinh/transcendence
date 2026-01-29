@@ -79,7 +79,7 @@ export default async function chatRoutes (
         request.raw.on('close', () => {
             console.log(`❌ SSE connection closed: ${connectionId}`);
             const connection = sseConnections.get(connectionId);
-            if (connection ?? connection.username) {
+            if (connection && connection.username) {
                 console.log(`🚪 Broadcasting user_left for ${connection.username}`);
                 broadcastSSE({
                     type: 'user_left',
