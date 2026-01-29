@@ -9,7 +9,7 @@ export const userService = {
 	},
 
 	fetchUser: (id: number) => {
-		return db.prepare('SELECT id, username FROM users WHERE id = ?').get(id)
+		return db.prepare('SELECT * FROM users WHERE id = ?').get(id)
 	},
 
 	addUser: async (username: string, email: string, password: string) => {

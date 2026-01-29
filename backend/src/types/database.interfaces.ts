@@ -37,3 +37,8 @@ export interface DatabaseRunResult {
 	changes: number;
 	lastInsertRowid: number | bigint;
 }
+
+export interface Player {
+	player_id: number;
+	status: 'waiting' | 'playing';
+}
