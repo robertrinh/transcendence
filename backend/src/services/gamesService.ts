@@ -1,7 +1,7 @@
 import { db } from '../databaseInit.js'
 import { dbError } from '../Errors/dbErrors.js'
 import { ApiError } from '../Errors/errors.js';
-import { Player } from '../types/database.interfaces.js';
+import { Player, Game } from '../types/database.interfaces.js';
 
 
 export const gamesService = {
@@ -19,8 +19,7 @@ export const gamesService = {
 			throw new ApiError(400, "duplicate player");
 		try {
 			const game_created = db.prepare('INSERT INTO games (player1_id, player2_id, status) VALUES(?, ?, ?) RETURNING *').run(player, new_player, 'ready');
-			db.prepare('UPDATE users SET status = ? WHERE id = ?').run('playing', player); //make in one go?
-			db.prepare('UPDATE users SET status = ? WHERE id = ?').run('playing', new_player);
+			db.prepare('UPDATE users SET status = ? WHERE id = ? OR id = ?').run('playing', player, new_player);
 			db.prepare('DELETE FROM game_queue WHERE player_id = ?').run(player);
 			return game_created;
 		}
@@ -47,6 +46,15 @@ export const gamesService = {
 	},
 
 	finishGame: (id:number, score_player1:number, score_player2:number, winner_id: number, finished_at: number) =>{
-		return db.prepare(' UPDATE games SET winner_id = ?, score_player1 = ?, score_player2 = ?, finished_at = ?, status = ? WHERE id = ?').run(winner_id, score_player1, score_player2, finished_at, 'finished', id)
+		const gameObj = gamesService.fetchGame(id) as Game;
+		if (gameObj.status !== 'ready')
+			throw new ApiError(400, 'game not ongoing');
+		try {
+			db.prepare('UPDATE users SET status = ? WHERE id = ? OR id = ?').run('finished', gameObj.player1_id, gameObj.player2_id);
+			return db.prepare(' UPDATE games SET winner_id = ?, score_player1 = ?, score_player2 = ?, finished_at = ?, status = ? WHERE id = ?').run(winner_id, score_player1, score_player2, finished_at, 'finished', id)
+		}
+		catch (err:any) {
+			dbError(err);
+		}
 	}
 }

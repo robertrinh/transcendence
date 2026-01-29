@@ -10,6 +10,7 @@ export const userService = {
                 u.username, 
                 u.nickname,
                 u.display_name,
+				u.status,
                 a.path as avatar_url,
                 u.created_at
             FROM users u 
@@ -26,6 +27,7 @@ export const userService = {
                 u.nickname,
                 u.display_name,
                 u.email,
+				u.status,
                 u.created_at,
                 a.path as avatar_url,
                 (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND winner_id = u.id) as wins,
@@ -37,24 +39,6 @@ export const userService = {
         `).get(id)
     },
 
-    fetchOwnProfile: (id:number) => {
-        return db.prepare(`
-            SELECT 
-                u.id, 
-                u.username, 
-                u.nickname,
-                u.display_name,
-                u.email,
-                u.created_at,
-                a.path as avatar_url,
-                (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND winner_id = u.id) as wins,
-                (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND winner_id != u.id AND winner_id IS NOT NULL) as losses,
-                (SELECT COUNT(*) FROM games WHERE player1_id = u.id OR player2_id = u.id) as total_games
-            FROM users u 
-            LEFT JOIN avatars a ON u.avatar_id = a.id 
-            WHERE u.id = ?
-        `).get(id)
-    },
     // for profile view
     fetchPublicProfile: (username: string) => {
         return db.prepare(`

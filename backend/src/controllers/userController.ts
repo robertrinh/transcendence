@@ -43,7 +43,7 @@ export const userController = {
 
     getMyProfile: async (req: FastifyRequest, reply: FastifyReply) => {
         const user_id = req.user!.userId;
-        const profile = userService.fetchOwnProfile(user_id);
+        const profile = userService.fetchUser(user_id);
         if (!profile)
             throw new ApiError(404, 'profile not found');
         return {success: true, profile}

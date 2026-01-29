@@ -57,7 +57,7 @@ export default async function gamesRoutes (
     fastify.put('/:id/finish', {
 		schema: {
 			tags: ['games'],
-			summary: 'Finish a game',
+			summary: 'Finish a game, log the game results',
 			params: IDSchema,
 			body: finishGameSchema,
 		}}, gamesController.finishGame);

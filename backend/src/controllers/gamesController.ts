@@ -25,11 +25,12 @@ export const gamesController = {
 		const game_queue = gamesService.fetchGameQueue();
 		if (game_queue === undefined) {
 			gamesService.addtoGameQueue(player_id);
-			return {success: true, message: 'Player added to queue'}
+			return {success: true, message: 'Player added to queue, waiting for other player to join'}
 		}
 		else {
 			const result = gamesService.createGame(game_queue.player_id, player_id);
-			return {success: true, message: 'Game created, connect to gameserver, i should send game info here i think'}
+			const game = gamesService.fetchGame(result!.lastInsertRowid);
+			return {success: true, data: game, message: 'Game created, connect to gameserver'}
 		}
 	},
 
