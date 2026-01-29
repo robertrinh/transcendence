@@ -1,6 +1,9 @@
 import { ApiError } from '../Errors/errors.js';
 import { gamesService } from '../services/gamesService.js'
 import { FastifyRequest, FastifyReply } from 'fastify';
+import { userService } from '../services/userService.js';
+import { Player } from '../types/database.interfaces.js';
+
 
 export const gamesController = {
 
@@ -9,12 +12,25 @@ export const gamesController = {
 		return {success: true, data: games }
     },
 
+	getGameQueue: async () => {
+		const queue = gamesService.fetchGameQueue();
+		return {success: true, data: queue }
+    },
+
 	createGame: async (req: FastifyRequest, reply: FastifyReply) => {
-		const { player1_id, player2_id } = req.body as { player1_id: number , player2_id: number }
-		if (player1_id === player2_id)
-			throw new ApiError(400, 'must be two different users');
-		const game = gamesService.createGame(player1_id, player2_id);
-		return {success: true, game, message: 'Game created'};
+		const player_id = req.user!.userId;
+		const player = userService.fetchUser(player_id) as Player;
+		if (player.status === 'playing')
+			throw new ApiError(400, "player already playing");
+		const game_queue = gamesService.fetchGameQueue();
+		if (game_queue === undefined) {
+			gamesService.addtoGameQueue(player_id);
+			return {success: true, message: 'Player added to queue'}
+		}
+		else {
+			const result = gamesService.createGame(game_queue.player_id, player_id);
+			return {success: true, message: 'Game created, connect to gameserver, i should send game info here i think'}
+		}
 	},
 
 	getGameByID: async (req: FastifyRequest, reply: FastifyReply) => {
