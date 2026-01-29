@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation, useParams, Outlet } from 'react-router-dom'
 import MainLayout from './components/Layout/MainLayout';
-import { verifyToken } from './config/api'  // NEW: import handshake
+import { verifyToken } from './config/api'
 import UserProfile from './components/chat/publicProfile';
 
 // Import your views
@@ -11,7 +12,6 @@ import Profile from './views/profile';
 import Tournaments from './views/tournaments';
 import NotFound from './views/notfound';
 
-
 interface User {
     id: string;
     username: string;
@@ -21,10 +21,81 @@ interface User {
     avatar_url?: string;
 }
 
+//* Route needed for user profile view
+function UserProfileRoute() {
+	const { username } = useParams<{ username: string }>();
+	if (!username) {
+		return <NotFound />;
+	}
+	return <UserProfile username={username} />;
+}
+
+//* AppLayout component needed for main layout and navigation
+//* uses old logic from MainLayout component to avoid dependencies
+function AppLayout({
+	user: _user,
+	onLogin: _onLogin,
+	onLogout: _onLogout,
+}: {
+	user: User | null;
+	onLogin: (userData: User, token: string) => void;
+	onLogout: () => void;
+}) {
+	const navigate = useNavigate();
+	const location = useLocation();
+
+	const getCurrentView = (): string => {
+		const path = location.pathname;
+		if (path === '/') {
+			return 'home';
+		}
+		if (path.startsWith('/user/')) {
+			return 'userProfile';
+		}
+		if (path === '/game') {
+			return 'game';
+		}
+		if (path === '/leaderboard') {
+			return 'leaderboard';
+		}
+		if (path === '/tournaments') {
+			return 'tournaments';
+		}
+		if (path === '/profile') {
+			return 'profile';
+		}
+		return 'home';
+	}
+
+	//* updates current view in URL without reloading the page
+	const handleSetCurrentView = (view: string) => {
+		if (view === 'home') {
+			navigate('/');
+		} else {
+			navigate(`/${view}`); //* $(view) syntax: navigate game, leaderboard etc.
+		}
+	};
+
+	const navigateToUserProfile = (username: string) => {
+		navigate(`/user/${username}`);
+	};
+
+	return (
+		<MainLayout
+			user={_user}
+			currentView={getCurrentView()}
+			setCurrentView={handleSetCurrentView}
+			onLogin={_onLogin}
+			onLogout={_onLogout}
+			navigateToUserProfile={navigateToUserProfile}
+		>
+			<Outlet />
+		</MainLayout>
+	);
+}
+
 export function App() {
     const [user, setUser] = useState<User | null>(null);
-    const [currentView, setCurrentView] = useState('home');
-    const [viewParams, setViewParams] = useState<any>(null); // new
     const [loading, setLoading] = useState(true);
 
     // Check for existing session on startup
@@ -32,7 +103,6 @@ export function App() {
         checkSession();
     }, []);
 
-    // CHANGED: Replace this function
     const checkSession = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -41,7 +111,6 @@ export function App() {
                 return;
             }
 
-            // CHANGED: Use verifyToken from api.ts instead
             const userData = await verifyToken();
             
             if (userData) {
@@ -79,36 +148,6 @@ export function App() {
         
         localStorage.removeItem('token');
         setUser(null);
-        setCurrentView('home');
-    };
-
-    //new
-    const navigateToUserProfile = (username: string) => {
-        setCurrentView('userProfile');
-        setViewParams({ username });
-    };
-
-    const renderCurrentView = () => {
-        switch (currentView) {
-            case 'home':
-                return <Home user={user} />;
-            case 'game':
-                return <Game />;
-            case 'leaderboard':
-                return <Leaderboard />;
-            case 'profile':
-                return <Profile user={user} />;
-            case 'userProfile': // NEW: Handle user profile view
-                return viewParams?.username ? (
-                    <UserProfile username={viewParams.username} />
-                ) : (
-                    <NotFound />
-                );
-            case 'tournaments':
-                return <Tournaments user={user} />;
-            default:
-                return <NotFound />;
-        }
     };
 
     if (loading) {
@@ -119,18 +158,30 @@ export function App() {
         );
     }
 
-    return (
-        <div className="min-h-screen bg-gradient-to-b from-slate-800 via-blue-950 to-slate-950">
-            <MainLayout
-                user={user}
-                currentView={currentView}
-                setCurrentView={setCurrentView}
-                onLogin={handleLogin}
-                onLogout={handleLogout}
-                navigateToUserProfile={navigateToUserProfile} 
-            >
-                {renderCurrentView()}
-            </MainLayout>
-        </div>
-    );
+	return (
+		<BrowserRouter>
+			<div className="min-h-screen bg-gradient-to-b from-slate-800 via-blue-950 to-slate-950">
+				<Routes>
+					<Route 
+						path="/"
+						element={
+						<AppLayout 
+							user={user} 
+							onLogin={handleLogin} 
+							onLogout={handleLogout} 
+						/>
+						}
+					>
+						<Route index element={<Home user={user} />} />
+						<Route path="/game" element={<Game />} />
+						<Route path="/leaderboard" element={<Leaderboard />} />
+						<Route path="/tournaments" element={<Tournaments user={user} />} />
+						<Route path="/profile" element={<Profile user={user} />} />
+						<Route path="/user/:username" element={<UserProfileRoute />} />
+						<Route path="*" element={<NotFound />} />
+						</Route>
+				</Routes>
+			</div>
+		</BrowserRouter>
+	);
 }

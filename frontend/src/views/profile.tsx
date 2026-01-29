@@ -30,7 +30,12 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
     const [uploading, setUploading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-    // Early return for non-authenticated users
+	useEffect(() => {
+		if (user) {
+			fetchProfile();
+		}
+	}, [user]);
+
     if (!user) {
         return (
             <div className="p-6 text-center">
@@ -48,11 +53,6 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
         );
     }
 
-    useEffect(() => {
-        if (user) {
-            fetchProfile();
-        }
-    }, [user]);
 
     const fetchProfile = async () => {
         if (!user) return;
