@@ -1,9 +1,5 @@
 import S from 'fluent-json-schema';
 
-export const postGameSchemaBody = S.object()
-	.prop('player1_id', S.integer().required())
-	.prop('player2_id', S.integer().required());
-
 export const finishGameSchema = S.object()
 	.prop('winner_id', S.integer().required())
 	.prop('score_player1', S.integer().minimum(0).required())

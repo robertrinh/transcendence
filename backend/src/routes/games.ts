@@ -1,7 +1,9 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { IDSchema, successResponseSchema } from '../schemas/generic.schema.js'
-import { postGameSchemaBody, updateScoreSchema, finishGameSchema } from '../schemas/games.schemas.js'
+import { updateScoreSchema, finishGameSchema } from '../schemas/games.schemas.js'
 import { gamesController } from '../controllers/gamesController.js'
+import { authenticate } from '../auth/middleware.js'
+
 
 
 //TODO: add param and response in the schema for swaggerUI 
@@ -18,9 +20,9 @@ export default async function gamesRoutes (
     fastify.post('/', {
 		schema: {
 			tags: ['games'],
-			summary: 'Create a new game',
-			body: postGameSchemaBody,
-		}}, gamesController.createGame);
+			summary: 'match making',
+			security: [{ bearerAuth: [] }],
+		}, preHandler: [authenticate]} , gamesController.createGame);
 	
     fastify.get('/:id', {
 		schema: {
@@ -28,6 +30,12 @@ export default async function gamesRoutes (
 			summary: 'Get game by ID',
 			params: IDSchema,
 		}}, gamesController.getGameByID);
+
+	fastify.get('/queue', {
+		schema: {
+			tags: ['games'],
+			summary: 'Get the game queue',
+		}}, gamesController.getGameQueue);
 
     fastify.delete('/:id', {
 		schema: {

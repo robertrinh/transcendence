@@ -1,5 +1,7 @@
 import { db } from '../databaseInit.js'
 import { dbError } from '../Errors/dbErrors.js'
+import { ApiError } from '../Errors/errors.js';
+import { Player } from '../types/database.interfaces.js';
 
 
 export const gamesService = {
@@ -8,17 +10,32 @@ export const gamesService = {
 		return db.prepare('SELECT * FROM games').all();
 	},
 
-	createGame: (player1_id: number, player2_id: number) => {
+	addtoGameQueue: (player: number) => {
+		return db.prepare('INSERT INTO game_queue (player_id) VALUES (?)').run(player);
+	},
+
+	createGame: (player: number, new_player: number) => {
+		if (player === new_player)
+			throw new ApiError(400, "duplicate player");
 		try {
-			return db.prepare('INSERT INTO games (player1_id, player2_id) VALUES (?, ?)').run(player1_id, player2_id);
-		} 
+			const game_created = db.prepare('INSERT INTO games (player1_id, player2_id, status) VALUES(?, ?, ?) RETURNING *').run(player, new_player, 'ready');
+			db.prepare('UPDATE users SET status = ? WHERE id = ?').run('playing', player); //make in one go?
+			db.prepare('UPDATE users SET status = ? WHERE id = ?').run('playing', new_player);
+			db.prepare('DELETE FROM game_queue WHERE player_id = ?').run(player);
+			return game_created;
+		}
 		catch (err: any) {
 			dbError(err);
 		}
+		
 	},
 
-	fetchGame: (id: number) =>{
+	fetchGame: (id: number | bigint) =>{
 		return db.prepare('SELECT * FROM games WHERE id = ?').get(id);
+	},
+
+	fetchGameQueue: () =>{
+		return db.prepare('SELECT * FROM game_queue').get() as Player;
 	},
 
 	removeGame: (id: number) => {
