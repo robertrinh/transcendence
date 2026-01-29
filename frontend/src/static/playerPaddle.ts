@@ -58,7 +58,6 @@ export class PlayerPaddle
     draw(canvasCtx: CanvasRenderingContext2D) {
         canvasCtx.fillStyle = this.color
         canvasCtx.fillRect(this.x, this.y, this.width, this.height)
-        canvasCtx.fillStyle = "#ffffff"
     }
 }
 

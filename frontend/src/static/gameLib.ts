@@ -49,8 +49,6 @@ export function drawPlayerScores(
     canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D,
     fontSizePX: number, color: string, textStyle: string,
     playerOneRoundScore: number, playerTwoRoundScore: number) {
-        const oldColor = ctx.fillStyle
-        const oldTextAlign = ctx.textAlign
         ctx.font = `${fontSizePX}px ${textStyle}`
         ctx.textAlign = "center"
         ctx.fillStyle = color
