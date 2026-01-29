@@ -15,6 +15,7 @@ interface MainLayoutProps {
     setCurrentView: (view: string) => void;
     onLogin: (userData: User, token: string) => void;
     onLogout: () => void;
+    navigateToUserProfile?: (username: string) => void;
     children?: React.ReactNode;
 }
 
@@ -24,6 +25,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     setCurrentView,
     onLogin,
     onLogout,
+    navigateToUserProfile,
     children
 }) => {
     const [showAuthPanel, setShowAuthPanel] = useState(false);
@@ -286,16 +288,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                     {/* Chat Content - Flexible */}
                     <div className="flex-1 min-h-0 overflow-hidden">
                         {user ? (
-                            <ChatMiniWindow user={user} />
+                            <ChatMiniWindow user={user}
+                                navigateToUserProfile={navigateToUserProfile}
+                            />
                         ) : (
                             <div className="h-full flex flex-col items-center justify-center text-gray-900 p-4">
                                 <p className="text-center mb-2">Login to join the chat</p>
-                                <button
-                                    onClick={() => setShowAuthPanel(true)}
-                                    className="text-blue-600 hover:text-blue-700 underline text-sm bg-white/50 px-3 py-1 rounded backdrop-blur-sm"
-                                >
-                                    Login here
-                                </button>
                             </div>
                         )}
                     </div>

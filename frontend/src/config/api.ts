@@ -10,6 +10,80 @@ const getApiBaseUrl = (): string => {
     return 'http://localhost:3000';
 };
 
+const API_BASE = '/api';
+
+// NEW: Handshake function to verify token and get user info
+export const verifyToken = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        return null;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/auth/verify`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            localStorage.removeItem('token');
+            return null;
+        }
+
+        const data = await response.json();
+        return data.user;
+    } catch (error) {
+        console.error('Token verification failed:', error);
+        localStorage.removeItem('token');
+        return null;
+    }
+};
+
+// Login
+export const login = async (username: string, password: string) => {
+    const response = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    });
+
+    const data = await response.json();
+    if (data.success) {
+        localStorage.setItem('token', data.token);
+    }
+    return data;
+};
+
+// Register
+export const register = async (username: string, password: string) => {
+    const response = await fetch(`${API_BASE}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    });
+
+    const data = await response.json();
+    if (data.success) {
+        localStorage.setItem('token', data.token);
+    }
+    return data;
+};
+
+// Logout
+export const logout = async () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        await fetch(`${API_BASE}/auth/logout`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        localStorage.removeItem('token');
+    }
+};
+
 export const API_BASE_URL = getApiBaseUrl();
 
 export const API_ENDPOINTS = {

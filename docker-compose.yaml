@@ -11,6 +11,7 @@ services:
       - 3000:3000
     volumes:
       - database:/app/database
+      - uploads:/app/uploads  
     restart: always
     networks:
       - transcendence
@@ -37,7 +38,9 @@ volumes:
   database:
     name: transcendence_database
     driver: local
-    
+  uploads:            
+    name: transcendence_uploads
+    driver: local
 networks:
   transcendence:
     driver: bridge
