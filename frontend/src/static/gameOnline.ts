@@ -105,49 +105,50 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
 
     let deltaTimeMS: number
     let fpsInterval: number, startTime, now, then: number
-
-    function startAnimate(fps: number) {
-        fpsInterval = 1000 / fps
-        then = window.performance.now()
-        startTime = then
-        draw(startTime)
-    }
-
     let lastFPS = 0
     let FPSUpdatePast = 0
 
-    function draw(newTime: DOMHighResTimeStamp) {
-        requestAnimationFrame(draw)
-        now = newTime
+	/**
+	 * Update the world state
+	 */
+	function update() {
+		now = performance.now()
+		if (then === undefined) {
+			then = now
+		}
         deltaTimeMS = now - then
-        if (deltaTimeMS > fpsInterval) {
+        if (deltaTimeMS > clientTick) {
             processMovement(1 + (deltaTimeMS / 1000))
             interpEnemy()
-            then = now - (deltaTimeMS % fpsInterval)
-            ctx.clearRect(0, 0, canvas.width, canvas.height)
+            then = now - (deltaTimeMS % clientTick)
             moveBall(ball)
-            ball.draw(ctx)
-            playerOne.draw(ctx)
-            playerTwo.draw(ctx)
-            drawPlayerScores(canvas, ctx, 48, "#36454f", "sans-serif",
-            p2Score, p1Score)
-            let debugText: Array<string> = new Array()
-            if (FPSUpdatePast === 0 || FPSUpdatePast > 100) {
-                lastFPS = Math.floor(1000 / deltaTimeMS)
-                FPSUpdatePast = 0
-            }
-            FPSUpdatePast += deltaTimeMS
-            debugText.push(`FPS: ${lastFPS}`)
-            debugText.push(`ball.x: ${Number(ball.x).toFixed(3)}`)
-            debugText.push(`ball.y: ${Number(ball.y).toFixed(3)}`)
-            if (interpVelocityBall !== undefined) {
-                debugText.push(`ball interp.x: ${Number(interpVelocityBall.x).toFixed(3)}`)
-                debugText.push(`ball interp.y: ${Number(interpVelocityBall.y).toFixed(3)}`)
-            }
-            printText(ctx, 20, canvas.width * 0.025, canvas.height * 0.8,
-                "#d3d3d3", "sans-serif", debugText
-            )
         }
+	}
+
+    function draw() {
+        requestAnimationFrame(draw)
+		ctx.clearRect(0, 0, canvas.width, canvas.height)
+		ball.draw(ctx)
+		playerOne.draw(ctx)
+		playerTwo.draw(ctx)
+		drawPlayerScores(canvas, ctx, 48, "#36454f", "sans-serif",
+		p2Score, p1Score)
+		let debugText: Array<string> = new Array()
+		if (FPSUpdatePast === 0 || FPSUpdatePast > 100) {
+			lastFPS = Math.floor(1000 / deltaTimeMS)
+			FPSUpdatePast = 0
+		}
+		FPSUpdatePast += deltaTimeMS
+		debugText.push(`FPS: ${lastFPS}`)
+		debugText.push(`ball.x: ${Number(ball.x).toFixed(3)}`)
+		debugText.push(`ball.y: ${Number(ball.y).toFixed(3)}`)
+		if (interpVelocityBall !== undefined) {
+			debugText.push(`ball interp.x: ${Number(interpVelocityBall.x).toFixed(3)}`)
+			debugText.push(`ball interp.y: ${Number(interpVelocityBall.y).toFixed(3)}`)
+		}
+		printText(ctx, 20, canvas.width * 0.025, canvas.height * 0.8,
+			"#d3d3d3", "sans-serif", debugText
+		)
     }
 
     let interpVelocityBall: Point
@@ -280,5 +281,6 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
     const ball = new Ball(canvas.width / 2, canvas.height / 2, {x: 1, y: 1}, 15, 2, "#ffffff", 0, 7.5)
     const playerOne = new PlayerPaddle(0, 0, ballSize, ballSize * 4, paddleMoveUnits, p1Color)
     const playerTwo = new PlayerPaddle(canvas.width - ballSize, 0, ballSize, ballSize * 4, paddleMoveUnits, p2Color) 
-    startAnimate(targetFPS)
+    requestAnimationFrame(draw)
+	setInterval(update, clientTick)
 }
