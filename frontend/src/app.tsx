@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, useNavigate, useLocation, useParams, Outl
 import MainLayout from './components/Layout/MainLayout';
 import Login from './components/auth/Login';
 import AuthRegister from './components/auth/AuthRegister';
-import { verifyToken } from './config/api'
 import UserProfile from './components/chat/publicProfile';
 
 // Import your views
@@ -105,9 +104,9 @@ export function App() {
     const [loading, setLoading] = useState(true);
 
     // Check for existing session on startup
-	useEffect(() => {
-		checkSession();
-	}, []);
+    useEffect(() => {
+        checkSession();
+    }, []);
 
 	const checkSession = async () => {
 		try {
@@ -115,34 +114,24 @@ export function App() {
 			if (!token) {
 				setLoading(false);
 				return;
-            }
+			}
 			const response = await fetch('/api/auth/validate', {
-						headers: {
-							'Authorization': `Bearer ${token}`
-						}
-					});
-					if (response.ok) {
-						const data = await response.json();
-						setUser(data.user);
+				headers: {
+					'Authorization': `Bearer ${token}`
+				}
+			});
+			if (response.ok) {
+				const data = await response.json();
+				setUser(data.user);
 				setIsAuthenticated(true);
 			} else {
-            localStorage.removeItem('token');
+				localStorage.removeItem('token');
 			}
 		} catch (error) {
 			console.error('Session check failed:', error);
-        }
-        setLoading(false);
-    };
-	// 		} else {
-	// 			localStorage.removeItem('token');
-	// 		}
-	// 	} catch (error) {
-	// 		console.error('Session check failed:', error);
-	// 		localStorage.removeItem('token');
-	// 	}
-	// 	setLoading(false);
-	// };
-
+		}
+		setLoading(false);
+	};
 
 	const handleLogin = (userData: User, token: string) => {
 		localStorage.setItem('token', token);
@@ -166,7 +155,6 @@ export function App() {
 		localStorage.removeItem('token');
 		setUser(null);
 		setIsAuthenticated(false);
-		// setCurrentView('home');
 	};
 
 	if (loading) {
