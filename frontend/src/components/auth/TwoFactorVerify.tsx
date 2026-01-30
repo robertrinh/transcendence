@@ -13,7 +13,8 @@ interface TwoFactorVerifyProps {
 	onCancel: () => void;
 }
 
-function TwoFactorVerify({ user, token, onVerifySuccess, onCancel }: TwoFactorVerifyProps) {
+//TODO change _user and _token to user and token after implementing 2fa verification logic
+function TwoFactorVerify({ user: _user, token: _token, onVerifySuccess, onCancel }: TwoFactorVerifyProps) {
 	const [code, setCode] = useState('');
 	const [error, setError] = useState('');
 	const [loading, setLoading] = useState(false);
@@ -24,6 +25,7 @@ function TwoFactorVerify({ user, token, onVerifySuccess, onCancel }: TwoFactorVe
 		setLoading(true);
 
 		//TODO add 2fa verification logic
+
 		//! delete later: DEV MODE:skip 2FA by clicking button
 		onVerifySuccess();
 
