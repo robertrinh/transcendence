@@ -105,11 +105,6 @@ export function App() {
     const [loading, setLoading] = useState(true);
 
     // Check for existing session on startup
-    useEffect(() => {
-        checkSession();
-    }, []);
-
-	// Check for existing session on startup (but don't require it)
 	useEffect(() => {
 		checkSession();
 	}, []);
@@ -120,13 +115,6 @@ export function App() {
 			if (!token) {
 				setLoading(false);
 				return;
-			}
-            const userData = await verifyToken();
-            
-            if (userData) {
-                setUser(userData);
-            } else {
-                localStorage.removeItem('token');
             }
 			const response = await fetch('/api/auth/validate', {
 						headers: {
@@ -136,9 +124,8 @@ export function App() {
 					if (response.ok) {
 						const data = await response.json();
 						setUser(data.user);
-						setIsAuthenticated(true);  // <-- Restore authentication if session valid
-        	} } catch (error) {
-            console.error('Session check failed:', error);
+				setIsAuthenticated(true);
+			} else {
             localStorage.removeItem('token');
         }
         setLoading(false);
