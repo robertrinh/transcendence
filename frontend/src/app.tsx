@@ -127,6 +127,9 @@ export function App() {
 				setIsAuthenticated(true);
 			} else {
             localStorage.removeItem('token');
+			}
+		} catch (error) {
+			console.error('Session check failed:', error);
         }
         setLoading(false);
     };
