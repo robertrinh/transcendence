@@ -23,7 +23,7 @@ export const userController = {
 
     getAllUsers: async () => {
         const users = userService.fetchAllUsers();
-        return {success: true, users }
+        return {success: true, data: users }
     },
 
     getUserByID: async (req: FastifyRequest, reply: FastifyReply) => {
@@ -31,7 +31,7 @@ export const userController = {
         const user = userService.fetchUser(id);
         if (!user)
             throw new ApiError(404, 'User not found', 'USER_NOT_FOUND');
-        return { success: true, user }
+        return { success: true, data: user }
     },
 
     createUser: async (req: FastifyRequest, reply: FastifyReply) => {

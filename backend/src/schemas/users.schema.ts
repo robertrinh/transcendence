@@ -1,42 +1,80 @@
 import S from 'fluent-json-schema';
+import { ApiErrorSchema, IDSchema } from './generic.schema.js';
 
-export const userSchema = S.object()
-	.prop('id', S.number())
-	.prop('username', S.string());
+const userName = S.string().minLength(3).maxLength(20)
+const email = S.string().format(S.FORMATS.EMAIL)
+const password = S.string().minLength(6)
+const token = S.string().minLength(10)
+const timeStamp = S.string().format('date-time')
 
-export const userBody = S.object()
-	.prop('username', S.string().minLength(3).required())
-	.prop('email', S.string().format(S.FORMATS.EMAIL).required()) //check this
-	.prop('password', S.string().minLength(6).required());
-
-export const updateUser = S.object()
+export const fullUserSchema = S.object()
+	.prop('id', S.integer())
+	.prop('username', userName)
 	.prop('nickname', S.string())
 	.prop('display_name', S.string())
-	.prop('email', S.string().format(S.FORMATS.EMAIL))
-	.prop('password', S.string());
+	.prop('password', password)
+	.prop('created_at', timeStamp)
+	.prop('avatar_url', S.string())
+	.prop('email', email)
+	.prop('last_login', timeStamp)
+	.prop('wins', S.number())
+	.prop('losses', S.number())
+	.prop('total_games', S.number())
+	.prop('winRate', S.string());
 
-export const imageSchema = S.object()
-	.prop('image', S.string()
-		.contentEncoding('base64')
-		.contentMediaType('image/jpeg')
-	);
+export const publicProfileSchema = fullUserSchema.without(['password', 'last_login', 'email', 'created_at', ]);
+export const userSchema = fullUserSchema.only(['id', 'username']);
+export const userParamSchema = fullUserSchema.only(['username']);
+export const updateUser = fullUserSchema.only(['nickname', 'display_name', 'email', 'password'])
+
+export const userBody = S.object()
+	.prop('username', userName.required())
+	.prop('email', email.required())
+	.prop('password', password.required());
+
+export const loginSchema = userBody.without(['email']);
+
 export const tokenSchema = S.object()
-  .prop('token', S.string());
+	.prop('token', token);
 
-export const publicProfileSchema = S.object()
-  .prop('id', S.string())
-  .prop('username', S.string())
-  .prop('nickname', S.string())
-  .prop('display_name', S.string())
-  .prop('avatar_url', S.string())
-  .prop('wins', S.number())
-  .prop('losses', S.number())
-  .prop('total_games', S.number())
-  .prop('winRate', S.string());
 
-export const userParamSchema = S.object()
-  .prop('username', S.string().required());
-/*
+//RESPONSES
+const errorResponseSchema = S.object()
+	.prop('success', S.boolean().default(false))
+	.prop('error', S.string())
+	.prop('message', S.string());
+
+export const getUsersResponse = S.object()
+	.prop('success', S.boolean().default(true))
+	.prop('data', S.array().items(publicProfileSchema))
+	.prop('message', S.string());
+
+export const getUserResponse = S.object()
+	.prop('success', S.boolean().default(true))
+	.prop('data', publicProfileSchema)
+	.prop('message', S.string());
+
+
+//COMPLETE SCHEMAS
+export const getAllUsersSchema = {
+	tags: ['users'],
+	summary: 'Get all users',
+	response: {
+		200: getUsersResponse,
+		400: ApiErrorSchema
+	}}
+
+export const getUserSchema = {
+	tags: ['users'],
+	summary: 'Get user by ID',
+	params: IDSchema,
+	response: {
+		200: getUsersResponse,
+		400: ApiErrorSchema
+	}}
+
+
+  /*
 
 Can have a schema and then create other schemas with just some things...
 const S = require('fluent-json-schema')
