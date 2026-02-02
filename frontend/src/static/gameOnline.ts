@@ -9,7 +9,7 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
     const ballSize = ballRadius * 2
     const paddleMoveUnits = 30
     const targetFPS = 60
-    const serverTick = 1000 / 10
+    const serverTick = 1000 / 66
     const clientTick = 1000 / targetFPS
 
     let p1Score = 0
