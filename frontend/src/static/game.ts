@@ -1,6 +1,7 @@
 import { assertIsNotNull } from './lib.js'
 import { gameOnlineLobby } from './gameOnline.js'
 import { gameOfflineLobby } from './gameOffline.js'
+import { assert } from 'node:console'
 
 class GameState {
     runGame = true
@@ -30,11 +31,17 @@ export default async function gameInit (gameMode: string, socket?: WebSocket) {
         canvas.setAttribute("id", "game-canvas")
         canvas.setAttribute("class", "m-auto my-8 overflow-hidden bg-white border-4 border-indigo-500 w-[60%]")
     }
-    const ctx = canvas.getContext("2d")
+    const ctx = canvas.getContext("2d", {alpha: false})
     assertIsNotNull(ctx)
+    const drawCanvas = document.createElement("canvas")
+    assertIsNotNull(drawCanvas)
     canvas.setAttribute("tabindex", "0")
     canvas.setAttribute("width", "1024")
     canvas.setAttribute("height", "768")
+    drawCanvas.width = canvas.width
+    drawCanvas.height = canvas.height
+    const drawCtx = drawCanvas.getContext("2d", {alpha: false})
+    assertIsNotNull(drawCtx)
     const main = document.getElementById('main')
     assertIsNotNull(main)
     main.insertAdjacentElement('afterend', canvas)
@@ -43,6 +50,6 @@ export default async function gameInit (gameMode: string, socket?: WebSocket) {
         await gameOfflineLobby(gameMode, canvas, ctx)
     }
     else {
-        await gameOnlineLobby(canvas, ctx, socket)
+        await gameOnlineLobby(canvas, ctx, drawCanvas, drawCtx, socket)
     }
 }

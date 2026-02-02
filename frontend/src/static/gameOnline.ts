@@ -1,16 +1,12 @@
 import { Ball } from './ball.js'
 import { PlayerPaddle } from './playerPaddle.js'
-import { printText, drawPlayerScores } from './gameLib.js'
+import { playerOne, playerTwo, ball, ballSize, paddleMoveUnits, clientTick,
+    drawPlayerScores} from './lib.js'
 
-export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, socket: WebSocket) {
-    const p1Color = "#5885A2"
-    const p2Color = "#B8383B"
-    const ballRadius = 15
-    const ballSize = ballRadius * 2
-    const paddleMoveUnits = 30
-    const targetFPS = 60
-    const serverTick = 1000 / 66
-    const clientTick = 1000 / targetFPS
+export async function gameOnlineLobby(canvas: HTMLCanvasElement, 
+        ctx: CanvasRenderingContext2D, drawCanvas: HTMLCanvasElement,
+        drawCtx: CanvasRenderingContext2D, socket: WebSocket) {
+  const serverTick = 1000 / 66
 
     let p1Score = 0
     let p2Score = 0
@@ -18,16 +14,16 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
     function handleKeyDown(key: KeyboardEvent) {
         switch (key.key) {
             case "ArrowDown":
-                playerOne.downPressed = true
+                playerOne.paddle.downPressed = true
                 break
             case "ArrowUp":
-                playerOne.upPressed = true
+                playerOne.paddle.upPressed = true
                 break
             case "s":
-                playerOne.downPressed = true
+                playerOne.paddle.downPressed = true
                 break
             case "w":
-                playerOne.upPressed = true
+                playerOne.paddle.upPressed = true
                 break
         }
         key.preventDefault()
@@ -36,16 +32,16 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
     function handleKeyUp(key: KeyboardEvent) {
         switch (key.key) {
             case "ArrowDown":
-                playerOne.downPressed = false
+                playerOne.paddle.downPressed = false
                 break
             case "ArrowUp":
-                playerOne.upPressed = false
+                playerOne.paddle.upPressed = false
                 break
             case "s":
-                playerOne.downPressed = false
+                playerOne.paddle.downPressed = false
                 break
             case "w":
-                playerOne.upPressed = false
+                playerOne.paddle.upPressed = false
                 break
         }
         key.preventDefault()
@@ -53,15 +49,15 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
 
     function processMovement(deltaTimeSeconds: number) {
         const timestamp = +new Date()
-        if (playerOne.downPressed) {
+        if (playerOne.paddle.downPressed) {
             const moveObj = {type: "MOVE_DOWN", ts: timestamp}
-            playerOne.moveDown(canvas, deltaTimeSeconds)
+            playerOne.paddle.moveDown(deltaTimeSeconds)
             gameSocket.send(JSON.stringify(moveObj))
             pendingMoves.push(moveObj)
         }
-        if (playerOne.upPressed) {
+        if (playerOne.paddle.upPressed) {
             const moveObj = {type: "MOVE_UP", ts: timestamp}
-            playerOne.moveUp(canvas, deltaTimeSeconds)
+            playerOne.paddle.moveUp(deltaTimeSeconds)
             gameSocket.send(JSON.stringify(moveObj))
             pendingMoves.push(moveObj)
         }
@@ -86,11 +82,7 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
             return
         }
         const updateDelta = clientTick * (1 + (deltaTimeMS / 1000))
-        if (interpVelocityBall.x < 0) {
-            ball.dirVector.x = -1
-        } else if (interpVelocityBall.x > 0) {
-            ball.dirVector.x = 1
-        }
+        ball.appendPos(new Point(ball.x, ball.y))
         ball.x += interpVelocityBall.x * updateDelta
         ball.y += interpVelocityBall.y * updateDelta
     }
@@ -100,7 +92,7 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
             return
         }
         const updateDelta = clientTick * (1 + (deltaTimeMS / 1000))
-        playerTwo.y += interpVelocityEnemy.y * updateDelta
+        playerTwo.paddle.y += interpVelocityEnemy.y * updateDelta
     }
 
     let deltaTimeMS: number
@@ -127,28 +119,16 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
 
     function draw() {
         requestAnimationFrame(draw)
-		ctx.clearRect(0, 0, canvas.width, canvas.height)
-		ball.draw(ctx)
-		playerOne.draw(ctx)
-		playerTwo.draw(ctx)
-		drawPlayerScores(canvas, ctx, 48, "#36454f", "sans-serif",
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+		drawCtx.clearRect(0, 0, canvas.width, canvas.height)
+        drawCtx.fillStyle = "white"
+        drawCtx.fillRect(0, 0, canvas.width, canvas.height)
+		ball.draw(drawCtx)
+		playerOne.paddle.draw(drawCtx)
+		playerTwo.paddle.draw(drawCtx)
+		drawPlayerScores(canvas, drawCtx, 48, "#36454f", "sans-serif",
 		p2Score, p1Score)
-		let debugText: Array<string> = new Array()
-		if (FPSUpdatePast === 0 || FPSUpdatePast > 100) {
-			lastFPS = Math.floor(1000 / deltaTimeMS)
-			FPSUpdatePast = 0
-		}
-		FPSUpdatePast += deltaTimeMS
-		debugText.push(`FPS: ${lastFPS}`)
-		debugText.push(`ball.x: ${Number(ball.x).toFixed(3)}`)
-		debugText.push(`ball.y: ${Number(ball.y).toFixed(3)}`)
-		if (interpVelocityBall !== undefined) {
-			debugText.push(`ball interp.x: ${Number(interpVelocityBall.x).toFixed(3)}`)
-			debugText.push(`ball interp.y: ${Number(interpVelocityBall.y).toFixed(3)}`)
-		}
-		printText(ctx, 20, canvas.width * 0.025, canvas.height * 0.8,
-			"#d3d3d3", "sans-serif", debugText
-		)
+        ctx.drawImage(drawCanvas, 0, 0)
     }
 
     let interpVelocityBall: Point
@@ -171,10 +151,10 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
                 break
             }
             if (movePair.type === 'MOVE_UP') {
-                playerOne.moveUp(canvas, 1)
+                playerOne.paddle.moveUp(1)
             }
             else if (movePair.type === 'MOVE_DOWN') {
-                playerOne.moveDown(canvas, 1)
+                playerOne.paddle.moveDown(1)
             }
             i++
         }
@@ -207,15 +187,21 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
                     scoreReceived = false
                 }
                 if (playerID === 1) {
-                    interpVelocityEnemy = pointSubtract(new Point(p2Server.x, p2Server.y), new Point(playerTwo.x, playerTwo.y))
-                    playerOne.x = p1Server.x
-                    playerOne.y = p1Server.y
+                    interpVelocityEnemy = pointSubtract(
+                        new Point(p2Server.x, p2Server.y),
+                        new Point(playerTwo.paddle.x, playerTwo.paddle.y)
+                    )
+                    playerOne.paddle.x = p1Server.x
+                    playerOne.paddle.y = p1Server.y
                     updatePendingMoves(p1Server.last_ts)
                 }
                 else {
-                    interpVelocityEnemy = pointSubtract(new Point(p1Server.x, p1Server.y), new Point(playerTwo.x, playerTwo.y))
-                    playerOne.x = p2Server.x
-                    playerOne.y = p2Server.y
+                    interpVelocityEnemy = pointSubtract(
+                        new Point(p1Server.x, p1Server.y),
+                        new Point(playerTwo.paddle.x, playerTwo.paddle.y)
+                    )
+                    playerOne.paddle.x = p2Server.x
+                    playerOne.paddle.y = p2Server.y
                     updatePendingMoves(p2Server.last_ts)
                 }
                 interpVelocityEnemy.y /= serverTick
@@ -227,12 +213,13 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
                 playerID = JSONObject.player_id as number
                 // move paddle to the right side
                 if (playerID === 2) {
-                    playerOne.x = canvas.width-playerOne.width
-                    playerOne.y = 0
-                    playerOne.color = p2Color
-                    playerTwo.x = 0
-                    playerTwo.y = 0
-                    playerTwo.color = p1Color
+                    const p1Color = playerOne.paddle.color
+                    playerOne.paddle.x = canvas.width-playerOne.paddle.width
+                    playerOne.paddle.y = 0
+                    playerOne.paddle.color = playerTwo.paddle.color
+                    playerTwo.paddle.x = 0
+                    playerTwo.paddle.y = 0
+                    playerTwo.paddle.color = p1Color
                 }
                 console.log(`You are player ${playerID}`)
                 gameSocket.send(JSON.stringify({type: 'READY'}))
@@ -278,9 +265,8 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
     
     canvas.addEventListener("keydown", handleKeyDown)
     canvas.addEventListener("keyup", handleKeyUp)
-    const ball = new Ball(canvas.width / 2, canvas.height / 2, {x: 1, y: 1}, 15, 2, "#ffffff", 0, 7.5)
-    const playerOne = new PlayerPaddle(0, 0, ballSize, ballSize * 4, paddleMoveUnits, p1Color)
-    const playerTwo = new PlayerPaddle(canvas.width - ballSize, 0, ballSize, ballSize * 4, paddleMoveUnits, p2Color) 
+    ball.x = canvas.width / 2
+    ball.y = canvas.height / 2
     requestAnimationFrame(draw)
 	setInterval(update, clientTick)
 }

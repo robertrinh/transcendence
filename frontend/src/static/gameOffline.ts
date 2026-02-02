@@ -1,9 +1,10 @@
 import { Ball } from './ball.js'
 import { PlayerPaddle, player_paddle } from './playerPaddle.js'
-import { Point, Vector2, assertIsNotNull, lineLineIntersection } from './lib.js'
+import { playerOne, playerTwo, ball, Point, Vector2, assertIsNotNull,
+    lineLineIntersection, applyBallHorizontalBounce, drawPlayerScores } 
+    from './lib.js'
 import { Player } from './player.js'
 import { gameInstance } from './game.js'
-import { applyBallHorizontalBounce, drawPlayerScores } from './gameLib.js'
 
 export async function gameOfflineLobby(gameMode: string, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
     function handleKeyDown(key: KeyboardEvent) {
@@ -318,8 +319,8 @@ export async function gameOfflineLobby(gameMode: string, canvas: HTMLCanvasEleme
             }
             if (app.state === gameState.ActiveRound) {
                 draw(canvas, ctx, ball, playerOne, playerTwo)
-                if (!playerTwo.humanControlled) {
-                    playerTwo.ai.update(deltaTimeSeconds, ball, canvas, playerTwo.paddle, ctx)
+                if (!playerTwo.humanControlled && playerTwo.ai !== undefined) {
+                    playerTwo.ai.update(deltaTimeSeconds, ball, playerTwo.paddle, ctx)
                 }
                 moveBall(canvas, ball, playerOne.paddle, playerTwo.paddle)
                 if (ballExitsLeftSide()) {
@@ -345,9 +346,9 @@ export async function gameOfflineLobby(gameMode: string, canvas: HTMLCanvasEleme
         ctx.clearRect(0, 0, canvas.width, canvas.height)
         ball.draw(ctx)
         playerOne.paddle.draw(ctx)
-        playerOne.paddle.update(canvas, deltaTimeSeconds)
+        playerOne.paddle.update(deltaTimeSeconds)
         playerTwo.paddle.draw(ctx)
-        playerTwo.paddle.update(canvas, deltaTimeSeconds)
+        playerTwo.paddle.update(deltaTimeSeconds)
         drawPlayerScores(canvas, ctx, 48, "#36454f", "sans-serif",
             playerOne.roundScore, playerTwo.roundScore)
     }
@@ -363,10 +364,10 @@ export async function gameOfflineLobby(gameMode: string, canvas: HTMLCanvasEleme
     let spacePressed = false
     canvas.addEventListener("keydown", handleKeyDown)
     canvas.addEventListener("keyup", handleKeyUp)
-    const ball = new Ball(0, 0, {x: 1, y: 1}, 15, 2, "#a31621", 0, 7.5)
     const humanControlled = gameMode === 'multiplayer'
-    const playerTwo = new Player(40, 40, 20, 150, 1000, "#08A4BD", humanControlled, canvas)
-    const playerOne = new Player(canvas.width - 40, 40, 20, 150, 1000, "#08A4BD", true, canvas) 
+    if (humanControlled) {
+        playerTwo.setAI()
+    }
     const app = {state: gameState.Start}
 
     await game()

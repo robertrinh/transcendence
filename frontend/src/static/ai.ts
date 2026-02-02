@@ -1,7 +1,7 @@
 import { Ball } from './ball.js'
-import { assertIsNotNull, Point, Vector2 } from './lib.js'
+import { assertIsNotNull, Point, Vector2, lineLineIntersection, arenaHeight, 
+    arenaWidth } from './lib.js'
 import { PlayerPaddle } from './playerPaddle.js'
-import { lineLineIntersection } from './lib.js'
 
 // The AI is on the left side of the game
 export class AI
@@ -12,21 +12,22 @@ export class AI
     lastBallXDir: number = 1
     lastBallY = 0
 
-    constructor(canvas: HTMLCanvasElement, paddle: PlayerPaddle) {
-        this.centreY = (canvas.height / 2) - (paddle.height / 2)
+    constructor(paddle: PlayerPaddle) {
+        this.centreY = (arenaHeight / 2) - (paddle.height / 2)
     }
 
-    private moveTo(targetY: number, paddle: PlayerPaddle, canvas: HTMLCanvasElement, deltaTimeSeconds: number) {
+    private moveTo(targetY: number, paddle: PlayerPaddle,
+        deltaTimeSeconds: number) {
         if (this.coversCentreTargetY(targetY, paddle)) {
             return
         }
         const deltaY = targetY - (paddle.y + paddle.height / 2)
         // const deltaY = targetY - paddle.y - paddle.height / 2
         if (deltaY < 0) {
-            paddle.moveUp(canvas, deltaTimeSeconds)
+            paddle.moveUp(deltaTimeSeconds)
         }
         else {
-            paddle.moveDown(canvas, deltaTimeSeconds)
+            paddle.moveDown(deltaTimeSeconds)
         }
     }
 
@@ -38,12 +39,12 @@ export class AI
         return false
     }
 
-    private moveToTargetPoint(paddle: PlayerPaddle, canvas: HTMLCanvasElement, deltaTimeSeconds: number) {
-        this.moveTo(this.targetY, paddle, canvas, deltaTimeSeconds)
+    private moveToTargetPoint(paddle: PlayerPaddle, deltaTimeSeconds: number) {
+        this.moveTo(this.targetY, paddle, deltaTimeSeconds)
     }
 
-    private getTargetPoint(ball: Ball, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, paddle: PlayerPaddle) {
-        const maxRayDistance = Math.pow(canvas.width, 2) + Math.pow(canvas.height, 2)
+    private getTargetPoint(ball: Ball, ctx: CanvasRenderingContext2D, paddle: PlayerPaddle) {
+        const maxRayDistance = Math.pow(arenaWidth, 2) + Math.pow(arenaHeight, 2)
         const maxIters = 5
         let targetPoint: Point | null = null
         let beginPoint = {x: ball.x + ball.radius, y: ball.y + ball.radius}
@@ -61,9 +62,9 @@ export class AI
             ctx.lineTo(endPoint.x, endPoint.y)
             ctx.closePath()
             ctx.stroke()
-            const pointTop = lineLineIntersection(beginPoint, endPoint, {x: 0, y: ball.radius}, {x: canvas.width, y: ball.radius})
-            const pointBottom = lineLineIntersection(beginPoint, endPoint, {x: 0, y: canvas.height - ball.radius}, {x: canvas.width, y: canvas.height - ball.radius})
-            targetPoint = lineLineIntersection(beginPoint, endPoint, {x: paddle.x + paddle.width, y: 0}, {x: paddle.x + paddle.width, y: canvas.height})
+            const pointTop = lineLineIntersection(beginPoint, endPoint, {x: 0, y: ball.radius}, {x: arenaWidth, y: ball.radius})
+            const pointBottom = lineLineIntersection(beginPoint, endPoint, {x: 0, y: arenaHeight - ball.radius}, {x: arenaWidth, y: arenaHeight - ball.radius})
+            targetPoint = lineLineIntersection(beginPoint, endPoint, {x: paddle.x + paddle.width, y: 0}, {x: paddle.x + paddle.width, y: arenaHeight})
             if (targetPoint !== null) {
                 break
             }
@@ -93,8 +94,8 @@ export class AI
         return targetPoint.y + offset
     }
 
-    update(deltaTimeSeconds: number, ball: Ball, canvas: HTMLCanvasElement, paddle: PlayerPaddle, ctx: CanvasRenderingContext2D) {
-        this.moveToTargetPoint(paddle, canvas, deltaTimeSeconds)
+    update(deltaTimeSeconds: number, ball: Ball, paddle: PlayerPaddle, ctx: CanvasRenderingContext2D) {
+        this.moveToTargetPoint(paddle, deltaTimeSeconds)
         this.timeSinceLastAction += deltaTimeSeconds
         if (this.timeSinceLastAction < 1) {
             if (this.lastBallXDir > 0) {
@@ -107,7 +108,7 @@ export class AI
         this.timeSinceLastAction = 0
         // ball is moving towards the AI
         if (ball.dirVector.x < 0) {
-            const target = this.getTargetPoint(ball, canvas, ctx, paddle)
+            const target = this.getTargetPoint(ball, ctx, paddle)
             if (target === null) {
                 this.targetY = ball.y + ball.radius
             }
