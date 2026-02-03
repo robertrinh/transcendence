@@ -7,13 +7,18 @@ export class Player
     roundScore = 0
     gameScore = 0
     humanControlled: boolean
-    ai: AI
+    ai: AI | undefined
 
-    constructor(x: number, y: number, width: number, height: number, yVector: number, color: string, 
-        humanControlled: boolean, canvas: HTMLCanvasElement
-    ) {
+    constructor(
+            x: number, y: number, width: number, height: number,
+            yVector: number, color: string) {
         this.paddle = new PlayerPaddle(x, y, width, height, yVector, color)
-        this.humanControlled = humanControlled
-        this.ai = new AI(canvas, this.paddle)
+        this.humanControlled = true
+        this.ai = undefined
+    }
+
+    setAI(difficultyLevel: DifficultyLevel) {
+        this.humanControlled = false
+        this.ai = new AI(this.paddle, difficultyLevel)
     }
 }

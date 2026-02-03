@@ -73,14 +73,10 @@ export class Ball
 		ctx.strokeStyle = color
 		ctx.strokeRect(this.x, this.y, this.radius * 2, this.radius * 2)
 	}
-	
-	increaseSpeed() {
-		if (this.movementSpeed < this.maxSpeed) {
-			this.movementSpeed += 0.5 * Math.pow(1.2, this.speedX)
-			this.speedX += 1
-		}
-		if (this.movementSpeed > this.maxSpeed) {
-			this.movementSpeed = this.maxSpeed
-		}
+
+	setStart(dirVect: Vector2) {
+		this.x = (arenaWidth / 2) - this.radius
+		this.y = (arenaHeight / 2) - this.radius
+		this.dirVector = dirVect
 	}
 }
