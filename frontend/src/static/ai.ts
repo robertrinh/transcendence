@@ -3,6 +3,12 @@ import { Point, Vector2, lineLineIntersection, arenaHeight, arenaWidth,
     ballRadius } from './lib'
 import { PlayerPaddle } from './playerPaddle'
 
+export enum DifficultyLevel {
+    Easy,
+    Normal,
+    Hard
+}
+
 
 // The AI is on the left side of the game
 export class AI
@@ -12,9 +18,25 @@ export class AI
     targetY = 0
     lastBallXDir: number = 1
     lastBallY = 0
+    difficultyLevel: DifficultyLevel
 
-    constructor(canvas: HTMLCanvasElement, paddle: PlayerPaddle) {
-        this.centreY = (canvas.height / 2) - (paddle.height / 2)
+    private levelModifier: number
+
+    constructor(paddle: PlayerPaddle, difficultyLevel: DifficultyLevel) {
+        this.centreY = (arenaHeight / 2) - (paddle.height / 2)
+        this.difficultyLevel = difficultyLevel
+        switch (this.difficultyLevel) {
+            case DifficultyLevel.Easy:
+                this.levelModifier = 0.2
+                break
+            case DifficultyLevel.Normal:
+                this.levelModifier = 0.6
+                break
+            case DifficultyLevel.Hard:
+                this.levelModifier = 0.8
+                break
+        }
+
     }
 
     private moveTo(targetY: number, paddle: PlayerPaddle, canvas: HTMLCanvasElement, deltaTimeSeconds: number) {
@@ -82,7 +104,13 @@ export class AI
         if (targetPoint === null) {
             return null
         }
-        const hasRandOffset = Math.random() > 0.8 ? true: false
+        /*
+        The chance for the ai to make a mistake is higher on lower difficulties.
+        Two more random rolls are done after to decide:
+        1. If the offset needs to apply up or down
+        2. The actual offset amount
+        */
+        const hasRandOffset = Math.random() > this.levelModifier ? true: false
         if (!hasRandOffset) {
             return targetPoint.y
         }
