@@ -1,6 +1,5 @@
-import { Ball } from './ball.js'
-import { PlayerPaddle } from './playerPaddle.js'
-import { printText, drawPlayerScores } from './gameLib.js'
+import { Ball } from './ball'
+import { playerOne, playerTwo, ball, clientTick, drawPlayerScores } from './lib'
 
 export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, socket: WebSocket) {
     const p1Color = "#5885A2"

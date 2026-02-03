@@ -1,7 +1,8 @@
-import { Ball } from './ball.js'
-import { assertIsNotNull, Point, Vector2 } from './lib.js'
-import { PlayerPaddle } from './playerPaddle.js'
-import { lineLineIntersection } from './lib.js'
+import { Ball } from './ball'
+import { Point, Vector2, lineLineIntersection, arenaHeight, arenaWidth,
+    ballRadius } from './lib'
+import { PlayerPaddle } from './playerPaddle'
+
 
 // The AI is on the left side of the game
 export class AI

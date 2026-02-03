@@ -1,3 +1,5 @@
+import { arenaHeight } from "./lib"
+
 export class PlayerPaddle
 {
     x: number

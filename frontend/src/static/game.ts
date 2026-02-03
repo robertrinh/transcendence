@@ -1,6 +1,6 @@
-import { assertIsNotNull } from './lib.js'
-import { gameOnlineLobby } from './gameOnline.js'
-import { gameOfflineLobby } from './gameOffline.js'
+import { assertIsNotNull } from './lib'
+import { gameOnlineLobby } from './gameOnline'
+import { gameOfflineLobby } from './gameOffline'
 
 class GameState {
     runGame = true

@@ -1,9 +1,9 @@
-import { Ball } from './ball.js'
-import { PlayerPaddle, player_paddle } from './playerPaddle.js'
-import { Point, Vector2, assertIsNotNull, lineLineIntersection } from './lib.js'
-import { Player } from './player.js'
-import { gameInstance } from './game.js'
-import { applyBallHorizontalBounce, drawPlayerScores } from './gameLib.js'
+import { Ball } from './ball'
+import { PlayerPaddle } from './playerPaddle'
+import { playerOne, playerTwo, ball, Point, Vector2,
+    applyBallHorizontalBounce, drawPlayerScores, arenaWidth, clientTick,
+    roundMax, handlePaddleCollision, assertIsNotNull } from './lib'
+import { DifficultyLevel } from './ai'
 
 export async function gameOfflineLobby(gameMode: string, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
     function handleKeyDown(key: KeyboardEvent) {

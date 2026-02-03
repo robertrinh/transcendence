@@ -1,5 +1,5 @@
-import { PlayerPaddle } from './playerPaddle.js'
-import { AI } from './ai.js'
+import { PlayerPaddle } from './playerPaddle'
+import { AI, DifficultyLevel } from './ai'
 
 export class Player
 {
