@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PrivacyPolicy from '../../views/privacy';
 
 interface AuthRegisterProps {
     onSwitchToLogin: () => void;
@@ -28,6 +29,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -144,7 +146,25 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
                                 Login here
                             </button>
                         </p>
+
+                        <p className="text-center text-xs text-gray-500 mt-2">
+                            By registering, you agree to our{' '}
+                            <button
+                                type="button"
+                                onClick={() => setShowPrivacyModal(true)}
+                                className="text-blue-500 hover:text-blue-600 hover:underline"
+                            >
+                                Privacy Policy
+                            </button>
+                        </p>
                     </>
+                )}
+
+                {showPrivacyModal && (
+                    <PrivacyPolicy 
+                        isModal={true} 
+                        onClose={() => setShowPrivacyModal(false)} 
+                    />
                 )}
             </div>
         );
@@ -223,7 +243,25 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
                         Already have an account? Login here
                     </button>
                 </div>
+
+                <p className="mt-4 text-center text-sm text-gray-500">
+                    By registering, you agree to our{' '}
+                    <button
+                        type="button"
+                        onClick={() => setShowPrivacyModal(true)}
+                        className="text-blue-500 hover:text-blue-600 hover:underline"
+                    >
+                        Privacy Policy
+                    </button>
+                </p>
             </div>
+
+            {showPrivacyModal && (
+                <PrivacyPolicy 
+                    isModal={true} 
+                    onClose={() => setShowPrivacyModal(false)} 
+                />
+            )}
         </div>
     );
 };
