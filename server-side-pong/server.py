@@ -108,7 +108,7 @@ async def handler(websocket: ServerConnection):
         try:
             message_content = json.loads(message)
         except json.decoder.JSONDecodeError as e:
-            print(e)
+            print(e, file=sys.stderr)
             continue
         message_type = message_content['type']
         await process_message(message_type, message_content, websocket)
