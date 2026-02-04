@@ -78,6 +78,7 @@ class GameInstance:
 
     def add_player(self, connection: ServerConnection):
         self.players.append(connection)
+        print(f"lobby {self.lobby_id}: connection {connection} added")
 
     def has_player(self, connection: ServerConnection):
         return connection in self.players
@@ -99,6 +100,7 @@ class GameInstance:
             broadcast(self.players, json.dumps(message))
             raise Exception(f"Lobby {self.lobby_id} timed out")
         self.game_running = True
+        print(f"lobby {self.lobby_id}: all players connected, starting...")
         while self.game_running:
             broadcast(self.players, json.dumps(game_loop(self)))
             await asyncio.sleep(TICK/1000)
