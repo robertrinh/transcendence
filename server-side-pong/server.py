@@ -2,11 +2,9 @@ import asyncio
 import json
 import random as rand
 from time import time
-from multiprocessing import Process, Pipe
 from websockets import ServerConnection
 from websockets.asyncio.server import serve
 from gameinstance import GameInstance
-from game import game_process
 
 IP = "0.0.0.0"
 PORT = 8081  # change to envvar
@@ -23,21 +21,91 @@ def request_lobby_id() -> str:
     return "".join(lobby_id)
 
 
-def spawn_game_instance() -> GameInstance:
+def add_game_instance() -> GameInstance:
     lobby_id = request_lobby_id()
-    parent_conn, child_conn = Pipe()
-    process = Process(target=game_process, args=(child_conn, IP, lobby_id))
-    process.start()
-    game_port = parent_conn.recv()
-    LOBBIES.append(GameInstance(lobby_id, process, game_port))
+    LOBBIES.append(GameInstance(lobby_id))
     return LOBBIES[-1]
 
 
-async def reap_children():
+def find_game_instance_by_id(lobby_id: str) -> GameInstance | None:
     for lobby in LOBBIES:
-        if not lobby.process.is_alive():
-            print(f"joining lobby {lobby.lobby_id}")
-            lobby.process.join()
+        if lobby.lobby_id == lobby_id:
+            return lobby
+    return None
+
+
+def find_game_instance_by_connection(
+        websocket: ServerConnection) -> GameInstance | None:
+    for lobby in LOBBIES:
+        if lobby.has_player(websocket):
+            return lobby
+    return None
+
+
+async def process_message(
+        message_type: str, message_content, websocket: ServerConnection):
+    print(
+        f"message_type:{message_type}\nmessage_content:{message_content}\n"
+        f"websocket:{websocket}")
+    if message_type == 'REQ_LOBBY':
+        game_instance = add_game_instance()
+        lobby_id = game_instance.lobby_id
+        response = {
+            'type': 'LOBBY_ID',
+            'lobby_id': lobby_id
+            }
+        await websocket.send(json.dumps(response))
+        return
+    if message_type == 'JOIN_LOBBY':
+        lobby_id = message_content['lobby_id']
+        lobby = find_game_instance_by_id(lobby_id)
+        response = None
+        if lobby is None:
+            response = {
+                'type': 'ERROR',
+                'message': f"Lobby {lobby.id} not found"
+            }
+        elif lobby.lobby_full():
+            response = {
+                'type': 'ERROR',
+                'message': f"Lobby {lobby.id} is full"
+            }
+        else:
+            lobby.add_player(websocket)
+            if len(lobby.players) == 1:
+                asyncio.create_task(lobby.start_lobby())
+            response = {
+                'type': 'JOIN_SUCCESS'
+            }
+        await websocket.send(json.dumps(response))
+        return
+    # The message contains a game state update at this point so always look for
+    # the related lobby first
+    lobby = find_game_instance_by_connection(websocket)
+    match message_type:
+        case 'MOVE_DOWN':
+            if websocket == lobby.players[0]:
+                print("Player 1 wants to move down")
+                lobby.p1_input.append(['DOWN', message_content['ts']])
+            else:
+                print("Player 2 wants to move down")
+                lobby.p2_input.append(['DOWN', message_content['ts']])
+        case 'MOVE_UP':
+            if websocket == lobby.players[0]:
+                print("Player 1 wants to move up")
+                lobby.p1_input.append(['UP', message_content['ts']])
+            else:
+                print("Player 2 wants to move up")
+                lobby.p2_input.append(['UP', message_content['ts']])
+        case 'WHOAMI':
+            if websocket == lobby.players[0]:
+                await websocket.send(json.dumps(
+                    {'type': 'ID', 'player_id': 1}
+                    ))
+            else:
+                await websocket.send(json.dumps(
+                    {'type': 'ID', 'player_id': 2}
+                    ))
 
 
 async def handler(websocket: ServerConnection):
@@ -48,38 +116,14 @@ async def handler(websocket: ServerConnection):
         except json.decoder.JSONDecodeError as e:
             print(e)
             continue
-        print(f"connected: {CONNECTED}")
-        print(f"lobbies: {LOBBIES}")
-        print(f"message_content: {message_content}")
         message_type = message_content['type']
-        if message_type == 'REQ_LOBBY':
-            game_instance = spawn_game_instance()
-            lobby_id = game_instance.lobby_id
-            response = {
-                'type': 'LOBBY_ID',
-                'lobby_id': lobby_id
-                }
-            await websocket.send(json.dumps(response))
-        elif message_type == 'JOIN_LOBBY':
-            lobby_id = message_content['lobby_id']
-            for lobby in LOBBIES:
-                if lobby.lobby_id == lobby_id:
-                    response = {
-                        'type': 'REDIRECT',
-                        'ip': IP,
-                        'port': lobby.port 
-                    }
-                    await websocket.send(json.dumps(response))
-                    # should remove it from the main list
-                    await websocket.close()
-                    break
+        await process_message(message_type, message_content, websocket)
 
 
 async def main(ip: str, port: int):
     rand.seed(time())
     async with serve(handler, ip, port) as server:
         print(f"Lobby server is listening on: {ip}:{port}")
-        # asyncio.create_task(reap_children())
         await server.serve_forever()
 
 if __name__ == "__main__":
