@@ -34,10 +34,10 @@ const ChatMiniWindow: React.FC<ChatMiniWindowProps> = ({ user, navigateToUserPro
             navigateToUserProfile(username);
         }
     };
-    // CHANGED: Start with empty messages - will be filled by SSE
+    //  Start with empty messages - will be filled by SSE
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
-    const [connected, setConnected] = useState(false); // CHANGED: Track SSE connection
+    const [connected, setConnected] = useState(false); //  Track SSE connection
     const [connectionId, setConnectionId] = useState<string | null>(null); // NEW: Store connection ID
     const [toast, setToast ] = useState<string | null>(null); // new for public profile
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -79,7 +79,7 @@ const ChatMiniWindow: React.FC<ChatMiniWindowProps> = ({ user, navigateToUserPro
             }
 
             console.log('🔗 Connecting to SSE with token...');
-            // CHANGED: Pass token as query parameter
+            //  Pass token as query parameter
             const sseUrl = `/api/chat/stream?token=${token}`;
             console.log('📡 SSE URL:', sseUrl);
             

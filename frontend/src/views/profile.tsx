@@ -17,6 +17,24 @@ interface ProfileProps {
     user: User | null;
 }
 
+   // Helper function to get avatar URL
+const getAvatarUrl = (avatarPath?: string): string | undefined => {
+    if (!avatarPath) return undefined;
+    
+    // Extract filename from path if it contains /uploads/avatars/
+    if (avatarPath.includes('/uploads/avatars/')) {
+        const filename = avatarPath.split('/').pop();
+        return `/api/avatars/${filename}`;
+    }
+    
+    // If it's already just a filename
+    if (!avatarPath.includes('/')) {
+        return `/api/avatars/${avatarPath}`;
+    }
+    
+    return `/api/avatars/${avatarPath}`;
+};
+
 const Profile: React.FC<ProfileProps> = ({ user }) => {
     const [profileData, setProfileData] = useState<User | null>(null);
     const [editing, setEditing] = useState(false);
@@ -180,23 +198,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
         }
     };
 
-    // Helper function to get avatar URL
-    const getAvatarUrl = (avatarPath?: string): string | undefined => {
-        if (!avatarPath) return undefined;
-        
-        // Extract filename from path if it contains /uploads/avatars/
-        if (avatarPath.includes('/uploads/avatars/')) {
-            const filename = avatarPath.split('/').pop();
-            return `/api/avatars/${filename}`;
-        }
-        
-        // If it's already just a filename
-        if (!avatarPath.includes('/')) {
-            return `/api/avatars/${avatarPath}`;
-        }
-        
-        return `/api/avatars/${avatarPath}`;
-    };
+ 
 
     // Loading state display
     if (loading && !profileData) {
@@ -264,7 +266,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
                                             onChange={handleFileSelect}
                                             className="hidden"
                                         />
-                                        Change<br/>Photo
+                                        Change<br/>Avatar
                                     </label>
                                 </div>
                             )}
@@ -436,3 +438,4 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
 };
 
 export default Profile;
+export { getAvatarUrl };

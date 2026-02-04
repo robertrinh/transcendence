@@ -74,16 +74,16 @@ const Login: React.FC<LoginProps> = ({
 				setPendingToken(data.token);
 				setShowTwoFactor(true);
 
-				// if (data.requires2FA) {
-				// 	setPendingUser(data.user);
-				// 	setPendingToken(data.token);
-				// 	setShowTwoFactor(true);
-				// } else {
-				// 	onLoginSuccess(data.user, data.token);
-				// 	// Clear form
-				// 	setUsername('');
-				// 	setPassword('');
-				// }
+				if (data.requires2FA) {
+					setPendingUser(data.user);
+					setPendingToken(data.token);
+					setShowTwoFactor(true);
+				} else {
+					onLoginSuccess(data.user, data.token);
+					// Clear form
+					setUsername('');
+					setPassword('');
+				}
 			} else {
 				setError(data.error || 'Login failed');
 			}

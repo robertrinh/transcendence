@@ -11,7 +11,7 @@ import Home from './views/home';
 import Game from './views/game';
 import Leaderboard from './views/leaderboard';
 import Profile from './views/profile';
-import Tournaments from './views/tournaments';
+import Settings from './views/settings';
 import NotFound from './views/notfound';
 
 interface User {
@@ -61,11 +61,11 @@ function AppLayout({
 		if (path === '/leaderboard') {
 			return 'leaderboard';
 		}
-		if (path === '/tournaments') {
-			return 'tournaments';
-		}
 		if (path === '/profile') {
 			return 'profile';
+		}
+		if (path === '/settings') {
+			return 'settings';
 		}
 		return 'home';
 	}
@@ -203,8 +203,8 @@ export function App() {
 						<Route index element={<Home user={user} />} />
 						<Route path="/game" element={<Game />} />
 						<Route path="/leaderboard" element={<Leaderboard />} />
-						<Route path="/tournaments" element={<Tournaments user={user} />} />
 						<Route path="/profile" element={<Profile user={user} />} />
+						<Route path="/settings" element={<Settings user={user} onUserUpdate={(updatedUser) => setUser(updatedUser)} />} />
 						<Route path="/user/:username" element={<UserProfileRoute />} />
 						<Route path="*" element={<NotFound />} />
 						</Route>

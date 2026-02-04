@@ -14,7 +14,7 @@ interface TwoFactorVerifyProps {
 }
 
 //TODO change _user and _token to user and token after implementing 2fa verification logic
-function TwoFactorVerify({ user: _user, token: _token, onVerifySuccess, onCancel }: TwoFactorVerifyProps) {
+function TwoFactorVerify({ token, onVerifySuccess, onCancel }: TwoFactorVerifyProps) {
 	const [code, setCode] = useState('');
 	const [error, setError] = useState('');
 	const [loading, setLoading] = useState(false);
@@ -23,14 +23,32 @@ function TwoFactorVerify({ user: _user, token: _token, onVerifySuccess, onCancel
 		e.preventDefault();
 		setError('');
 		setLoading(true);
+		
+		try {
+            const response = await fetch('/api/auth/2fa/verify', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ code })
+            });
 
-		//TODO add 2fa verification logic
+            const data = await response.json();
 
-		//! delete later: DEV MODE:skip 2FA by clicking button
-		onVerifySuccess();
+            if (response.ok && data.success) {
+                onVerifySuccess();
+            } else {
+                setError(data.error || 'Invalid verification code');
+            }
+        } catch (err) {
+            setError('Network error. Please try again.');
+            console.error('2FA verification error:', err);
+        } finally {
+            setLoading(false);
+        }
 
-		setLoading(false);
-	};
+    };
 
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -57,9 +75,8 @@ function TwoFactorVerify({ user: _user, token: _token, onVerifySuccess, onCancel
 
 					<button
 						type="submit"
-						//! add back in later: disabled={loading || code.length !== 6}
-						disabled={loading}
-						className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white p-3 rounded-lg hover:from-blue-500 hover:to-blue-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium shadow-lg shadow-blue-500/25"
+						disabled={loading || code.length !== 6}
+						className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 					>
 						{loading ? 'Verifying...' : 'Verify Code'}
 					</button>
@@ -81,11 +98,11 @@ function TwoFactorVerify({ user: _user, token: _token, onVerifySuccess, onCancel
 				</div>
 
 				{/* Testing Hint */}
-				<div className="mt-4 pt-4 border-t border-white/10">
-					<p className="text-xs text-white/40 text-center">
+				{/* <div className="mt-4 pt-4 border-t border-gray-200">
+					<p className="text-xs text-gray-400 text-center">
 						DEV MODE: Click button to skip 2FA (disabled code input for now)
 					</p>
-				</div>
+				</div> */}
 			</div>
 		</div>
 	);
