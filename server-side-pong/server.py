@@ -1,6 +1,7 @@
 import asyncio
 import json
 import random as rand
+import sys
 from time import time
 from websockets import ServerConnection
 from websockets.asyncio.server import serve
@@ -127,4 +128,8 @@ async def main(ip: str, port: int):
         await server.serve_forever()
 
 if __name__ == "__main__":
-    asyncio.run(main(IP, PORT))
+    try:
+        asyncio.run(main(IP, PORT))
+    except KeyboardInterrupt:
+        print("\nGame server interrupted, exiting...", file=sys.stderr)
+        exit(0)
