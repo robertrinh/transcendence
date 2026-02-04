@@ -94,7 +94,6 @@ class GameInstance:
             broadcast(self.players, json.dumps(message))
             sec_passed += sec_pause
             await asyncio.sleep(sec_pause)
-        print("Lobby is full")
         if not self.lobby_full():
             message = {'type': 'ERROR', 'message': 'Lobby timed out'}
             broadcast(self.players, json.dumps(message))
@@ -296,20 +295,6 @@ def update(game: GameInstance):
     handle_score(game)
 
 
-def print_game(game: GameInstance):
-    if len(game.p2_input) == 0:
-        return
-    print(
-        f"p1\n"
-        f"x:{game.p1_paddle.shape.x} y:{game.p1_paddle.shape.y}\n"
-        f"p1_input:{game.p1_input}"
-
-        f"p2\n"
-        f"x:{game.p2_paddle.shape.x} y:{game.p2_paddle.shape.y}\n"
-        f"p2_input:{game.p2_input}"
-        )
-
-
 def game_loop(game: GameInstance):
     game_state = {
         'type': 'STATE',
@@ -329,7 +314,6 @@ def game_loop(game: GameInstance):
         }
     }
     update(game)
-    print_game(game)
     return game_state
 
 

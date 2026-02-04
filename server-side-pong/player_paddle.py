@@ -17,7 +17,6 @@ class PlayerPaddle:
         self.shape.y = new_y
 
     def move_down(self, arena_height: int):
-        print(self.shape)
         new_y = self.shape.y + self.y_vector
         if (new_y + self.shape.height) > arena_height:
             new_y = arena_height - self.shape.height

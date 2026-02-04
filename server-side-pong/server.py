@@ -45,9 +45,6 @@ def find_game_instance_by_connection(
 
 async def process_message(
         message_type: str, message_content, websocket: ServerConnection):
-    print(
-        f"message_type:{message_type}\nmessage_content:{message_content}\n"
-        f"websocket:{websocket}")
     if message_type == 'REQ_LOBBY':
         game_instance = add_game_instance()
         lobby_id = game_instance.lobby_id
@@ -86,17 +83,13 @@ async def process_message(
     match message_type:
         case 'MOVE_DOWN':
             if websocket == lobby.players[0]:
-                print("Player 1 wants to move down")
                 lobby.p1_input.append(['DOWN', message_content['ts']])
             else:
-                print("Player 2 wants to move down")
                 lobby.p2_input.append(['DOWN', message_content['ts']])
         case 'MOVE_UP':
             if websocket == lobby.players[0]:
-                print("Player 1 wants to move up")
                 lobby.p1_input.append(['UP', message_content['ts']])
             else:
-                print("Player 2 wants to move up")
                 lobby.p2_input.append(['UP', message_content['ts']])
         case 'WHOAMI':
             if websocket == lobby.players[0]:
