@@ -1,9 +1,9 @@
 import asyncio
 import json
 import random as rand
-import pygame
 from websockets import ServerConnection, broadcast
-from ball import Ball, Vector2
+from ball import Ball
+from lib import Vector2, Rect
 from player_paddle import PlayerPaddle
 
 # game dimensions
@@ -53,14 +53,12 @@ class GameInstance:
         self.ball.set_start(ARENA_HEIGHT, ARENA_WIDTH, random_ball_vec())
         self.p1_paddle = PlayerPaddle(
             PADDLE_SPEED_UNITS_S,
-            pygame.Rect(0, 0, BALL_SIZE, BALL_SIZE * 4),
-            pygame.Color(55, 100, 40)
-            )
+            Rect(0, 0, BALL_SIZE, BALL_SIZE * 4)
+        )
         self.p2_paddle = PlayerPaddle(
             PADDLE_SPEED_UNITS_S,
-            pygame.Rect(ARENA_WIDTH-(BALL_SIZE), 0, BALL_SIZE, BALL_SIZE * 4),
-            pygame.Color(55, 100, 40)
-            )
+            Rect(ARENA_WIDTH-(BALL_SIZE), 0, BALL_SIZE, BALL_SIZE * 4)
+        )
         self.set_game_start()
         self.players = list()
 
@@ -130,18 +128,20 @@ def handle_paddle_collision(
         old_ball_pos: Point, new_ball_pos: Point,
         player: PlayerPaddle, ball: Ball) -> None | tuple[Point, str]:
     intersect = None
+    shape = player.shape
+    bottomleft = [shape.x, shape.y + shape.height]
+    bottomright = [shape.x + shape.width, shape.y + shape.height]
+    topright = [shape.x + shape.width, shape.y]
+    topleft = [shape.x, shape.y]
     # moving left
     if ball.dir_vect.x < 0:
         intersect = line_line_intersect(
             old_ball_pos,
             new_ball_pos,
+            Point(topright[0] + ball.radius_px, topright[1] - ball.radius_px),
             Point(
-                player.shape.topright[0] + ball.radius_px,
-                player.shape.topright[1] - ball.radius_px
-                ),
-            Point(
-                player.shape.bottomright[0] + ball.radius_px,
-                player.shape.bottomright[1] + ball.radius_px
+                bottomright[0] + ball.radius_px,
+                bottomright[1] + ball.radius_px
             ),
             "right"
         )
@@ -149,13 +149,10 @@ def handle_paddle_collision(
         intersect = line_line_intersect(
             old_ball_pos,
             new_ball_pos,
+            Point(topleft[0] - ball.radius_px, topleft[1] - ball.radius_px),
             Point(
-                player.shape.topleft[0] - ball.radius_px,
-                player.shape.topleft[1] - ball.radius_px
-                ),
-            Point(
-                player.shape.bottomleft[0] - ball.radius_px,
-                player.shape.bottomleft[1] + ball.radius_px
+                bottomleft[0] - ball.radius_px,
+                bottomleft[1] + ball.radius_px
             ),
             "left"
         )
@@ -165,12 +162,12 @@ def handle_paddle_collision(
                 old_ball_pos,
                 new_ball_pos,
                 Point(
-                    player.shape.bottomleft[0] - ball.radius_px,
-                    player.shape.bottomleft[1] + ball.radius_px
-                    ),
+                    bottomleft[0] - ball.radius_px,
+                    bottomleft[1] + ball.radius_px
+                ),
                 Point(
-                    player.shape.bottomright[0] + ball.radius_px,
-                    player.shape.bottomright[1] + ball.radius_px
+                    bottomright[0] + ball.radius_px,
+                    bottomright[1] + ball.radius_px
                 ),
                 "bottom"
             )
@@ -179,12 +176,12 @@ def handle_paddle_collision(
                     old_ball_pos,
                     new_ball_pos,
                     Point(
-                        player.shape.topleft[0] - ball.radius_px,
-                        player.shape.topleft[1] - ball.radius_px
-                        ),
+                        topleft[0] - ball.radius_px,
+                        topleft[1] - ball.radius_px
+                    ),
                     Point(
-                        player.shape.topright[0] + ball.radius_px,
-                        player.shape.topright[1] - ball.radius_px
+                        topright[0] + ball.radius_px,
+                        topright[1] - ball.radius_px
                     ),
                     "top"
                 )
@@ -236,10 +233,12 @@ def handle_score(game: GameInstance):
 
 
 def move_ball(ball: Ball, player_one: PlayerPaddle, player_two: PlayerPaddle):
-    old_pos = Point(ball.shape.centerx, ball.shape.centery)
+    old_pos = Point(
+        ball.shape.x + ball.radius_px,
+        ball.shape.y + ball.radius_px)
     new_pos = Point(
-        ball.shape.centerx + (ball.dir_vect.x * ball.movement_speed),
-        ball.shape.centery + (ball.dir_vect.y * ball.movement_speed))
+        old_pos.x + (ball.dir_vect.x * ball.movement_speed),
+        old_pos.y + (ball.dir_vect.y * ball.movement_speed))
     ball.shape.x = new_pos.x - ball.radius_px
     ball.shape.y = new_pos.y - ball.radius_px
     # Paddle collision
