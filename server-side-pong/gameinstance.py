@@ -1,6 +1,7 @@
 import asyncio
 import json
 import random as rand
+import requests
 from websockets import ServerConnection, broadcast
 from ball import Ball
 from lib import Vector2, Rect
@@ -13,6 +14,7 @@ ARENA_HEIGHT = 768
 TICK = 1000 / 66
 BALL_RADIUS = 15
 BALL_SIZE = BALL_RADIUS * 2
+ROUND_MAX = 5
 
 # movement
 BALL_SPEED_UNITS_S = 500  # The ball speed in units per second
@@ -45,6 +47,11 @@ class GameInstance:
 
     ball: Ball
 
+    # database information, should receive this on creation
+    db_game_id: int
+    db_p1_id: int
+    db_p2_id: int
+
     def __init__(self, lobby_id: str):
         self.lobby_id = lobby_id
         conv_ball_speed = (BALL_SPEED_UNITS_S / 1000) * TICK
@@ -61,6 +68,9 @@ class GameInstance:
         )
         self.set_game_start()
         self.players = list()
+        self.db_game_id = 0
+        self.db_p1_id = 0
+        self.db_p2_id = 0
 
     def set_game_start(self):
         # player one
@@ -230,6 +240,23 @@ def handle_score(game: GameInstance):
         return
     message = {'type': 'SCORE', 'scored_by': scored_by}
     broadcast(game.players, json.dumps(message))
+    # game is finished, we need to upload the results to the database
+    if game.p1_score == ROUND_MAX or game.p2_score == ROUND_MAX:
+        game.game_running = False
+        print(f"lobby {game.lobby_id}: game finished, uploading results...")
+        try:
+            response = requests.put(
+                f"http://backend/api/games/{game.db_game_id}",
+                json={
+                    "score_player1": game.p1_score,
+                    "score_player2": game.p2_score
+                }
+            )
+            print(
+                f"lobby {game.lobby_id}: upload response status code "
+                f"{response.status_code}")
+        except requests.ConnectionError as e:
+            print(f"lobby {game.lobby_id}: {repr(e)}")
     game.ball.set_start(ARENA_HEIGHT, ARENA_WIDTH, random_ball_vec())
 
 
