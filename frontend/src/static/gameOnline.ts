@@ -1,9 +1,10 @@
 import { Ball } from './ball'
 import { playerOne, playerTwo, ball, clientTick, drawPlayerScores } from './lib'
+import websocket from './websocket'
 
 export async function gameOnlineLobby(canvas: HTMLCanvasElement, 
         ctx: CanvasRenderingContext2D, drawCanvas: HTMLCanvasElement,
-        drawCtx: CanvasRenderingContext2D, socket: WebSocket) {
+        drawCtx: CanvasRenderingContext2D) {
   const serverTick = 1000 / 66
 
     let p1Score = 0
@@ -50,13 +51,13 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
         if (playerOne.paddle.downPressed) {
             const moveObj = {type: "MOVE_DOWN", ts: timestamp}
             playerOne.paddle.moveDown()
-            gameSocket.send(JSON.stringify(moveObj))
+            websocket.send(JSON.stringify(moveObj))
             pendingMoves.push(moveObj)
         }
         if (playerOne.paddle.upPressed) {
             const moveObj = {type: "MOVE_UP", ts: timestamp}
             playerOne.paddle.moveUp()
-            gameSocket.send(JSON.stringify(moveObj))
+            websocket.send(JSON.stringify(moveObj))
             pendingMoves.push(moveObj)
         }
     }
@@ -220,7 +221,7 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
                     playerTwo.paddle.color = p1Color
                 }
                 console.log(`You are player ${playerID}`)
-                gameSocket.send(JSON.stringify({type: 'READY'}))
+                websocket.send(JSON.stringify({type: 'READY'}))
                 break
             case "SCORE":
                 scoreReceived = true
@@ -238,29 +239,8 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
         }
     }
 
-    function gameSockOnOpen() {
-        gameSocket.send(JSON.stringify({type: 'WHOAMI'}))
-    }
-
-    let gameSocket: WebSocket
-
-    socket.onmessage = function(ev) {
-        const JSONObject = JSON.parse(ev.data)
-        console.log(`Message received: ${JSONObject}`)
-        console.log(JSONObject.type)
-        switch (JSONObject.type) {
-            case "REDIRECT":
-                socket.close()
-                const serverHostname = import.meta.env.VITE_SERVER_HOSTNAME as string
-                console.log(`Creating a new socket to connect ${serverHostname}:${JSONObject.port}`)
-                gameSocket = new WebSocket(`ws://${serverHostname}:${JSONObject.port}`)
-                gameSocket.onmessage = gameSockOnMessage
-                gameSocket.onopen = gameSockOnOpen
-                break
-            default:
-      }
-    }
-    
+    websocket.onmessage = gameSockOnMessage
+    websocket.send(JSON.stringify({type: 'WHOAMI'}))
     canvas.addEventListener("keydown", handleKeyDown)
     canvas.addEventListener("keyup", handleKeyUp)
     ball.x = canvas.width / 2

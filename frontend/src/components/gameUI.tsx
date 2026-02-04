@@ -1,10 +1,9 @@
 import Button from "./button";
 import { useEffect } from "react";
+import websocket from "../static/websocket";
 
 interface GameUI {
     onGameModeSelect: any
-    onConnectToServer: any
-    socket: WebSocket | null
 }
 
 function updateDisplayById(id: string, displayStyle: string) {
@@ -49,7 +48,7 @@ function resizeGameUI(gameUI: HTMLElement) {
         gameUI.style.height = String(gameUI.offsetWidth * widthRatio) + "px"
 }
 
-export default function GameUI({onGameModeSelect, onConnectToServer, socket}: GameUI) {
+export default function GameUI({onGameModeSelect}: GameUI) {
     useEffect(() => {
         const gameUI = document.getElementById("game-ui")
         if (gameUI === null) {
@@ -131,7 +130,7 @@ export default function GameUI({onGameModeSelect, onConnectToServer, socket}: Ga
                     }
                     buttonName='host lobby'
                     onClick={() => {
-                        onConnectToServer(JSON.stringify({type: "REQ_LOBBY"}))
+                        websocket.send(JSON.stringify({type: "REQ_LOBBY"}))
                         const menuState = new Map<string, string>([
                             ['req-lobby-id', 'block'],
                             ['btn-copy-lobby', 'block'],
@@ -191,12 +190,9 @@ export default function GameUI({onGameModeSelect, onConnectToServer, socket}: Ga
                             alert(e)
                             return
                         }
-                        if (socket === null) {
-                            throw Error("socket cannot be null")
-                        }
-                        socket.send(JSON.stringify({type: "JOIN_LOBBY", lobby_id: lobbyID}))
+                        websocket.send(JSON.stringify({type: "JOIN_LOBBY", lobby_id: lobbyID}))
                         updateDisplayById("game-ui", "none")
-                        onGameModeSelect('online', socket, lobbyID)
+                        onGameModeSelect('online')
                     }}
                 >
                 </Button>
@@ -218,9 +214,9 @@ export default function GameUI({onGameModeSelect, onConnectToServer, socket}: Ga
                             alert(e)
                             return
                         }
-                        onConnectToServer(JSON.stringify({type: "JOIN_LOBBY", lobby_id: lobbyID}))
+                        websocket.send(JSON.stringify({type: "JOIN_LOBBY", lobby_id: lobbyID}))
                         updateDisplayById("game-ui", "none")
-                        onGameModeSelect('online', socket, lobbyID)
+                        onGameModeSelect('online')
                     }}
                 >
                 </Button>

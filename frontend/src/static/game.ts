@@ -22,7 +22,7 @@ class GameState {
 
 export const gameInstance = new GameState
 
-export default async function gameInit (gameMode: string, socket?: WebSocket) {
+export default async function gameInit (gameMode: string) {
     let canvas = document.getElementById('game-canvas') as HTMLCanvasElement | null
     if (canvas === null) {
         canvas = document.createElement("canvas")
@@ -45,10 +45,12 @@ export default async function gameInit (gameMode: string, socket?: WebSocket) {
     assertIsNotNull(main)
     main.insertAdjacentElement('afterend', canvas)
     console.log(`GAMING MODE: ${gameMode}`)
-    if (socket === undefined) {
-        await gameOfflineLobby(gameMode, canvas, ctx, drawCanvas, drawCtx)
-    }
-    else {
-        await gameOnlineLobby(canvas, ctx, drawCanvas, drawCtx, socket)
+    switch (gameMode) {
+        case "singleplayer":
+        case "multiplayer":
+            await gameOfflineLobby(gameMode, canvas, ctx, drawCanvas, drawCtx)
+            break
+        case "online":
+            await gameOnlineLobby(canvas, ctx, drawCanvas, drawCtx)
     }
 }
