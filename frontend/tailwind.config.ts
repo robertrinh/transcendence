@@ -19,6 +19,10 @@ export default {
                 '0%': { opacity: '0', transform: 'translate(-50%, -10px)' },
                 '100%': { opacity: '1', transform: 'translate(-50%, 0)' },
             },
+            'gradient-shift': { // Add this
+                '0%, 100%': { backgroundPosition: '0% 50%' },
+                '50%': { backgroundPosition: '100% 50%' },
+            },
         },
     },
   },

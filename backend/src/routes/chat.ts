@@ -7,14 +7,14 @@ import { db } from '../databaseInit.js'
 const sseConnections = new Map<string, any>();
 const chatMessages: any[] = [];
 
-// CHANGED: SSE endpoint - get token from query parameter
+//  SSE endpoint - get token from query parameter
 export default async function chatRoutes (
     	fastify: FastifyInstance,
     	options: FastifyPluginOptions
     ) {
     fastify.get('/stream', async (request, reply) => {
     try {
-        // CHANGED: Get token from query parameter (EventSource limitation)
+        //  Get token from query parameter (EventSource limitation)
         const token = (request.query as any).token;
         
         if (!token) {
@@ -105,10 +105,10 @@ export default async function chatRoutes (
     }
 });
 
-// CHANGED: Join chat endpoint with JWT verification
+//  Join chat endpoint with JWT verification
 fastify.post('/join', async (request, reply) => {
     try {
-        // CHANGED: Get token from Authorization header
+        //  Get token from Authorization header
         const authHeader = request.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return reply.status(401).send({ error: 'No token provided' });
@@ -149,10 +149,10 @@ fastify.post('/join', async (request, reply) => {
     }
 });
 
-// CHANGED: Send message endpoint with JWT verification
+//  Send message endpoint with JWT verification
 fastify.post('/send', async (request, reply) => {
     try {
-        // CHANGED: Get token from Authorization header
+        //  Get token from Authorization header
         const authHeader = request.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return reply.status(401).send({ error: 'No token provided' });

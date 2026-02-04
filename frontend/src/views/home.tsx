@@ -63,9 +63,6 @@ const Home: React.FC<HomeProps> = ({ user }) => {
 						Browse Tournaments
 					</button>
 				</div>
-
-				{/* Put in the right place later! */}
-				{user && <TwoFactorSetup />}
 			</div>
 		</div>
 	);
