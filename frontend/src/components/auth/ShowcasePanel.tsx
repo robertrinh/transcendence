@@ -219,7 +219,7 @@ export const MarqueeRow: React.FC<MarqueeRowProps> = ({
 				{repeatedItems.map((item, i) => (
 					<div 
 						key={i} 
-						className="flex-shrink-0 px-6 py-3 mx-2 bg-black/70 backdrop-blur-sm border border-white/10 rounded-lg text-white/90 font-medium whitespace-nowrap"
+						className="flex-shrink-0 px-6 py-3 mx-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-lg text-white/90 font-medium whitespace-nowrap"
 					>
 						{item}
 					</div>
