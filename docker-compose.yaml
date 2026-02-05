@@ -33,6 +33,19 @@ services:
     networks:
       - transcendence
 
+  gameserver:
+    container_name: gameserver
+    build:
+      context: ./server-side-pong
+      dockerfile: Dockerfile.dev
+    ports:
+      - 8081:8081
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: always
+    networks:
+      - transcendence
+
 volumes:
   database:
     name: transcendence_database
