@@ -119,7 +119,7 @@ export const GameOfLifeBackground: React.FC = () => {
 		if (!grid.length) 
 			return;
 
-		ctx.fillStyle = '#0a0a0f'; //* background colour
+		ctx.fillStyle = 'rgba(0, 0, 0, 0.18)'; //* background colour
 		ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
 		const rows = grid.length;
