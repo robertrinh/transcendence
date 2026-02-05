@@ -1,6 +1,6 @@
 NAME = ft_transcendence
 
-all: dev-d
+all: dev
 
 #make dev/dev-d starts it with vite server which gives us hot reload
 dev:
@@ -26,7 +26,6 @@ down:
 clean:
 	@docker-compose -f docker-compose.dev.yaml down -v --rmi all
 	@docker-compose -f docker-compose.yaml down -v --rmi all
-	@rm -rf frontend/node_modules
 
 re: clean all
 
