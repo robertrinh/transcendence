@@ -42,8 +42,10 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
 				<GameOfLifeBackground />
 			</div>
 
+			{/* Dark overlay from game of life for text readability */}
 			<div className="fixed inset-0 z-[1] bg-black/40" />
 
+			{/* Ping pong icon with drop shadow from game of life*/}
 			<div className="fixed top-6 left-6 z-50">
 				<img 
 					src="/public/ping-pong-icon.png" 
@@ -57,7 +59,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
 
 			<div className="relative z-30 min-h-screen flex flex-col items-center pt-20 px-4">
 				<div 
-					className="w-full max-w-md bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl"
+					className="w-full max-w-md bg-black/30 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl"
 				>
 					<div className="mb-6 text-center">
 						<h1 className="text-2xl font-bold text-white">Transcendence</h1>
