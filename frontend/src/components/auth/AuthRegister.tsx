@@ -89,70 +89,85 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
         return (
             <div className="space-y-4">
                 {success ? (
-                    <div className="text-center">
-                        <div className="text-green-600 font-semibold mb-2">Registration successful!</div>
-                        <p className="text-sm text-gray-600">Switching to login...</p>
+                    <div className="text-center py-4">
+                        <div className="text-green-400 font-semibold mb-2">Registration successful!</div>
+                        <p className="text-sm text-white/60">Switching to login...</p>
                     </div>
                 ) : (
                     <>
-                        <form onSubmit={handleSubmit} className="space-y-3">
-                            <input
-                                type="text"
-                                placeholder="Username"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                                required
-                                minLength={3}
-                            />
-                            <input
-                                type="email"
-                                placeholder="Email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                                required
-                            />
-                            <input
-                                type="password"
-                                placeholder="Password (min 6 characters)"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                                required
-                                minLength={6}
-                            />
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-white/70 text-sm font-medium mb-1.5">
+                                    Username
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder="Choose a username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                                    required
+                                    minLength={3}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-white/70 text-sm font-medium mb-1.5">
+                                    Email
+                                </label>
+                                <input
+                                    type="email"
+                                    placeholder="Enter your email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-white/70 text-sm font-medium mb-1.5">
+                                    Password
+                                </label>
+                                <input
+                                    type="password"
+                                    placeholder="Min 6 characters"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                                    required
+                                    minLength={6}
+                                />
+                            </div>
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600 disabled:opacity-50 transition-colors"
+                                className="w-full bg-gradient-to-r from-green-600 to-green-500 text-white p-3 rounded-lg hover:from-green-500 hover:to-green-400 disabled:opacity-50 transition-all font-medium shadow-lg shadow-green-500/25"
                             >
                                 {loading ? 'Creating account...' : 'Register'}
                             </button>
                         </form>
 
                         {error && (
-                            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">
+                            <div className="bg-red-500/20 border border-red-500/30 text-red-300 px-4 py-3 rounded-lg text-sm">
                                 {error}
                             </div>
                         )}
 
-                        <p className="text-center text-sm text-gray-600">
+                        <p className="text-center text-sm text-white/60">
                             Already have an account?{' '}
                             <button
                                 onClick={onSwitchToLogin}
-                                className="text-blue-500 hover:text-blue-600 hover:underline"
+                                className="text-blue-400 hover:text-blue-300 hover:underline transition-colors"
                             >
                                 Login here
                             </button>
                         </p>
 
-                        <p className="text-center text-xs text-gray-500 mt-2">
+                        <p className="text-center text-xs text-white/40 mt-2">
                             By registering, you agree to our{' '}
                             <button
                                 type="button"
                                 onClick={() => setShowPrivacyModal(true)}
-                                className="text-blue-500 hover:text-blue-600 hover:underline"
+                                className="text-blue-400 hover:text-blue-300 hover:underline transition-colors"
                             >
                                 Privacy Policy
                             </button>
