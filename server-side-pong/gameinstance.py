@@ -246,7 +246,7 @@ def handle_score(game: GameInstance):
         print(f"lobby {game.lobby_id}: game finished, uploading results...")
         try:
             response = requests.put(
-                f"http://backend/api/games/{game.db_game_id}",
+                f"http://backend:3000/api/games/{game.db_game_id}",
                 json={
                     "score_player1": game.p1_score,
                     "score_player2": game.p2_score

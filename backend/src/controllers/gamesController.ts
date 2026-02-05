@@ -42,6 +42,8 @@ export const gamesController = {
 		const { id } = req.params as { id: number }
 		const {score_player1, score_player2 } = req.body as { score_player1: number, score_player2: number };
 		const result = gamesService.updateGame(id, score_player1, score_player2);
+		if (result.changes === 0)
+			throw new ApiError(400, "run query didnt work")
 		return {
 			success: true,
 			message: 'Game updated'
