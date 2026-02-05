@@ -1,5 +1,14 @@
-import React from 'react';
-import ShowcasePanel from './ShowcasePanel';
+import React, { useState, useEffect } from 'react';
+import { GameOfLifeBackground, MarqueeRow } from './ShowcasePanel';
+
+const LOGO_COLORS = [
+	'#00FFFF', //* Cyan
+	'#FF00FF', //* Magenta
+	'#00FF00', //* Lime
+	'#FF6B6B', //* Coral
+	'#9D4EDD', //* Purple
+	'#FFE66D', //* Yellow
+];
 
 interface User {
 	id: string;
@@ -13,13 +22,30 @@ interface AuthLayoutProps {
 }
 
 const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
+	const [colorIndex, setColorIndex] = useState(0);
+	
+	//* Cycle through colors
+	useEffect(() => {
+		const interval = setInterval(() => {
+			setColorIndex((prev) => (prev + 1) % LOGO_COLORS.length);
+		}, 2000); //* Change color every 2 seconds
+		return () => clearInterval(interval);
+	}, []);
+
+	const row1 = ['Local Play', 'Tournament Mode', 'Online Functionalities', 'Leaderboards', 'AI Opponents'];
+	const row2 = ['Customizable Avatars', 'Match History', 'Friend System', '2FA Security', 'GDPR Compliance'];
+	const row3 = ['Classic Pong', 'Pls pass us', 'Fast Matches', 'Chat', 'Anonymous Mode'];
+
 	return (
 		<div className="min-h-screen flex bg-white relative">
 			<div className="absolute top-6 left-6 z-20">
 				<img 
-					src="/public/ping-pong-icon-black.png" 
+					src="/public/ping-pong-icon.png" 
 					alt="Pong Logo" 
-					className="h-16 w-auto object-contain"
+					className="h-16 w-auto object-contain transition-[filter] duration-700"
+					style={{ 
+						filter: `brightness(0) invert(1) drop-shadow(0 0 12px ${LOGO_COLORS[colorIndex]}) drop-shadow(0 0 4px ${LOGO_COLORS[colorIndex]})` 
+					}}
 				/>
 			</div>
 
