@@ -19,7 +19,7 @@
 		"noUnusedParameters": true,
 		"noFallthroughCasesInSwitch": true
 	},
-	"include": ["src/**/*"],
+	"include": ["src/**/*", "vite-end.d.ts"],
 	//not really needed with vite but good for clarity
   	"exclude": ["node_modules", "dist"]
 }

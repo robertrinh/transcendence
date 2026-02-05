@@ -1,25 +1,33 @@
-import { Ball } from './ball.js'
-import { PlayerPaddle } from './playerPaddle.js'
+import { Ball } from './ball'
+import { playerOne, playerTwo, ball, clientTick, drawPlayerScores } from './lib'
+import websocket from './websocket'
 
-export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, socket: WebSocket) {
-    const p1Color = "#5885A2"
-    const p2Color = "#B8383B"
-    const ballRadius = 15
-    const ballSize = ballRadius * 2
+interface MoveTS {
+    type: string,
+    timestamp: number
+}
+
+export async function gameOnlineLobby(canvas: HTMLCanvasElement, 
+        ctx: CanvasRenderingContext2D, drawCanvas: HTMLCanvasElement,
+        drawCtx: CanvasRenderingContext2D) {
+  const serverTick = 1000 / 66
+
+    let p1Score = 0
+    let p2Score = 0
 
     function handleKeyDown(key: KeyboardEvent) {
         switch (key.key) {
             case "ArrowDown":
-                playerOne.downPressed = true
+                playerOne.paddle.downPressed = true
                 break
             case "ArrowUp":
-                playerOne.upPressed = true
+                playerOne.paddle.upPressed = true
                 break
             case "s":
-                playerOne.downPressed = true
+                playerOne.paddle.downPressed = true
                 break
             case "w":
-                playerOne.upPressed = true
+                playerOne.paddle.upPressed = true
                 break
         }
         key.preventDefault()
@@ -28,33 +36,33 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
     function handleKeyUp(key: KeyboardEvent) {
         switch (key.key) {
             case "ArrowDown":
-                playerOne.downPressed = false
+                playerOne.paddle.downPressed = false
                 break
             case "ArrowUp":
-                playerOne.upPressed = false
+                playerOne.paddle.upPressed = false
                 break
             case "s":
-                playerOne.downPressed = false
+                playerOne.paddle.downPressed = false
                 break
             case "w":
-                playerOne.upPressed = false
+                playerOne.paddle.upPressed = false
                 break
         }
         key.preventDefault()
     }
 
-    function processMovement(deltaTimeSeconds: number) {
+    function processMovement() {
         const timestamp = +new Date()
-        if (playerOne.downPressed) {
-            const moveObj = {type: "MOVE_DOWN", ts: timestamp}
-            playerOne.moveDown(canvas, deltaTimeSeconds)
-            gameSocket.send(JSON.stringify(moveObj))
+        if (playerOne.paddle.downPressed) {
+            const moveObj = {type: "MOVE_DOWN", timestamp: timestamp} as MoveTS
+            playerOne.paddle.moveDown()
+            websocket.send(JSON.stringify(moveObj))
             pendingMoves.push(moveObj)
         }
-        if (playerOne.upPressed) {
-            const moveObj = {type: "MOVE_UP", ts: timestamp}
-            playerOne.moveUp(canvas, deltaTimeSeconds)
-            gameSocket.send(JSON.stringify(moveObj))
+        if (playerOne.paddle.upPressed) {
+            const moveObj = {type: "MOVE_UP", timestamp: timestamp} as MoveTS
+            playerOne.paddle.moveUp()
+            websocket.send(JSON.stringify(moveObj))
             pendingMoves.push(moveObj)
         }
     }
@@ -73,50 +81,60 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
         return new Point((a.x - b.x), (a.y - b.y))
     }
 
-    const serverTick = 1000 / 10
-    const clientTick = 1000 / 60
-
     function moveBall(ball: Ball): void {
-        if (interpVelocity === undefined) {
+        if (interpVelocityBall === undefined) {
             return
         }
         const updateDelta = clientTick * (1 + (deltaTimeMS / 1000))
-        ball.x += interpVelocity.x * updateDelta
-        ball.y += interpVelocity.y * updateDelta
+        ball.appendPos(new Point(ball.x, ball.y))
+        ball.x += interpVelocityBall.x * updateDelta
+        ball.y += interpVelocityBall.y * updateDelta
     }
 
-    let deltaTimeMS: number
-    let fpsInterval: number, startTime, now, then: number
-
-    function startAnimate(fps: number) {
-        fpsInterval = 1000 / fps
-        then = window.performance.now()
-        startTime = then
-        draw(startTime)
-    }
-
-    function draw(newTime: DOMHighResTimeStamp) {
-        requestAnimationFrame(draw)
-        now = newTime
-        deltaTimeMS = now - then
-        if (deltaTimeMS > fpsInterval) {
-            processMovement(1 + (deltaTimeMS / 1000))
-            then = now - (deltaTimeMS % fpsInterval)
-            ctx.clearRect(0, 0, canvas.width, canvas.height)
-            moveBall(ball)
-            ball.draw(ctx)
-            playerOne.draw(ctx)
-            playerTwo.draw(ctx)
+    function interpEnemy() {
+        if (interpVelocityEnemy === undefined) {
+            return
         }
+        const updateDelta = clientTick * (1 + (deltaTimeMS / 1000))
+        playerTwo.paddle.y += interpVelocityEnemy.y * updateDelta
     }
 
-    let interpVelocity: Point
+    let deltaTimeMS: number, now: number, then: number
+
+	/**
+	 * Update the world state
+	 */
+	function update() {
+		now = performance.now()
+		if (then === undefined) {
+			then = now
+		}
+        deltaTimeMS = now - then
+        if (deltaTimeMS > clientTick) {
+            processMovement()
+            interpEnemy()
+            then = now - (deltaTimeMS % clientTick)
+            moveBall(ball)
+        }
+	}
+
+    function draw() {
+        requestAnimationFrame(draw)
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+		drawCtx.clearRect(0, 0, canvas.width, canvas.height)
+        drawCtx.fillStyle = "white"
+        drawCtx.fillRect(0, 0, canvas.width, canvas.height)
+		ball.draw(drawCtx)
+		playerOne.paddle.draw(drawCtx)
+		playerTwo.paddle.draw(drawCtx)
+		drawPlayerScores(canvas, drawCtx, 48, "#36454f", "sans-serif",
+		p2Score, p1Score)
+        ctx.drawImage(drawCanvas, 0, 0)
+    }
+
+    let interpVelocityBall: Point
+    let interpVelocityEnemy: Point
     let pendingMoves = new Array<MoveTS>()
-
-    interface MoveTS {
-        type: string,
-        ts: number
-    }
 
     function updatePendingMoves(lastServerTime: number) {
         let i = 0
@@ -125,15 +143,14 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
         }
         while (i < pendingMoves.length) {
             const movePair = pendingMoves[i]
-			console.log(`movePair.ts:${movePair.ts}`)
-            if (movePair.ts >= lastServerTime) {
+            if (movePair.timestamp >= lastServerTime) {
                 break
             }
             if (movePair.type === 'MOVE_UP') {
-                playerOne.moveUp(canvas, 1)
+                playerOne.paddle.moveUp()
             }
             else if (movePair.type === 'MOVE_DOWN') {
-                playerOne.moveDown(canvas, 1)
+                playerOne.paddle.moveDown()
             }
             i++
         }
@@ -141,6 +158,8 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
     }
 
     let playerID = 0 // playerID given by server
+    let scoreReceived = false
+    let scoreCounter = 0
 
     function gameSockOnMessage(event: MessageEvent) {
         const JSONObject = JSON.parse(event.data)
@@ -149,19 +168,39 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
         const ballServer = JSONObject.ball
         switch (JSONObject.type) {
             case "STATE":
-                interpVelocity = pointSubtract(new Point(ballServer.x, ballServer.y), new Point(ball.x, ball.y))
-                interpVelocity.x /= serverTick
-                interpVelocity.y /= serverTick
+                interpVelocityBall = pointSubtract(new Point(ballServer.x, ballServer.y), new Point(ball.x, ball.y))
+                interpVelocityBall.x /= serverTick
+                interpVelocityBall.y /= serverTick
+                if (scoreReceived) {
+                    scoreCounter++
+                }
+                if (scoreCounter === 2) {
+                    interpVelocityBall.x = 0
+                    interpVelocityBall.y = 0
+                    ball.x = ballServer.x
+                    ball.y = ballServer.y
+                    scoreCounter = 0
+                    scoreReceived = false
+                }
                 if (playerID === 1) {
-                    playerOne.x = p1Server.x
-                    playerOne.y = p1Server.y
+                    interpVelocityEnemy = pointSubtract(
+                        new Point(p2Server.x, p2Server.y),
+                        new Point(playerTwo.paddle.x, playerTwo.paddle.y)
+                    )
+                    playerOne.paddle.x = p1Server.x
+                    playerOne.paddle.y = p1Server.y
                     updatePendingMoves(p1Server.last_ts)
                 }
                 else {
-                    playerOne.x = p2Server.x
-                    playerOne.y = p2Server.y
+                    interpVelocityEnemy = pointSubtract(
+                        new Point(p1Server.x, p1Server.y),
+                        new Point(playerTwo.paddle.x, playerTwo.paddle.y)
+                    )
+                    playerOne.paddle.x = p2Server.x
+                    playerOne.paddle.y = p2Server.y
                     updatePendingMoves(p2Server.last_ts)
                 }
+                interpVelocityEnemy.y /= serverTick
                 break
             case "LOBBY_WAIT":
                 console.log("Waiting for other players to connect...")
@@ -170,46 +209,39 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement, ctx: CanvasRend
                 playerID = JSONObject.player_id as number
                 // move paddle to the right side
                 if (playerID === 2) {
-                    playerOne.x = canvas.width-playerOne.width
-                    playerOne.y = 0
-                    playerTwo.x = 0
-                    playerTwo.y = 0
+                    const p1Color = playerOne.paddle.color
+                    playerOne.paddle.x = canvas.width-playerOne.paddle.width
+                    playerOne.paddle.y = 0
+                    playerOne.paddle.color = playerTwo.paddle.color
+                    playerTwo.paddle.x = 0
+                    playerTwo.paddle.y = 0
+                    playerTwo.paddle.color = p1Color
                 }
                 console.log(`You are player ${playerID}`)
-                gameSocket.send(JSON.stringify({type: 'READY'}))
+                websocket.send(JSON.stringify({type: 'READY'}))
+                break
+            case "SCORE":
+                scoreReceived = true
+                switch (JSONObject.scored_by) {
+                    case "p1":
+                        p1Score++
+                        break
+                    case "p2":
+                        p2Score++
+                        break
+                }
                 break
             default:
                 console.log(`Unrecognized message type: ${JSONObject.type}`)
         }
     }
 
-    function gameSockOnOpen() {
-        gameSocket.send(JSON.stringify({type: 'WHOAMI'}))
-    }
-
-    let gameSocket: WebSocket
-
-    socket.onmessage = function(ev) {
-        const JSONObject = JSON.parse(ev.data)
-        console.log(`Message received: ${JSONObject}`)
-        console.log(JSONObject.type)
-        switch (JSONObject.type) {
-            case "REDIRECT":
-                socket.close()
-                console.log(`Creating a new socket to connect ${JSONObject.ip}:${JSONObject.port}`)
-                gameSocket = new WebSocket(`ws://${JSONObject.ip}:${JSONObject.port}`)
-                gameSocket.onmessage = gameSockOnMessage
-                gameSocket.onopen = gameSockOnOpen
-                break
-            default:
-      }
-    }
-    
+    websocket.onmessage = gameSockOnMessage
+    websocket.send(JSON.stringify({type: 'WHOAMI'}))
     canvas.addEventListener("keydown", handleKeyDown)
     canvas.addEventListener("keyup", handleKeyUp)
-    const paddleMoveUnits = 30
-    const ball = new Ball(canvas.width / 2, canvas.height / 2, {x: 1, y: 1}, 15, 2, "#a31621", 0, 7.5)
-    const playerOne = new PlayerPaddle(0, 0, ballSize, ballSize * 4, paddleMoveUnits, p1Color)
-    const playerTwo = new PlayerPaddle(canvas.width - ballSize, 0, ballSize, ballSize * 4, paddleMoveUnits, p2Color) 
-    startAnimate(60)
+    ball.x = canvas.width / 2
+    ball.y = canvas.height / 2
+    requestAnimationFrame(draw)
+	setInterval(update, clientTick)
 }

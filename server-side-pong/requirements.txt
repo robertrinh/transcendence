@@ -1,3 +1,7 @@
 asyncio==4.0.0
-pygame==2.6.1
+certifi==2026.1.4
+charset-normalizer==3.4.4
+idna==3.11
+requests==2.32.5
+urllib3==2.6.3
 websockets==15.0.1

@@ -12,7 +12,7 @@ dev-d:
 
 #make real starts the nginx server, the one we will use for eval
 real:
-	@docker-compose -f docker-compose.yaml up --build -d
+	@docker-compose -f docker-compose.yaml up --build
 
 frontend:
 	@docker-compose -f docker-compose.dev.yaml up --build -d frontend

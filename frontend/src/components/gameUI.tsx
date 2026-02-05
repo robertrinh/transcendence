@@ -1,9 +1,9 @@
 import Button from "./button";
+import { useEffect } from "react";
+import websocket from "../static/websocket";
 
 interface GameUI {
     onGameModeSelect: any
-    onConnectToServer: any
-    socket: WebSocket | null
 }
 
 function updateDisplayById(id: string, displayStyle: string) {
@@ -42,9 +42,30 @@ function validateJoinLobby(lobbyID: string): string {
     return lobbyEle.value
 }
 
-export default function GameUI({onGameModeSelect, onConnectToServer, socket}: GameUI) {
+function resizeGameUI(gameUI: HTMLElement) {
+        const widthRatio = 0.75 // 4:3
+        gameUI.setAttribute("style", `height:${gameUI.offsetWidth * widthRatio}px`)
+        gameUI.style.height = String(gameUI.offsetWidth * widthRatio) + "px"
+}
+
+export default function GameUI({onGameModeSelect}: GameUI) {
+    useEffect(() => {
+        const gameUI = document.getElementById("game-ui")
+        if (gameUI === null) {
+            return
+        }
+        resizeGameUI(gameUI)
+        window.addEventListener("resize", () => {
+            resizeGameUI(gameUI)
+        })
+        return () => {
+            removeEventListener("resize", () => {
+                resizeGameUI(gameUI)
+            })
+        }
+    }, [])
     return (
-        <div id="game-ui" className='m-auto my-8 bg-white border-4 border-indigo-500 w-[1024px] h-[768px] flex'>
+        <div id="game-ui" className='m-auto my-8 bg-white border-4 border-indigo-500 w-[60%] flex'>
             <div id="game-menu" className="m-auto w-[40%] h-[70%] flex flex-col gap-5">
                 <Button
                     id='btn-play-local'
@@ -109,7 +130,7 @@ export default function GameUI({onGameModeSelect, onConnectToServer, socket}: Ga
                     }
                     buttonName='host lobby'
                     onClick={() => {
-                        onConnectToServer(JSON.stringify({type: "REQ_LOBBY"}))
+                        websocket.send(JSON.stringify({type: "REQ_LOBBY"}))
                         const menuState = new Map<string, string>([
                             ['req-lobby-id', 'block'],
                             ['btn-copy-lobby', 'block'],
@@ -169,12 +190,9 @@ export default function GameUI({onGameModeSelect, onConnectToServer, socket}: Ga
                             alert(e)
                             return
                         }
-                        if (socket === null) {
-                            throw Error("socket cannot be null")
-                        }
-                        socket.send(JSON.stringify({type: "JOIN_LOBBY", lobby_id: lobbyID}))
+                        websocket.send(JSON.stringify({type: "JOIN_LOBBY", lobby_id: lobbyID}))
                         updateDisplayById("game-ui", "none")
-                        onGameModeSelect('online', socket, lobbyID)
+                        onGameModeSelect('online')
                     }}
                 >
                 </Button>
@@ -196,9 +214,9 @@ export default function GameUI({onGameModeSelect, onConnectToServer, socket}: Ga
                             alert(e)
                             return
                         }
-                        onConnectToServer(JSON.stringify({type: "JOIN_LOBBY", lobby_id: lobbyID}))
+                        websocket.send(JSON.stringify({type: "JOIN_LOBBY", lobby_id: lobbyID}))
                         updateDisplayById("game-ui", "none")
-                        onGameModeSelect('online', socket, lobbyID)
+                        onGameModeSelect('online')
                     }}
                 >
                 </Button>

@@ -4,18 +4,12 @@ import { gameInstance } from '../static/game.js'
 
 interface GameCanvas {
     mode: string
-    socket: WebSocket | undefined | null
 }
 
-export default function GameCanvas({mode, socket}:GameCanvas) {
+export default function GameCanvas({mode}:GameCanvas) {
     useEffect(() => {
     async function wrapper() {
-      if (socket === null || socket === undefined) {
-        await gameInit(mode, undefined)
-      }
-      else {
-        await gameInit(mode, socket)
-      }
+        await gameInit(mode)
     }
     gameInstance.startGame()
     wrapper()

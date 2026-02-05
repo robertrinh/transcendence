@@ -1,32 +1,84 @@
-import { Ball } from './ball.js'
-import { assertIsNotNull, Point, Vector2 } from './lib.js'
-import { PlayerPaddle } from './playerPaddle.js'
-import { lineLineIntersection } from './lib.js'
+import { Ball } from './ball'
+import { Point, Vector2, lineLineIntersection, arenaHeight, arenaWidth,
+    ballRadius } from './lib'
+import { PlayerPaddle } from './playerPaddle'
 
-// The AI is on the left side of the game
+export enum DifficultyLevel {
+    Easy,
+    Normal,
+    Hard
+}
+
+function getFirstHit(beginPoint: Point, endPoint: Point) {
+    let intersect = null
+    intersect = lineLineIntersection(
+        beginPoint, endPoint, {x: arenaWidth-ballRadius, y: -ballRadius},
+        {x: arenaWidth-ballRadius, y: arenaHeight+ballRadius}, "right"
+    )
+    if (intersect !== null) {
+        return intersect
+    }
+    intersect = lineLineIntersection(
+        beginPoint, endPoint, {x: ballRadius, y: -ballRadius},
+        {x: ballRadius, y: arenaHeight + ballRadius}, "left")
+    if (intersect !== null) {
+        return intersect
+    }
+    intersect = lineLineIntersection(
+        beginPoint, endPoint, {x: 0, y: ballRadius},
+        {x: arenaWidth, y: ballRadius}, "top")
+    if (intersect !== null) {
+        return intersect
+    }
+    intersect = lineLineIntersection(
+        beginPoint, endPoint, {x: 0, y: arenaHeight - ballRadius},
+        {x: arenaWidth, y: arenaHeight - ballRadius}, "bottom")
+    return intersect
+} 
+
 export class AI
 {
-    timeSinceLastAction = 0
+    msSinceLastAction = 0
     centreY = 0
     targetY = 0
     lastBallXDir: number = 1
     lastBallY = 0
+    difficultyLevel: DifficultyLevel
 
-    constructor(canvas: HTMLCanvasElement, paddle: PlayerPaddle) {
-        this.centreY = (canvas.height / 2) - (paddle.height / 2)
+    private levelModifier: number
+    private rayPoints = new Array<Point>()
+    private maxRayDistance = Math.sqrt(
+        Math.pow(arenaWidth, 2) + Math.pow(arenaHeight, 2)
+    )
+    private maxRayIters = 10
+
+    constructor(paddle: PlayerPaddle, difficultyLevel: DifficultyLevel) {
+        this.centreY = (arenaHeight / 2) - (paddle.height / 2)
+        this.difficultyLevel = difficultyLevel
+        switch (this.difficultyLevel) {
+            case DifficultyLevel.Easy:
+                this.levelModifier = 0.2
+                break
+            case DifficultyLevel.Normal:
+                this.levelModifier = 0.6
+                break
+            case DifficultyLevel.Hard:
+                this.levelModifier = 0.8
+                break
+        }
+
     }
 
-    private moveTo(targetY: number, paddle: PlayerPaddle, canvas: HTMLCanvasElement, deltaTimeSeconds: number) {
+    private moveTo(targetY: number, paddle: PlayerPaddle) {
         if (this.coversCentreTargetY(targetY, paddle)) {
             return
         }
         const deltaY = targetY - (paddle.y + paddle.height / 2)
-        // const deltaY = targetY - paddle.y - paddle.height / 2
         if (deltaY < 0) {
-            paddle.moveUp(canvas, deltaTimeSeconds)
+            paddle.moveUp()
         }
         else {
-            paddle.moveDown(canvas, deltaTimeSeconds)
+            paddle.moveDown()
         }
     }
 
@@ -38,82 +90,96 @@ export class AI
         return false
     }
 
-    private moveToTargetPoint(paddle: PlayerPaddle, canvas: HTMLCanvasElement, deltaTimeSeconds: number) {
-        this.moveTo(this.targetY, paddle, canvas, deltaTimeSeconds)
+    private moveToTargetPoint(paddle: PlayerPaddle) {
+        this.moveTo(this.targetY, paddle)
     }
 
-    private getTargetPoint(ball: Ball, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, paddle: PlayerPaddle) {
-        const maxRayDistance = Math.pow(canvas.width, 2) + Math.pow(canvas.height, 2)
-        const maxIters = 5
-        let targetPoint: Point | null = null
-        let beginPoint = {x: ball.x + ball.radius, y: ball.y + ball.radius}
-        let dirVector: Vector2 = {x: ball.dirVector.x, y: ball.dirVector.y}
-        let endPoint: Point = {x: beginPoint.x, y: beginPoint.y}
+    private getTargetPoint(ball: Ball, paddle: PlayerPaddle) {
+        let targetIntersection: null | Point = null
+        let beginPoint = new Point(ball.x + ball.radius, ball.y + ball.radius)
+        let dirVector = new Vector2(ball.dirVector.x, ball.dirVector.y)
+        let endPoint = new Point(beginPoint.x, beginPoint.y)
         let i = 0
-
-        while (i < maxIters && targetPoint === null) {
+        this.rayPoints = []
+        this.rayPoints.push(beginPoint)
+        while (i < this.maxRayIters && targetIntersection === null) {
             const angle = Math.atan2(dirVector.y, dirVector.x)
-            endPoint.x += Math.cos(angle) * maxRayDistance
-            endPoint.y += Math.sin(angle) * maxRayDistance
-            ctx.strokeStyle = "#36454F"
-            ctx.beginPath()
-            ctx.moveTo(beginPoint.x, beginPoint.y)
-            ctx.lineTo(endPoint.x, endPoint.y)
-            ctx.closePath()
-            ctx.stroke()
-            const pointTop = lineLineIntersection(beginPoint, endPoint, {x: 0, y: ball.radius}, {x: canvas.width, y: ball.radius})
-            const pointBottom = lineLineIntersection(beginPoint, endPoint, {x: 0, y: canvas.height - ball.radius}, {x: canvas.width, y: canvas.height - ball.radius})
-            targetPoint = lineLineIntersection(beginPoint, endPoint, {x: paddle.x + paddle.width, y: 0}, {x: paddle.x + paddle.width, y: canvas.height})
-            if (targetPoint !== null) {
-                break
+            endPoint.x += Math.cos(angle) * this.maxRayDistance
+            endPoint.y += Math.sin(angle) * this.maxRayDistance
+            this.rayPoints.push(endPoint)
+            const nextIntersect = getFirstHit(beginPoint, endPoint)
+            if (nextIntersect === null) {
+                return null
             }
-            if (pointTop === null) {
-                assertIsNotNull(pointBottom)
-                beginPoint = pointBottom
+            switch (nextIntersect[1]) {
+                case "bottom":
+                case "top":
+                    dirVector.y = -dirVector.y
+                    break
+                case "left":
+                    dirVector.x = -dirVector.x
+                    break
+                case "right":
+                    targetIntersection = nextIntersect[0]
+                    break
             }
-            else {
-                beginPoint = pointTop
-            }
+            beginPoint = nextIntersect[0]
+            this.rayPoints.push(beginPoint)
             endPoint = {x: beginPoint.x, y: beginPoint.y}
-            dirVector.y = -dirVector.y
             i++
         }
-        if (targetPoint === null) {
+        if (targetIntersection === null) {
             return null
         }
-        const hasRandOffset = Math.random() > 0.8 ? true: false
+        /*
+        The chance for the ai to make a mistake is higher on lower difficulties.
+        Two more random rolls are done after to decide:
+        1. If the offset needs to apply up or down
+        2. The actual offset amount
+        */
+        const hasRandOffset = Math.random() > this.levelModifier ? true: false
         if (!hasRandOffset) {
-            return targetPoint.y
+            return targetIntersection.y
         }
         const upOffset = Math.random() > 0.5 ? true: false
         const offset = Math.random() * (paddle.height * 2)
         if (upOffset) {
-            return targetPoint.y - offset
+            return targetIntersection.y - offset
         }
-        return targetPoint.y + offset
+        return targetIntersection.y + offset
     }
 
-    update(deltaTimeSeconds: number, ball: Ball, canvas: HTMLCanvasElement, paddle: PlayerPaddle, ctx: CanvasRenderingContext2D) {
-        this.moveToTargetPoint(paddle, canvas, deltaTimeSeconds)
-        this.timeSinceLastAction += deltaTimeSeconds
-        if (this.timeSinceLastAction < 1) {
-            if (this.lastBallXDir > 0) {
-                this.targetY = ball.y + ball.radius
-            }
-            return
+    update(deltaTimeMS: number, ball: Ball, paddle: PlayerPaddle) {
+        this.moveToTargetPoint(paddle)
+        this.msSinceLastAction += deltaTimeMS
+        if (this.msSinceLastAction < 1000) {
+           return
         }
         this.lastBallXDir = ball.dirVector.x
         this.lastBallY = ball.y
-        this.timeSinceLastAction = 0
-        // ball is moving towards the AI
-        if (ball.dirVector.x < 0) {
-            const target = this.getTargetPoint(ball, canvas, ctx, paddle)
-            if (target === null) {
-                this.targetY = ball.y + ball.radius
-            }
-            else {
-                this.targetY = target
-            }
+        this.msSinceLastAction = 0
+        const target = this.getTargetPoint(ball, paddle)
+        if (target === null) {
+            this.targetY = ball.y + ball.radius
         }
+        else {
+            this.targetY = target
+        }
+    }
+
+    drawRays(ctx: CanvasRenderingContext2D) {
+        ctx.fillStyle = "black"
+        let i = 0
+        if (this.rayPoints.length === 0) {
+            return
+        }
+        ctx.moveTo(this.rayPoints[0].x, this.rayPoints[0].y)
+        i++
+        while (i < this.rayPoints.length) {
+            const pt = this.rayPoints[i]
+            ctx.lineTo(pt.x, pt.y)
+            i++
+        }
+        ctx.stroke()
     }
 }
