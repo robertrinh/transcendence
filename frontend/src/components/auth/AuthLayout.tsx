@@ -37,8 +37,14 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
 	const row3 = ['Classic Pong', 'Pls pass us', 'Fast Matches', 'Chat', 'Anonymous Mode'];
 
 	return (
-		<div className="min-h-screen flex bg-white relative">
-			<div className="absolute top-6 left-6 z-20">
+		<div className="min-h-screen w-full relative overflow-hidden">
+			<div className="fixed inset-0 z-0">
+				<GameOfLifeBackground />
+			</div>
+
+			<div className="fixed inset-0 z-[1] bg-black/40" />
+
+			<div className="fixed top-6 left-6 z-50">
 				<img 
 					src="/public/ping-pong-icon.png" 
 					alt="Pong Logo" 
@@ -49,12 +55,13 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
 				/>
 			</div>
 
-			{/* Left side: Form */}
-			<div className="w-full lg:w-1/2 flex flex-col justify-center px-8 lg:px-16">
-				<div className="max-w-md mx-auto w-full">
-					<div className="mb-8 text-center">
-						<h1 className="text-3xl font-bold text-gray-900">Transcendence</h1>
-						<p className="text-gray-500 mt-2">A homage to the pioneer of games.</p>
+			<div className="relative z-30 min-h-screen flex flex-col items-center pt-20 px-4">
+				<div 
+					className="w-full max-w-md bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl"
+				>
+					<div className="mb-6 text-center">
+						<h1 className="text-2xl font-bold text-white">Transcendence</h1>
+						<p className="text-white/50 mt-1 text-sm">A homage to the pioneer of games.</p>
 					</div>
 					
 					{/* Form content (Login or Register) */}
@@ -62,16 +69,10 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
 				</div>
 			</div>
 
-			{/* Right side: Rounded floating panel */}
-			<div className="hidden lg:flex lg:w-1/2 h-screen items-center justify-center p-6">
-				<div 
-					className="w-full h-[90%] bg-gradient-to-br from-slate-800 via-blue-900 to-slate-900 relative overflow-hidden"
-					style={{ 
-						borderRadius: '40px',
-					}}
-				>
-					<ShowcasePanel />
-				</div>
+			<div className="fixed bottom-12 left-0 right-0 z-20 flex flex-col gap-3">
+				<MarqueeRow items={row1} direction="left" speed={30} />
+				<MarqueeRow items={row2} direction="right" speed={35} />
+				<MarqueeRow items={row3} direction="left" speed={28} />
 			</div>
 
 			<div className="fixed bottom-0 left-0 right-0 z-30 px-8 py-2">
