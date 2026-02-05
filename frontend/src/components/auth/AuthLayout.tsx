@@ -74,13 +74,13 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
 				</div>
 			</div>
 
-			<div className="absolute bottom-0 left-0 right-0 lg:right-1/2 z-20 px-8 py-4">
-				<div className="flex items-center justify-center gap-2 text-gray-400 text-sm">
+			<div className="fixed bottom-0 left-0 right-0 z-30 px-8 py-2">
+				<div className="flex items-center justify-center gap-2 text-white/80 text-xs">
 					<span>Made at</span>
 					<img 
-						src="/public/logo_codam_black.png" 
+						src="/public/logo_codam_white.png" 
 						alt="Codam Logo" 
-						className="h-5 w-auto object-contain opacity-60"
+						className="h-4 w-auto object-contain invert-0 opacity-70"
 					/>
 				</div>
 			</div>
