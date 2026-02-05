@@ -2,6 +2,11 @@ import { Ball } from './ball'
 import { playerOne, playerTwo, ball, clientTick, drawPlayerScores } from './lib'
 import websocket from './websocket'
 
+interface MoveTS {
+    type: string,
+    timestamp: number
+}
+
 export async function gameOnlineLobby(canvas: HTMLCanvasElement, 
         ctx: CanvasRenderingContext2D, drawCanvas: HTMLCanvasElement,
         drawCtx: CanvasRenderingContext2D) {
@@ -49,13 +54,13 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
     function processMovement() {
         const timestamp = +new Date()
         if (playerOne.paddle.downPressed) {
-            const moveObj = {type: "MOVE_DOWN", ts: timestamp}
+            const moveObj = {type: "MOVE_DOWN", timestamp: timestamp} as MoveTS
             playerOne.paddle.moveDown()
             websocket.send(JSON.stringify(moveObj))
             pendingMoves.push(moveObj)
         }
         if (playerOne.paddle.upPressed) {
-            const moveObj = {type: "MOVE_UP", ts: timestamp}
+            const moveObj = {type: "MOVE_UP", timestamp: timestamp} as MoveTS
             playerOne.paddle.moveUp()
             websocket.send(JSON.stringify(moveObj))
             pendingMoves.push(moveObj)
@@ -94,10 +99,7 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
         playerTwo.paddle.y += interpVelocityEnemy.y * updateDelta
     }
 
-    let deltaTimeMS: number
-    let fpsInterval: number, startTime, now, then: number
-    let lastFPS = 0
-    let FPSUpdatePast = 0
+    let deltaTimeMS: number, now: number, then: number
 
 	/**
 	 * Update the world state
@@ -133,11 +135,6 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
     let interpVelocityBall: Point
     let interpVelocityEnemy: Point
     let pendingMoves = new Array<MoveTS>()
-
-    interface MoveTS {
-        type: string,
-        timestamp: number
-    }
 
     function updatePendingMoves(lastServerTime: number) {
         let i = 0

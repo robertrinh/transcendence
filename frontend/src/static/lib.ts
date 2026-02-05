@@ -169,7 +169,6 @@ export function applyBallVerticalBounce(ball: Ball): void {
 
 export function printText(ctx: CanvasRenderingContext2D, fontSizePX: number,
     x: number, y: number, color: string, textStyle: string, text: Array<string>) {
-    const oldColor = ctx.fillStyle
     let i = 0
     for (const str of text) {
         ctx.fillStyle = color

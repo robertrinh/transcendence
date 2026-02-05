@@ -83,14 +83,14 @@ async def process_message(
     match message_type:
         case 'MOVE_DOWN':
             if websocket == lobby.players[0]:
-                lobby.p1_input.append(['DOWN', message_content['ts']])
+                lobby.p1_input.append(['DOWN', message_content['timestamp']])
             else:
-                lobby.p2_input.append(['DOWN', message_content['ts']])
+                lobby.p2_input.append(['DOWN', message_content['timestamp']])
         case 'MOVE_UP':
             if websocket == lobby.players[0]:
-                lobby.p1_input.append(['UP', message_content['ts']])
+                lobby.p1_input.append(['UP', message_content['timestamp']])
             else:
-                lobby.p2_input.append(['UP', message_content['ts']])
+                lobby.p2_input.append(['UP', message_content['timestamp']])
         case 'WHOAMI':
             if websocket == lobby.players[0]:
                 await websocket.send(json.dumps(

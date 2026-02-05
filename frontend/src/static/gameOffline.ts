@@ -99,7 +99,6 @@ export async function gameOfflineLobby(
                 ball.y = paddleHitPoint.y - ball.radius
                 break
         }
-        ball.increaseSpeed()
     }
 
     function ballExitsLeftSide(): boolean {
