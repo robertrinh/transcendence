@@ -44,7 +44,7 @@ export const GameOfLifeBackground: React.FC = () => {
 			grid[i] = [];
 			colors[i] = [];
 			for (let j = 0; j < cols; j++) {
-				grid[i][j] = Math.random() > 0.80 ? 1 : 0; //* ~20% alive
+				grid[i][j] = Math.random() > 0.75 ? 1 : 0; //* ~20% alive
 				colors[i][j] = COLORS[Math.floor(Math.random() * COLORS.length)];
 			}
 		}
@@ -101,12 +101,18 @@ export const GameOfLifeBackground: React.FC = () => {
 			}
 		}
 
-		//* occasionally spawn new cells to keep it alive
-		if (Math.random() > 0.7) {
-			const iRandom = Math.floor(Math.random() * rows); 
-			const jRandom = Math.floor(Math.random() * cols);
-			newGrid[iRandom][jRandom] = 1;
-			newColors[iRandom][jRandom] = COLORS[Math.floor(Math.random() * COLORS.length)];
+		//* Spawn 3x3 clusters often so dead regions get new life
+		if (Math.random() > 0.45) {
+			const i0 = Math.floor(Math.random() * rows);
+			const j0 = Math.floor(Math.random() * cols);
+			for (let di = 0; di < Math.min(3, rows); di++) {
+				for (let dj = 0; dj < Math.min(3, cols); dj++) {
+					const i = (i0 + di) % rows;
+					const j = (j0 + dj) % cols;
+					newGrid[i][j] = 1;
+					newColors[i][j] = COLORS[Math.floor(Math.random() * COLORS.length)];
+				}
+			}
 		}
 
 		gridRef.current = newGrid;
