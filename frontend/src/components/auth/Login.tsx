@@ -196,13 +196,6 @@ const Login: React.FC<LoginProps> = ({
 							Coming soon
 						</p>
 					</div>
-
-					{/* Quick login hint for development */}
-					<div className="border-t border-white/10 pt-4">
-						<p className="text-xs text-white/40 text-center">
-							Default admin: <code className="bg-white/10 px-1.5 py-0.5 rounded">admin</code> / <code className="bg-white/10 px-1.5 py-0.5 rounded">admin123</code>
-						</p>
-					</div>
 				</div>
 			</>
 		);
