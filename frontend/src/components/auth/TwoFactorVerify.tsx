@@ -1,10 +1,5 @@
 import { useState } from 'react';
-
-interface User {
-	id: string;
-	username: string;
-	email?: string;
-}
+import { User } from '../util/profileUtils';
 
 interface TwoFactorVerifyProps {
 	user: User;

@@ -1,9 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-
-interface User {
-    id: string;
-    username: string;
-}
+import { User } from '../util/profileUtils';
 
 interface Message {
     id: string;

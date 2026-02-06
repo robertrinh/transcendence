@@ -5,6 +5,7 @@ import Login from './components/auth/Login';
 import AuthRegister from './components/auth/AuthRegister';
 import AuthLayout from './components/auth/AuthLayout';
 import UserProfile from './components/chat/publicProfile';
+import { User, fetchUserProfile } from './components/util/profileUtils';
 
 // Import your views
 import Home from './views/home';
@@ -13,16 +14,6 @@ import Leaderboard from './views/leaderboard';
 import Profile from './views/profile';
 import Settings from './views/settings';
 import NotFound from './views/notfound';
-
-interface User {
-	id: string;
-	username: string;
-	email?: string;
-	nickname?: string;
-    display_name?: string;
-    avatar_url?: string;
-}
-
 
 //* Route needed for user profile view
 function UserProfileRoute() {
@@ -36,9 +27,9 @@ function UserProfileRoute() {
 //* AppLayout component needed for main layout and navigation
 //* uses old logic from MainLayout component to avoid dependencies
 function AppLayout({
-	user: _user,
-	onLogin: _onLogin,
-	onLogout: _onLogout,
+	user: user,
+	onLogin: onLogin,
+	onLogout: onLogout,
 }: {
 	user: User | null;
 	onLogin: (userData: User, token: string) => void;
@@ -85,11 +76,11 @@ function AppLayout({
 
 	return (
 		<MainLayout
-			user={_user}
+			user={user}
 			currentView={getCurrentView()}
 			setCurrentView={handleSetCurrentView}
-			onLogin={_onLogin}
-			onLogout={_onLogout}
+			onLogin={onLogin}
+			onLogout={onLogout}
 			navigateToUserProfile={navigateToUserProfile}
 		>
 			<Outlet />
@@ -104,7 +95,6 @@ export function App() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // Check for existing session on startup
     useEffect(() => {
         checkSession();
     }, []);
@@ -125,6 +115,10 @@ export function App() {
 				const data = await response.json();
 				setUser(data.user);
 				setIsAuthenticated(true);
+				const profile = await fetchUserProfile(token);
+            if (profile) {
+                setUser((prevUser: User | null) => prevUser ? { ...prevUser, ...profile } : profile);
+            }
 			} else {
 				localStorage.removeItem('token');
 			}
@@ -134,10 +128,14 @@ export function App() {
 		setLoading(false);
 	};
 
-	const handleLogin = (userData: User, token: string) => {
+	const handleLogin = async (userData: User, token: string) => {
 		localStorage.setItem('token', token);
 		setUser(userData);
 		setIsAuthenticated(true);
+		const profile = await fetchUserProfile(token);
+    if (profile) {
+        setUser((prevUser: User | null) => prevUser ? { ...prevUser, ...profile } : profile);
+    }
 	};
 
 	const handleLogout = async () => {
@@ -204,7 +202,7 @@ export function App() {
 						<Route path="/game" element={<Game />} />
 						<Route path="/leaderboard" element={<Leaderboard />} />
 						<Route path="/profile" element={<Profile user={user} />} />
-						<Route path="/settings" element={<Settings user={user} onUserUpdate={(updatedUser) => setUser(updatedUser)} />} />
+						<Route path="/settings" element={<Settings user={user} onUserUpdate={setUser} />} />
 						<Route path="/user/:username" element={<UserProfileRoute />} />
 						<Route path="*" element={<NotFound />} />
 						</Route>

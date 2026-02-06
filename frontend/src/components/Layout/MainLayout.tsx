@@ -2,14 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import ChatMiniWindow from '../chat/ChatMiniWindow';
 import Login from '../auth/Login';
 import AuthRegister from '../auth/AuthRegister';
-import { getAvatarUrl } from '../../views/profile';
+import { User, getAvatarUrl } from '../util/profileUtils';
 
-interface User {
-    id: string;
-    username: string;
-    email?: string;
-    avatar_url?: string;
-}
+// interface User {
+//     id: string;
+//     username: string;
+//     email?: string;
+//     avatar_url?: string;
+// }
 
 interface MainLayoutProps {
     user: User | null;
@@ -37,6 +37,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     const authButtonRef = useRef<HTMLButtonElement>(null);
     const userMenuRef = useRef<HTMLDivElement>(null); // new for avata + dropmenu
     const userButtonRef = useRef<HTMLButtonElement>(null); // new for avata + dropmenu
+
+    useEffect(() => {
+        console.log('🔍 MainLayout user changed:', user);
+        console.log('🔍 MainLayout avatar_url:', user?.avatar_url);
+    }, [user]);
 
     const handleLoginSuccess = (userData: User, token: string) => {
         onLogin(userData, token);
@@ -212,13 +217,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                     <button
                                         ref={userButtonRef}
                                         onClick={() => setShowUserMenu(!showUserMenu)}
-                                        className="w-20 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold overflow-hidden border-2 border-white/50 hover:border-white transition-all shadow-md hover:shadow-lg cursor-pointer"
+                                        className="w-20 h-15 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold overflow-hidden border-2 border-white/50 hover:border-white transition-all shadow-md hover:shadow-lg cursor-pointer"
                                     >
                                         {user.avatar_url ? (
                                             <img 
                                                 src={getAvatarUrl(user.avatar_url)}
                                                 alt="Avatar"
-                                                className="w-20 h-10 object-cover"
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    // Fallback to initial if image fails to load
+                                                    e.currentTarget.style.display = 'none';
+                                                    e.currentTarget.parentElement!.textContent = user.username.charAt(0).toUpperCase();
+                                                }}
                                             />
                                         ) : (
                                             user.username.charAt(0).toUpperCase()
