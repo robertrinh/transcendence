@@ -22,6 +22,8 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const [show2FASetup, setShow2FASetup] = useState(false); // New state for showing 2FA setup
+    const [show2FADisable, setShow2FADisable] = useState(false); // ✅ New state for disable modal
+    const [disableCode, setDisableCode] = useState('');
 
     // ...existing code (profileForm, passwordForm, avatarFile, previewUrl, editingField states)...
     const [profileForm, setProfileForm] = useState({
@@ -55,29 +57,49 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
         setTimeout(() => setMessage(null), 5000);
     };
 
-    // ...existing handlers (handleProfileUpdate, handlePasswordChange, handleAvatarUpload, etc.)...
     const handleProfileUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
         try {
             const token = localStorage.getItem('token');
+
+            const updateData: Partial<typeof profileForm> = {};
+            if (editingField === 'display_name') {
+                updateData.display_name = profileForm.display_name;
+            } else if (editingField === 'nickname') {
+                updateData.nickname = profileForm.nickname;
+            } else if (editingField === 'email') {
+                updateData.email = profileForm.email;
+            }
+
             const response = await fetch('/api/users/profile/me', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(profileForm)
+                body: JSON.stringify(updateData)
             });
 
             const data = await response.json();
             
             if (response.ok) {
-                showMessage('success', 'Profile updated successfully!');
-                setEditingField(null);
-                if (onUserUpdate) {
-                    onUserUpdate({ ...user!, ...profileForm });
+            showMessage('success', 'Profile updated successfully!');
+            setEditingField(null);
+            
+                // ✅ Update the user with the complete profile data from the response
+                if (onUserUpdate && data.profile) {
+                    onUserUpdate(data.profile);
+                }
+                
+                // ✅ Update the form with the complete data
+                if (data.profile) {
+                    setProfileForm({
+                        display_name: data.profile.display_name || '',
+                        nickname: data.profile.nickname || '',
+                        email: data.profile.email || ''
+                    });
                 }
             } else {
                 showMessage('error', data.error || 'Failed to update profile');
@@ -222,8 +244,13 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
     };
 
     // New handler for disabling 2FA
-    const handleDisable2FA = async () => {
-        if (!confirm('Are you sure you want to disable Two-Factor Authentication? This will make your account less secure.')) return;
+    const handleDisable2FA = async (e: React.FormEvent) => {
+      e.preventDefault();
+        
+        if (disableCode.length !== 6) {
+            showMessage('error', 'Please enter a valid 6-digit code');
+            return;
+        }
 
         setLoading(true);
         try {
@@ -231,25 +258,29 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
             const response = await fetch('/api/auth/2fa/disable', {
                 method: 'POST',
                 headers: {
+                    'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
-                }
+                },
+                body: JSON.stringify({ code: disableCode })
             });
 
             const data = await response.json();
             
-            if (response.ok) {
+            if (response.ok && data.success) {
                 showMessage('success', '2FA disabled successfully!');
+                setShow2FADisable(false);
+                setDisableCode('');
                 if (onUserUpdate && user) {
                     onUserUpdate({ ...user, two_factor_enabled: false });
                 }
-            } else {
-                showMessage('error', data.error || 'Failed to disable 2FA');
-            }
-        } catch (error) {
-            showMessage('error', 'Network error. Please try again.');
-        } finally {
-            setLoading(false);
+        } else {
+            showMessage('error', data.error || 'Failed to disable 2FA');
         }
+    } catch (error) {
+        showMessage('error', 'Network error. Please try again.');
+    } finally {
+        setLoading(false);
+    }
     };
 
     if (!user) {
@@ -295,6 +326,54 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
                         <span className={`font-medium ${message.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
                             {message.text}
                         </span>
+                    </div>
+                </div>
+            )}
+
+            {/* ✅ Disable 2FA Modal */}
+            {show2FADisable && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white p-8 rounded-lg shadow-xl w-96">
+                        <h2 className="text-2xl font-bold text-center mb-2 text-red-600">
+                            Disable Two-Factor Authentication
+                        </h2>
+
+                        <p className="text-gray-600 text-center mb-6">
+                            Enter your authenticator code to confirm disabling 2FA
+                        </p>
+
+                        <form onSubmit={handleDisable2FA} className="space-y-4">
+                            <input
+                                type="text"
+                                value={disableCode}
+                                onChange={(e) => setDisableCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                placeholder="000000"
+                                maxLength={6}
+                                inputMode="numeric"
+                                className="w-full px-4 py-3 text-center text-2xl tracking-widest border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                autoFocus
+                            />
+
+                            <button
+                                type="submit"
+                                disabled={loading || disableCode.length !== 6}
+                                className="w-full bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                {loading ? 'Disabling...' : 'Disable 2FA'}
+                            </button>
+                        </form>
+
+                        <div className="mt-6 text-center">
+                            <button
+                                onClick={() => {
+                                    setShow2FADisable(false);
+                                    setDisableCode('');
+                                }}
+                                className="text-gray-500 hover:text-gray-700 text-sm hover:underline"
+                            >
+                                ← Cancel
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -346,7 +425,7 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
                                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Profile Picture</h3>
                                 <div className="flex items-start gap-6">
                                     <div className="flex-shrink-0">
-                                        <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center overflow-hidden relative group">
+                                        {/* <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center overflow-hidden relative group">
                                             {previewUrl ? (
                                                 <img src={previewUrl} alt="Avatar Preview" className="w-full h-full object-cover" />
                                             ) : user.avatar_url ? (
@@ -356,7 +435,7 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
                                                     {user.username.charAt(0).toUpperCase()}
                                                 </span>
                                             )}
-                                        </div>
+                                        </div> */}
                                     </div>
                                     <div className="flex-1">
                                         <label className="inline-block bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded cursor-pointer transition-colors">
@@ -400,7 +479,7 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
                                                 Remove Picture
                                             </button>
                                         )}
-                                        <p className="text-xs text-gray-500 mt-2">JPG or PNG. Max size 5MB.</p>
+                                        <p className="text-xs text-gray-500 mt-2">JPG Max size 5MB.</p>
                                     </div>
                                 </div>
                             </div>
@@ -693,8 +772,9 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
                                                     <div className="text-sm text-gray-600 mt-1">Your account is protected with two-factor authentication</div>
                                                 </div>
                                             </div>
+                                            {/* ✅ Updated button to show modal */}
                                             <button
-                                                onClick={handleDisable2FA}
+                                                onClick={() => setShow2FADisable(true)}
                                                 disabled={loading}
                                                 className="text-red-600 hover:text-red-700 text-sm font-medium transition-colors disabled:opacity-50"
                                             >
@@ -725,7 +805,15 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
                                                 </div>
                                             ) : (
                                                 <div>
-                                                    <TwoFactorSetup />
+                                                    <TwoFactorSetup 
+                                                        onSuccess={() => {
+                                                            showMessage('success', '2FA enabled successfully!');
+                                                            setShow2FASetup(false);
+                                                            if (onUserUpdate && user) {
+                                                                onUserUpdate({ ...user, two_factor_enabled: true });
+                                                            }
+                                                        }}
+                                                    />
                                                     <button
                                                         onClick={() => setShow2FASetup(false)}
                                                         className="mt-4 text-gray-600 hover:text-gray-800 text-sm"
@@ -740,7 +828,7 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
                             </div>
 
                             {/* Security Tips */}
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            {/* <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                                 <div className="flex gap-3">
                                     <svg className="w-6 h-6 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -755,7 +843,7 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
                                         </ul>
                                     </div>
                                 </div>
-                            </div>
+                            </div> */}
                         </div>
                     )}
                 </div>

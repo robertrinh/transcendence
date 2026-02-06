@@ -1,6 +1,10 @@
 import { useState } from 'react';
 
-function TwoFactorSetup() {
+interface TwoFactorSetupProps {
+    onSuccess?: () => void; // ✅ Add callback prop
+}
+
+function TwoFactorSetup({ onSuccess } : TwoFactorSetupProps) {
 	const [qrCode, setQrCode] = useState<string | null>(null); //* null before, string qr code after
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(''); //* empty string
@@ -65,6 +69,9 @@ function TwoFactorSetup() {
                 setMessage('✅ 2FA successfully enabled!');
                 setQrCode(null); // Hide QR code
                 setVerificationCode('');
+                if (onSuccess) {
+                    onSuccess();
+                }
             } else {
                 setError(data.error || 'Invalid code. Please try again.');
             }
