@@ -135,7 +135,7 @@ export const userController = {
             return {
                 success: true,
                 message: 'Avatar uploaded successfully',
-                avatarUrl: fileName
+                avatar_url: fileName
             }
         } catch (error) {
             console.error('Avatar upload error:', error)

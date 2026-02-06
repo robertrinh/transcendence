@@ -1,11 +1,6 @@
 import React, { useState } from 'react';
 import TwoFactorVerify from './TwoFactorVerify';
-
-interface User {
-	id: string;
-	username: string;
-	email?: string;
-}
+import { User } from '../util/profileUtils';
 
 interface LoginProps {
 	onLoginSuccess: (userData: User, token: string) => void;

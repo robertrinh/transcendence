@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { getAvatarUrl } from './profile';
+import { User, getAvatarUrl } from '../components/util/profileUtils';
 import TwoFactorSetup from '../components/auth/TwoFactorSetup';
 
-interface User {
-    id: string;
-    username: string;
-    email?: string;
-    nickname?: string;
-    display_name?: string;
-    avatar_url?: string;
-    two_factor_enabled?: boolean; // Add this field
-}
+// interface User {
+//     id: string;
+//     username: string;
+//     email?: string;
+//     nickname?: string;
+//     display_name?: string;
+//     avatar_url?: string;
+//     two_factor_enabled?: boolean; // Add this field
+// }
 
 interface SettingsProps {
     user: User | null;
@@ -183,7 +183,7 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
                 showMessage('success', 'Avatar updated successfully!');
                 setAvatarFile(null);
                 setPreviewUrl(null);
-                if (onUserUpdate && user) {
+               if (onUserUpdate && user) {
                     onUserUpdate({ ...user, avatar_url: data.avatar_url });
                 }
             } else {
@@ -199,8 +199,8 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
     const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
-            if (!file.type.startsWith('image/jpeg') && !file.type.startsWith('image/png')) {
-                showMessage('error', 'Please select a JPG or PNG image');
+            if (!file.type.startsWith('image/jpeg')) {
+                showMessage('error', 'Please select a JPG image');
                 return;
             }
             
@@ -212,34 +212,6 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
             setAvatarFile(file);
             const url = URL.createObjectURL(file);
             setPreviewUrl(url);
-        }
-    };
-
-    const handleDeleteAvatar = async () => {
-        if (!confirm('Are you sure you want to delete your avatar?')) return;
-
-        setLoading(true);
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch('/api/users/profile/avatar', {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (response.ok) {
-                showMessage('success', 'Avatar deleted successfully!');
-                if (onUserUpdate && user) {
-                    onUserUpdate({ ...user, avatar_url: undefined });
-                }
-            } else {
-                showMessage('error', 'Failed to delete avatar');
-            }
-        } catch (error) {
-            showMessage('error', 'Network error. Please try again.');
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -425,17 +397,25 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
                                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Profile Picture</h3>
                                 <div className="flex items-start gap-6">
                                     <div className="flex-shrink-0">
-                                        {/* <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center overflow-hidden relative group">
+                                        <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center overflow-hidden relative group">
                                             {previewUrl ? (
-                                                <img src={previewUrl} alt="Avatar Preview" className="w-full h-full object-cover" />
+                                                <img 
+                                                    src={previewUrl} 
+                                                    alt="Avatar Preview" 
+                                                    className="w-full h-full object-cover" 
+                                                />
                                             ) : user.avatar_url ? (
-                                                <img src={avatarUrl || undefined} alt="Avatar" className="w-full h-full object-cover" />
+                                                <img 
+                                                    src={getAvatarUrl(user.avatar_url)} 
+                                                    alt="Avatar" 
+                                                    className="w-full h-full object-cover" 
+                                                />
                                             ) : (
-                                                <span className="text-2xl font-bold text-white">
+                                                <span className="text-3xl font-bold text-white">
                                                     {user.username.charAt(0).toUpperCase()}
                                                 </span>
                                             )}
-                                        </div> */}
+                                        </div>
                                     </div>
                                     <div className="flex-1">
                                         <label className="inline-block bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded cursor-pointer transition-colors">
@@ -470,7 +450,7 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
                                                 </div>
                                             </div>
                                         )}
-                                        {user.avatar_url && !avatarFile && (
+                                        {/* {user.avatar_url && !avatarFile && (
                                             <button
                                                 onClick={handleDeleteAvatar}
                                                 disabled={loading}
@@ -478,7 +458,7 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
                                             >
                                                 Remove Picture
                                             </button>
-                                        )}
+                                        )} */}
                                         <p className="text-xs text-gray-500 mt-2">JPG Max size 5MB.</p>
                                     </div>
                                 </div>

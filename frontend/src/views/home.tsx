@@ -1,11 +1,5 @@
 import React from 'react';
-import TwoFactorSetup from '../components/auth/TwoFactorSetup';
-
-interface User {
-	id: string;
-	username: string;
-	email?: string;
-}
+import { User } from '../components/util/profileUtils';
 
 interface HomeProps {
 	user: User | null;  // ← Now optional
