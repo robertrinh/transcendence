@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, useNavigate, useLocation, useParams, Outl
 import MainLayout from './components/Layout/MainLayout';
 import Login from './components/auth/Login';
 import AuthRegister from './components/auth/AuthRegister';
+import AuthLayout from './components/auth/AuthLayout';
 import UserProfile from './components/chat/publicProfile';
 
 // Import your views
@@ -167,13 +168,21 @@ export function App() {
 
 	//* Authentication gate: login/register first
 	if (!isAuthenticated) {
-		return showLogin ? (
-			<Login
-				onLoginSuccess={handleLogin}
-				onSwitchToRegister={() => setShowLogin(false)}
-			/>
-		) : (
-			<AuthRegister onSwitchToLogin={() => setShowLogin(true)} />
+		return (
+			<AuthLayout onLoginSuccess={handleLogin}>
+				{showLogin ? (
+					<Login
+						onLoginSuccess={handleLogin}
+						onSwitchToRegister={() => setShowLogin(false)}
+						isInPanel={true}
+					/>
+				) : (
+					<AuthRegister 
+						onSwitchToLogin={() => setShowLogin(true)} 
+						isInPanel={true}
+					/>
+				)}
+			</AuthLayout>
 		);
 	}
 
