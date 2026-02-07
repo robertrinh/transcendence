@@ -21,6 +21,7 @@ export const playerOne = new Player(
 export const playerTwo = new Player(
     arenaWidth - ballSize, 0, ballSize, ballSize * 4, paddleMoveUnits,
     "#b8383b")
+export const textColor = "#36454f"
 
 export class Vector2
 {
