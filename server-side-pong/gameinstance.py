@@ -17,8 +17,10 @@ BALL_SIZE = BALL_RADIUS * 2
 ROUND_MAX = 5
 
 # movement
-BALL_SPEED_UNITS_S = 500  # The ball speed in units per second
-PADDLE_SPEED_UNITS_S = 30
+BALL_SPEED_PER_TICK = 0.25
+PADDLE_SPEED_PER_TICK = 0.5
+BALL_SPEED = BALL_SPEED_PER_TICK * TICK
+PADDLE_SPEED = PADDLE_SPEED_PER_TICK * TICK
 
 
 class Point:
@@ -54,16 +56,15 @@ class GameInstance:
 
     def __init__(self, lobby_id: str):
         self.lobby_id = lobby_id
-        conv_ball_speed = (BALL_SPEED_UNITS_S / 1000) * TICK
         self.ball = Ball(
-            conv_ball_speed, conv_ball_speed * 2, BALL_RADIUS)
+            BALL_SPEED, BALL_SPEED * 2, BALL_RADIUS)
         self.ball.set_start(ARENA_HEIGHT, ARENA_WIDTH, random_ball_vec())
         self.p1_paddle = PlayerPaddle(
-            PADDLE_SPEED_UNITS_S,
+            PADDLE_SPEED,
             Rect(0, 0, BALL_SIZE, BALL_SIZE * 4)
         )
         self.p2_paddle = PlayerPaddle(
-            PADDLE_SPEED_UNITS_S,
+            PADDLE_SPEED,
             Rect(ARENA_WIDTH-(BALL_SIZE), 0, BALL_SIZE, BALL_SIZE * 4)
         )
         self.set_game_start()
