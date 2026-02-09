@@ -23,5 +23,8 @@ export const gameResponseSchema = S.object()
 	.prop('created_at', S.string())
 	.prop('finished_at', S.string());
 
+export const joinLobbySchema = S.object()
+	.prop('lobby_id', S.string().required());
+
 // export const gameResponse = gameResponseSchema.only(['',''])
 // export const gameResponse = gameResponseSchema.except(['',''])
