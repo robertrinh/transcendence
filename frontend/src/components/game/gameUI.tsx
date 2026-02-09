@@ -1,34 +1,24 @@
-import Button from "./button";
-import { useEffect } from "react";
-import websocket from "../static/websocket";
+import { useEffect } from 'react'
+import GameCanvas from './gameCanvas.js'
+import { HostLobby, JoinLobby, LocalMenu, MainMenu, OnlineMenu } from './gameMenus.js';
+import SearchingScreen from './searchingScreen.js';
+import TimeoutScreen from './timeoutScreen.js';
 
-interface GameUI {
-    onGameModeSelect: any
-}
+type Screen = 'main' | 'online' | 'local' | 'host-lobby' | 'join-lobby' | 'searching' | 'game' | 'timeout'
+type GameMode = 'none' | 'singleplayer' | 'multiplayer' | 'online'
 
-function updateDisplayById(id: string, displayStyle: string) {
-    const element = document.getElementById(id)
-    if (element === null) {
-        throw Error(`${id} is null`)
-    }
-    element.style.display = displayStyle
-}
+type gameProps = {
+	lobbyId: string;
+	gameMode: GameMode;
+	screen: Screen;
 
-// keep only the given elements visible
-function transitionMenu(newState: Map<string, string>) {
-    const menuEle = document.getElementById("game-menu")
-    if (menuEle === null) {
-        throw Error("menuEle cannot be null")
-    }
-    for (const ele of menuEle.children) {
-        const displayStyle = newState.get(ele.id)
-        if (displayStyle === undefined) {
-            updateDisplayById(ele.id, "none")
-        }
-        else {
-            updateDisplayById(ele.id, displayStyle)
-        }
-    }
+	setScreen(screen: Screen): void
+	setGameMode(gameMode: GameMode): void
+
+	handleRandomPlayer(): void
+	handleHostReq(): void
+	joinLobbyReq(lobbyId: string): void
+	resetPlayerStatus(): void
 }
 
 function validateJoinLobby(lobbyID: string): string {
@@ -48,194 +38,80 @@ function resizeGameUI(gameUI: HTMLElement) {
         gameUI.style.height = String(gameUI.offsetWidth * widthRatio) + "px"
 }
 
-export default function GameUI({onGameModeSelect}: GameUI) {
-    useEffect(() => {
-        const gameUI = document.getElementById("game-ui")
-        if (gameUI === null) {
-            return
-        }
-        resizeGameUI(gameUI)
-        window.addEventListener("resize", () => {
-            resizeGameUI(gameUI)
-        })
-        return () => {
-            removeEventListener("resize", () => {
-                resizeGameUI(gameUI)
-            })
-        }
-    }, [])
-    return (
-        <div id="game-ui" className='m-auto my-8 bg-white border-4 border-indigo-500 w-[60%] flex'>
-            <div id="game-menu" className="m-auto w-[40%] h-[70%] flex flex-col gap-5">
-                <Button
-                    id='btn-play-local'
-                    className={
-                        "bg-indigo-500 text-white py-2 px-8 uppercase rounded-xl"
-                    }
-                    buttonName='play local'
-                    onClick={() => {
-                        const menuState = new Map<string, string>([
-                            ['btn-singleplayer', 'block'],
-                            ['btn-multiplayer', 'block'],
-                            ['btn-main-menu', 'block']
-                        ])
-                        transitionMenu(menuState)
-                    }}
-                >
-                </Button>
-                <Button
-                    id='btn-play-online'
-                    className={
-                        "bg-indigo-500 text-white py-2 px-8 uppercase rounded-xl"
-                    }
-                    buttonName='play online'
-                    onClick={() => {
-                        const menuState = new Map<string, string>([
-                            ['btn-join-lobby', 'block'],
-                            ['btn-host-lobby', 'block'],
-                            ['btn-main-menu', 'block']
-                        ])
-                        transitionMenu(menuState)
-                    }}
-                >
-                </Button>
-                <Button
-                    id='btn-singleplayer'
-                    className={
-                        "bg-indigo-500 text-white py-2 px-8 uppercase rounded-xl hidden"
-                    }
-                    buttonName='singleplayer'
-                    onClick={() => {
-                        updateDisplayById("game-ui", "none")
-                        onGameModeSelect('singleplayer')
-                    }}
-                >
-                </Button>
-                <Button
-                    id='btn-multiplayer'
-                    className={
-                        "bg-indigo-500 text-white py-2 px-8 uppercase rounded-xl hidden"
-                    }
-                    buttonName='multiplayer'
-                    onClick={() => {
-                        updateDisplayById("game-ui", "none")
-                        onGameModeSelect('multiplayer')
-                    }}
-                >
-                </Button>
-                <Button
-                    id='btn-host-lobby'
-                    className={
-                        "bg-indigo-500 text-white py-2 px-8 uppercase rounded-xl hidden"
-                    }
-                    buttonName='host lobby'
-                    onClick={() => {
-                        websocket.send(JSON.stringify({type: "REQ_LOBBY"}))
-                        const menuState = new Map<string, string>([
-                            ['req-lobby-id', 'block'],
-                            ['btn-copy-lobby', 'block'],
-                            ['btn-join-self', 'block'],
-                            ['btn-main-menu', 'block']
-                        ])
-                        transitionMenu(menuState)
-                    }}
-                >
-                </Button>
-                <Button
-                    id='btn-join-lobby'
-                    className={
-                        "bg-indigo-500 text-white py-2 px-8 uppercase rounded-xl hidden"
-                    }
-                    buttonName='join lobby'
-                    onClick={() => {
-                         const menuState = new Map<string, string>([
-                            ['input-lobby-id', 'block'],
-                            ['btn-join-other', 'block'],
-                            ['btn-main-menu', 'block']
-                        ])
-                        transitionMenu(menuState)
-                    }}
-                >
-                </Button>
-                <input id="req-lobby-id" className="border-4 border-indigo-500 p-2 rounded-xl text-center hidden" placeholder="requesting lobby..."></input>
-                <Button
-                    id='btn-copy-lobby'
-                    className={
-                        "bg-indigo-500 text-white py-2 px-8 uppercase rounded-xl hidden"
-                    }
-                    buttonName='copy lobby code'
-                    onClick={() => {
-                        const lobbyElement = document.getElementById("req-lobby-id") as HTMLInputElement | null
-                        if (lobbyElement === null) {
-                            return
-                        }
-                        navigator.clipboard.writeText(lobbyElement.value)
-                    }}
-                >
-                </Button>
-                <Button
-                    id='btn-join-self'
-                    className={
-                        "bg-indigo-500 text-white py-2 px-8 uppercase rounded-xl hidden"
-                    }
-                    buttonName='join'
-                    onClick={() => {
-                        let lobbyID = null
-                        try
-                        {
-                            lobbyID = validateJoinLobby("req-lobby-id")
-                        }
-                        catch (e)
-                        {
-                            alert(e)
-                            return
-                        }
-                        websocket.send(JSON.stringify({type: "JOIN_LOBBY", lobby_id: lobbyID}))
-                        updateDisplayById("game-ui", "none")
-                        onGameModeSelect('online')
-                    }}
-                >
-                </Button>
-                <input id="input-lobby-id" className="border-4 border-indigo-500 p-2 rounded-xl text-center hidden" placeholder="enter lobby code"></input>
-                <Button
-                    id='btn-join-other'
-                    className={
-                        "bg-indigo-500 text-white py-2 px-8 uppercase rounded-xl hidden"
-                    }
-                    buttonName='join'
-                    onClick={() => {
-                        let lobbyID = null
-                        try
-                        {
-                            lobbyID = validateJoinLobby("input-lobby-id")
-                        }
-                        catch (e)
-                        {
-                            alert(e)
-                            return
-                        }
-                        websocket.send(JSON.stringify({type: "JOIN_LOBBY", lobby_id: lobbyID}))
-                        updateDisplayById("game-ui", "none")
-                        onGameModeSelect('online')
-                    }}
-                >
-                </Button>
-                <Button
-                    id='btn-main-menu'
-                    className={
-                        "bg-indigo-500 text-white py-2 px-8 uppercase rounded-xl hidden"
-                    }
-                    buttonName='main menu'
-                    onClick={() => {
-                        const menuState = new Map<string, string>([
-                            ['btn-play-local', 'block'],
-                            ['btn-play-online', 'block']
-                        ])
-                        transitionMenu(menuState)
-                    }}
-                >
-                </Button>
-            </div>
-        </div>
-    )
-}
+export default function GameUI({screen, gameMode, lobbyId, setScreen, setGameMode, handleRandomPlayer, handleHostReq, joinLobbyReq, resetPlayerStatus}:gameProps) {
+	useEffect(() => {
+		const gameUI = document.getElementById("game-ui")
+		if (gameUI === null) {
+			return
+		}
+		resizeGameUI(gameUI)
+		window.addEventListener("resize", () => {
+			resizeGameUI(gameUI)
+		})
+		return () => {
+			removeEventListener("resize", () => {
+				resizeGameUI(gameUI)
+			})
+		}
+	}, [])
+	switch (screen) {
+		case 'main':
+			return 	<MainMenu
+						onPlayLocal={() => setScreen('local')}
+						onPlayOnline={() => setScreen('online')}
+					/>
+		case 'local': 
+			return 	<LocalMenu
+						onSinglePlayer={() => {setGameMode('singleplayer'); setScreen('game')}}
+						onMultiPlayer={() => {setGameMode('multiplayer'); setScreen('game')}}
+						onBack={() => {setGameMode('none'); setScreen('main')}}
+					/>
+		case 'online':
+			return 	<OnlineMenu
+						onPlayRandom={handleRandomPlayer}
+						onHostLobby={() => {handleHostReq()}}
+						onJoinLobby={() => setScreen('join-lobby')}
+						onBack={() => setScreen('main')}
+					/>
+		case 'host-lobby':
+			return 	<HostLobby
+						lobbyId={lobbyId}
+						onCopyLobby={() => {
+							const lobbyElement = document.getElementById("req-lobby-id") as HTMLInputElement | null
+							if (lobbyElement === null) {return}
+							navigator.clipboard.writeText(lobbyElement.value)
+						}}
+						onJoinOwn={() => {
+							setGameMode('online')
+							setScreen('game')
+						}}
+					/>
+		case 'join-lobby':
+			return 	<JoinLobby
+						onJoin={() => {
+							let lobbyID = null
+							try {
+								lobbyID = validateJoinLobby("input-lobby-id")
+							}
+							catch (e) {
+								alert(e)
+								return
+							}
+							joinLobbyReq(lobbyID)
+							setGameMode('online')
+							setScreen('game')
+						}}
+					/>
+		case 'searching':
+			return 	<SearchingScreen
+						onCancel={() => {setGameMode('none'); setScreen('online'); resetPlayerStatus()}}
+					/>
+		case 'game':
+			return <GameCanvas mode={gameMode}/>
+		case 'timeout':
+			return <TimeoutScreen
+						onExit={() => {setGameMode('none'); setScreen('main'); resetPlayerStatus()}}
+						onRetry={async () => { await resetPlayerStatus(); handleRandomPlayer()}}
+					/>
+	}
+  }
