@@ -31,7 +31,7 @@ function transitionMenu(newState: Map<string, string>) {
     }
 }
 
-function validateJoinLobby(lobbyID: string): string {
+export function validateJoinLobby(lobbyID: string): string {
     const lobbyEle = document.getElementById(lobbyID) as HTMLInputElement | null
     if (lobbyEle === null) {
         throw Error("lobbyEle cannot be null")
@@ -221,3 +221,20 @@ export default function GameUI({onGameModeSelect, onConnectToServer, socket}: Ga
         </div>
     )
 }
+
+
+// function MainMenu({})
+    //play local
+    //play online
+
+// function OnlineMenu({})
+    //play random
+    //private game
+        //host lobby
+        //join lobby
+
+// function LocalMenu({})
+    //single-player
+    //multiplayer
+
+

@@ -17,21 +17,61 @@ export const gamesController = {
 		return {success: true, data: queue }
     },
 
-	createGame: async (req: FastifyRequest, reply: FastifyReply) => {
+	getMatchmakingStatus: async (req: FastifyRequest, reply: FastifyReply) => {
+		const player_id = req.user!.userId;
+		const status = gamesService.matchmakingStatus(player_id);
+		return {success: true, data: status }
+    },
+
+	matchMaking: async (req: FastifyRequest, reply: FastifyReply) => {
 		const player_id = req.user!.userId;
 		const player = userService.fetchUser(player_id) as Player;
-		if (player.status === 'playing')
+		if (player.status === 'playing' || player.status === 'searching')
 			throw new ApiError(400, "player already playing");
 		const game_queue = gamesService.fetchGameQueue();
-		if (game_queue === undefined) {
+		let i = 0;
+		while (game_queue[i]) {
+			if (game_queue[i].private === true) 
+				i++;
+		}
+		if (game_queue[i] === undefined) {
 			gamesService.addtoGameQueue(player_id);
 			return {success: true, message: 'Player added to queue, waiting for other player to join'}
 		}
 		else {
-			const result = gamesService.createGame(game_queue.player_id, player_id);
+			const result = gamesService.createGame(game_queue[i].player_id, player_id);
 			const game = gamesService.fetchGame(result!.lastInsertRowid);
 			return {success: true, data: game, message: 'Game created, connect to gameserver'}
 		}
+	},
+
+	hostLobby: async (req: FastifyRequest, reply: FastifyReply) => {
+		const player_id = req.user!.userId;
+		const player = userService.fetchUser(player_id) as Player;
+		if (player.status === 'playing' || player.status === 'searching')
+			throw new ApiError(400, "player already playing");
+		const queue = await gamesService.hostLobby(player_id);
+		console.log(`quque:`, queue);
+		return {success: true, data: queue, message: 'Player created private game'}
+	},
+
+	joinLobby: async (req: FastifyRequest, reply: FastifyReply) => {
+		const player_id = req.user!.userId;
+		const {lobby_id } = req.body as { lobby_id: string }
+		const player = userService.fetchUser(player_id) as Player;
+		if (player.status === 'playing' || player.status === 'searching')
+			throw new ApiError(400, "player already playing");
+		const game_queue = gamesService.fetchlobby(lobby_id);
+		if (game_queue === undefined)
+			throw new ApiError(404, 'lobby not found')
+		const result = gamesService.createGame(game_queue.player_id, player_id);
+		const game = gamesService.fetchGame(result!.lastInsertRowid);
+		return {success: true, data: game, message: 'Game created, connect to gameserver'}
+	},
+
+	cancelMatchmaking: async (req: FastifyRequest, reply: FastifyReply) => {
+		const result = gamesService.cancelMatchmaking(req.user!.userId);
+		return {success: true, message: 'player removed from game queue'}
 	},
 
 	getGameByID: async (req: FastifyRequest, reply: FastifyReply) => {

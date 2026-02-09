@@ -17,12 +17,26 @@ export default async function gamesRoutes (
 			summary: 'Get all games',
 		}}, gamesController.getAllGames); 
 
-    fastify.post('/', {
+    fastify.post('/matchmaking', {
 		schema: {
 			tags: ['games'],
 			summary: 'match making',
 			security: [{ bearerAuth: [] }],
-		}, preHandler: [authenticate]} , gamesController.createGame);
+		}, preHandler: [authenticate]} , gamesController.matchMaking);
+
+    fastify.post('/host', {
+		schema: {
+			tags: ['games'],
+			summary: 'request lobbyID and host a private game',
+			security: [{ bearerAuth: [] }],
+		}, preHandler: [authenticate]} , gamesController.hostLobby);
+
+    fastify.post('/joinlobby', {
+		schema: {
+			tags: ['games'],
+			summary: 'join private lobby',
+			security: [{ bearerAuth: [] }],
+		}, preHandler: [authenticate]} , gamesController.joinLobby);
 	
     fastify.get('/:id', {
 		schema: {
@@ -31,10 +45,22 @@ export default async function gamesRoutes (
 			params: IDSchema,
 		}}, gamesController.getGameByID);
 
+	fastify.get('/matchmaking', {
+		schema: {
+			tags: ['games'],
+			summary: 'Get the matchmaking status, gameData or status',
+		}, preHandler: [authenticate]}, gamesController.getMatchmakingStatus);
+
+	fastify.put('/matchmaking/cancel', {
+		schema: {
+			tags: ['games'],
+			summary: 'reset status and remove from queue',
+		}, preHandler: [authenticate]}, gamesController.cancelMatchmaking);
+
 	fastify.get('/queue', {
 		schema: {
 			tags: ['games'],
-			summary: 'Get the game queue',
+			summary: 'Get game queue',
 		}}, gamesController.getGameQueue);
 
     fastify.delete('/:id', {
