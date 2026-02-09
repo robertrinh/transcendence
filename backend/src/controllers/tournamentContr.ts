@@ -1,7 +1,7 @@
 import { ApiError } from '../Errors/errors.js';
 import { tournamentService } from '../services/tournamentService.js'
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { Tournament, TournamentParticipant } from '../types/tournament.types.js';
+import { Tournament, TournamentParticipant } from '../types/database.interfaces.js';
 
 
 export const tournamentController = {

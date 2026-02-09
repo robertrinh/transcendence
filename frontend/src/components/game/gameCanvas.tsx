@@ -1,6 +1,6 @@
 import {useEffect} from 'react'
-import gameInit from '../static/game.js'
-import { gameInstance } from '../static/game.js'
+import gameInit from '../../static/game.js'
+import { gameInstance } from '../../static/game.js'
 
 interface GameCanvas {
     mode: string
