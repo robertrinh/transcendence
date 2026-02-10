@@ -131,12 +131,10 @@ export default function Game() {
       })
       if (!response.ok) {
         const errordata = await response.json().catch(() => {})
-        console.log('errordata: ', errordata)
         if (errordata?.message) {
-          setError(errordata.message)
-          setScreen('error')
-          throw new Error('failed to join lobby')
+          alert(errordata.message)
         }
+        throw new Error('failed to join lobby')
       }
       const data = await response.json()
         if (data.data?.id) {
@@ -147,7 +145,7 @@ export default function Game() {
         }
       }
       catch (err: any) {
-        console.log(err)
+        console.error(err)
         updateGameMode('none')
       }
   }
