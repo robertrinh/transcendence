@@ -8,7 +8,8 @@ export const finishGameSchema = S.object()
 	.prop('winner_id', S.integer().required())
 	.prop('score_player1', S.integer().minimum(0).required())
 	.prop('score_player2', S.integer().minimum(0).required())
-	.prop('finished_at', S.string().format('date-time').required());
+	// https://fastify.dev/docs/latest/Guides/Migration-Guide-V5/#time-and-date-time-formats-enforce-timezone
+	.prop('finished_at', S.string().format('iso-date-time').required());
 
 export const updateScoreSchema = finishGameSchema.only(['score_player1', 'score_player2'])
 
