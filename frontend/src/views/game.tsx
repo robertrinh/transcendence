@@ -2,7 +2,7 @@ import {useState, useEffect} from 'react'
 import GameUI from '../components/game/gameUI.js'
 import websocket from '../static/websocket.js'
 
-type Screen = 'main' | 'online' | 'local' | 'host-lobby' | 'join-lobby' | 'searching' | 'game' | 'timeout'
+type Screen = 'main' | 'online' | 'local' | 'host-lobby' | 'join-lobby' | 'searching' | 'game' | 'timeout' | 'error'
 type GameMode = 'none' | 'singleplayer' | 'multiplayer' | 'online'
 
 export default function Game() {
@@ -10,6 +10,7 @@ export default function Game() {
   const [screen, setScreen] = useState<Screen>("main") 
   const [gameData, setGameData] = useState<any>(null)
   const [lobbyId, setLobbyId] = useState("")
+  const [error, setError] = useState<string | null>(null)
 
 
   useEffect(() => {
@@ -21,9 +22,15 @@ export default function Game() {
         const response = await fetch('/api/games/matchmaking', {
           headers: {'Authorization': `Bearer ${token}`}
         })
-        if (!response.ok)
-            throw new Error('failed poll matchmaking status')
-
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => {})
+          console.error('error: MATCHMAKING POLL: ', errorData)
+          if (errorData?.message) {
+            setError(errorData.message)
+            setScreen('error')
+            throw new Error('failed to poll matchmaking status')
+          }
+        }
         const data = await response.json()
         if (data.data?.id) {
           console.log('i get here, the gamedata is here and im setting gameMode to online', data)
@@ -68,9 +75,16 @@ export default function Game() {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`}
       })
-      if (!response.ok)
-        throw new Error('failed to join queue')
+      if (!response.ok) {
+        const errordata = await response.json().catch(() => {})
+        console.log('errordata: ', errordata)
+        if (errordata?.message) {
+          setError(errordata.message)
+          setScreen('error')
+          throw new Error('failed to join queue')
+        }
       }
+    }
       catch (err: any) {
         console.log(err)
         updateGameMode('none')
@@ -84,8 +98,15 @@ export default function Game() {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`}
       })
-      if (!response.ok)
-        throw new Error('failed to create lobbyId')
+      if (!response.ok) {
+        const errordata = await response.json().catch(() => {})
+        console.log('errordata: ', errordata)
+        if (errordata?.message) {
+          setError(errordata.message)
+          setScreen('error')
+          throw new Error('failed to create lobbyId')
+        }
+      }
       const data = await response.json()
       console.log(`data: `, data)
       setLobbyId(data.data.lobby_id);
@@ -108,8 +129,15 @@ export default function Game() {
 		},
         body: JSON.stringify({ lobby_id }),
       })
-      if (!response.ok)
-        throw new Error(`failed to join lobby on lobbyId: ${lobby_id}`)
+      if (!response.ok) {
+        const errordata = await response.json().catch(() => {})
+        console.log('errordata: ', errordata)
+        if (errordata?.message) {
+          setError(errordata.message)
+          setScreen('error')
+          throw new Error('failed to join lobby')
+        }
+      }
       const data = await response.json()
         if (data.data?.id) {
           console.log(data)
@@ -151,6 +179,7 @@ return (
 			screen={screen}
 			gameMode={gameMode}
 			lobbyId={lobbyId}
+      error={error}
 			setScreen={setScreen}
 			setGameMode={setGameMode}
 			handleRandomPlayer={handleRandomPlayer}

@@ -2,15 +2,16 @@ import { useEffect } from 'react'
 import GameCanvas from './gameCanvas.js'
 import { HostLobby, JoinLobby, LocalMenu, MainMenu, OnlineMenu } from './gameMenus.js';
 import SearchingScreen from './searchingScreen.js';
-import TimeoutScreen from './timeoutScreen.js';
+import  { TimeoutScreen, ErrorScreen } from './timeoutScreen.js';
 
-type Screen = 'main' | 'online' | 'local' | 'host-lobby' | 'join-lobby' | 'searching' | 'game' | 'timeout'
+type Screen = 'main' | 'online' | 'local' | 'host-lobby' | 'join-lobby' | 'searching' | 'game' | 'timeout' | 'error'
 type GameMode = 'none' | 'singleplayer' | 'multiplayer' | 'online'
 
 type gameProps = {
 	lobbyId: string;
 	gameMode: GameMode;
 	screen: Screen;
+	error: string | null;
 
 	setScreen(screen: Screen): void
 	setGameMode(gameMode: GameMode): void
@@ -38,7 +39,7 @@ function resizeGameUI(gameUI: HTMLElement) {
         gameUI.style.height = String(gameUI.offsetWidth * widthRatio) + "px"
 }
 
-export default function GameUI({screen, gameMode, lobbyId, setScreen, setGameMode, handleRandomPlayer, handleHostReq, joinLobbyReq, resetPlayerStatus}:gameProps) {
+export default function GameUI({screen, gameMode, lobbyId, error, setScreen, setGameMode, handleRandomPlayer, handleHostReq, joinLobbyReq, resetPlayerStatus}:gameProps) {
 	useEffect(() => {
 		const gameUI = document.getElementById("game-ui")
 		if (gameUI === null) {
@@ -98,8 +99,6 @@ export default function GameUI({screen, gameMode, lobbyId, setScreen, setGameMod
 								return
 							}
 							joinLobbyReq(lobbyID)
-							setGameMode('online')
-							setScreen('game')
 						}}
 					/>
 		case 'searching':
@@ -112,6 +111,11 @@ export default function GameUI({screen, gameMode, lobbyId, setScreen, setGameMod
 			return <TimeoutScreen
 						onExit={() => {setGameMode('none'); setScreen('main'); resetPlayerStatus()}}
 						onRetry={async () => { await resetPlayerStatus(); handleRandomPlayer()}}
+					/>
+		case 'error':
+			return <ErrorScreen
+						error={error}
+						onExit={() => {setGameMode('none'); setScreen('main'); resetPlayerStatus()}}
 					/>
 	}
   }
