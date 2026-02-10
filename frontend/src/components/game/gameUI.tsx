@@ -34,8 +34,10 @@ function validateJoinLobby(lobbyID: string): string {
 }
 
 function resizeGameUI(gameUI: HTMLElement) {
+        const oldDisplay = gameUI.style.display
         const widthRatio = 0.75 // 4:3
         gameUI.setAttribute("style", `height:${gameUI.offsetWidth * widthRatio}px`)
+        gameUI.setAttribute("style", `display:${oldDisplay}`)
         gameUI.style.height = String(gameUI.offsetWidth * widthRatio) + "px"
 }
 
