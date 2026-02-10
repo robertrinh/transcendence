@@ -2,6 +2,7 @@ import asyncio
 import json
 import random as rand
 import sys
+import signal
 from time import time
 from websockets import ServerConnection
 from websockets.asyncio.server import serve
@@ -115,14 +116,25 @@ async def handler(websocket: ServerConnection):
 
 
 async def main(ip: str, port: int):
+    loop = asyncio.get_running_loop()
     rand.seed(time())
+    stop = loop.create_future()
+    loop.add_signal_handler(signal.SIGTERM, stop.set_result, signal.SIGTERM)
+    loop.add_signal_handler(signal.SIGINT, stop.set_result, signal.SIGINT)
     async with serve(handler, ip, port) as server:
         print(f"Lobby server is listening on: {ip}:{port}")
-        await server.serve_forever()
+        await stop
+        signal_print = None
+        match stop.result():
+            case signal.SIGINT:
+                signal_print = 'SIGINT'
+            case signal.SIGTERM:
+                signal_print = 'SIGTERM'
+        print(
+            f"\n{signal_print} received, gracefully exiting server...",
+            file=sys.stderr)
+        server.close()
+        await server.wait_closed()
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main(IP, PORT))
-    except KeyboardInterrupt:
-        print("\nGame server interrupted, exiting...", file=sys.stderr)
-        exit(0)
+    asyncio.run(main(IP, PORT))

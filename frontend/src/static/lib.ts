@@ -10,17 +10,22 @@ export const arenaHeight = 768
 export const roundMax = 3
 export const ballRadius = 15
 export const ballSize = ballRadius * 2
-export const paddleMoveUnits = 30
+// physics, the speeds need to be equal to the server
 const targetFPS = 60
 export const clientTick = 1000 / targetFPS
+const ballSpeedPerTick = 0.25
+const paddleSpeedPerTick = 0.5
+const ballSpeed = ballSpeedPerTick * clientTick
+export const paddleMoveUnits = paddleSpeedPerTick * clientTick
 export const ball = new Ball(
-    0, 0, {x: 1, y: 1}, ballRadius, 5, "#160f29", 0, 7.5,
+    0, 0, {x: 1, y: 1}, ballRadius, ballSpeed, "#160f29", 0, 7.5,
     new Array("#ffffff", "#cdc3e9", "#9c88d3"))
 export const playerOne = new Player(
     0, 0, ballSize, ballSize * 4, paddleMoveUnits, "#5885a2")
 export const playerTwo = new Player(
     arenaWidth - ballSize, 0, ballSize, ballSize * 4, paddleMoveUnits,
     "#b8383b")
+export const textColor = "#36454f"
 
 export class Vector2
 {

@@ -2,7 +2,8 @@ import { Ball } from './ball'
 import { PlayerPaddle } from './playerPaddle'
 import { playerOne, playerTwo, ball, Point, Vector2,
     applyBallHorizontalBounce, drawPlayerScores, arenaWidth, clientTick,
-    roundMax, handlePaddleCollision, assertIsNotNull } from './lib'
+    roundMax, handlePaddleCollision, assertIsNotNull, printText, 
+    arenaHeight, textColor} from './lib'
 import { DifficultyLevel } from './ai'
 
 export async function gameOfflineLobby(
@@ -191,8 +192,13 @@ export async function gameOfflineLobby(
         // if (playerTwo.humanControlled === false) {
         //     playerTwo.ai?.drawRays(drawCtx)
         // }
-        drawPlayerScores(canvas, drawCtx, 48, "#36454f", "sans-serif",
+        drawPlayerScores(canvas, drawCtx, 48, textColor, "sans-serif",
         playerOne.roundScore, playerTwo.roundScore)
+        if (app.state === gameState.RoundEnd) {
+            drawCtx.textAlign = "center"
+            printText(drawCtx, 48, arenaWidth/2, arenaHeight * 0.8,
+                textColor, "sans-serif", Array("Press spacebar to continue..."))
+        }
         ctx.drawImage(drawCanvas, 0, 0)
     }
 
