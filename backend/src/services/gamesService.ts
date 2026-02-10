@@ -85,12 +85,12 @@ export const gamesService = {
 		return db.prepare('SELECT * FROM game_queue WHERE lobby_id = ?').get(lobby_id) as Queue;
 	},
 
-	finishGame: (id:number, score_player1:number, score_player2:number, winner_id: number, finished_at: number) =>{
+	finishGame: (id:number, score_player1:number, score_player2:number, winner_id: number, finished_at: string) =>{
 		const gameObj = gamesService.fetchGame(id) as Game;
 		if (gameObj.status !== 'ready') //check this
 			throw new ApiError(400, 'game not ongoing');
 		try {
-			db.prepare('UPDATE users SET status = ? WHERE id = ? OR id = ?').run('finished', gameObj.player1_id, gameObj.player2_id);
+			db.prepare('UPDATE users SET status = ? WHERE id = ? OR id = ?').run('idle', gameObj.player1_id, gameObj.player2_id);
 			return db.prepare(' UPDATE games SET winner_id = ?, score_player1 = ?, score_player2 = ?, finished_at = ?, status = ? WHERE id = ?').run(winner_id, score_player1, score_player2, finished_at, 'finished', id)
 		}
 		catch (err:any) {
