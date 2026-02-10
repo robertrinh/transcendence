@@ -6,6 +6,7 @@ from websockets import ServerConnection, broadcast
 from ball import Ball
 from lib import Vector2, Rect
 from player_paddle import PlayerPaddle
+from datetime import datetime
 
 # game dimensions
 ARENA_WIDTH = 1024
@@ -33,7 +34,7 @@ class Point:
 
 
 class GameInstance:
-    lobby_id: str
+    lobby_id: int
     players: [ServerConnection]
     game_running = False
 
@@ -54,8 +55,7 @@ class GameInstance:
     db_p1_id: int
     db_p2_id: int
 
-    def __init__(self, lobby_id: str):
-        self.lobby_id = lobby_id
+    def __init__(self, db_game_id: int, db_p1_id: int, db_p2_id: int):
         self.ball = Ball(
             BALL_SPEED, BALL_SPEED * 2, BALL_RADIUS)
         self.ball.set_start(ARENA_HEIGHT, ARENA_WIDTH, random_ball_vec())
@@ -69,9 +69,10 @@ class GameInstance:
         )
         self.set_game_start()
         self.players = list()
-        self.db_game_id = 0
-        self.db_p1_id = 0
-        self.db_p2_id = 0
+        self.lobby_id = db_game_id
+        self.db_game_id = db_game_id
+        self.db_p1_id = db_p1_id
+        self.db_p2_id = db_p2_id
 
     def set_game_start(self):
         # player one
@@ -87,12 +88,23 @@ class GameInstance:
         self.p2_paddle.shape.y = 0
         self.p2_score = 0
 
-    def add_player(self, connection: ServerConnection):
+    async def add_player(self, db_user_id: int, connection: ServerConnection):
+        is_p1 = self.db_p1_id == db_user_id
         self.players.append(connection)
-        print(f"lobby {self.lobby_id}: connection {connection} added")
+        game_player_id = 1 if is_p1 else 2
+        await connection.send(json.dumps(
+            {'type': 'ID', 'player_id': game_player_id}
+        ))
+        print(
+            f"lobby {self.lobby_id}: connection {connection} added with"
+            f" database id: {db_user_id}"
+        )
 
-    def has_player(self, connection: ServerConnection):
+    def has_player_conn(self, connection: ServerConnection):
         return connection in self.players
+
+    def has_player_id(self, db_user_id: int):
+        return db_user_id == self.db_p1_id or db_user_id == self.db_p2_id
 
     def lobby_full(self) -> bool:
         return len(self.players) == 2
@@ -244,13 +256,21 @@ def handle_score(game: GameInstance):
     # game is finished, we need to upload the results to the database
     if game.p1_score == ROUND_MAX or game.p2_score == ROUND_MAX:
         game.game_running = False
+        winner_id = 0
+        if game.p1_score == ROUND_MAX:
+            winner_id = game.db_p1_id
+        else:
+            winner_id = game.db_p2_id
         print(f"lobby {game.lobby_id}: game finished, uploading results...")
         try:
+            timestamp = '{:%Y-%m-%d %H:%M:%S}'.format(datetime.now())
             response = requests.put(
-                f"http://backend/api/games/{game.db_game_id}",
+                f"http://backend:3000/api/games/{game.db_game_id}/finish",
                 json={
+                    "winner_id": winner_id,
                     "score_player1": game.p1_score,
-                    "score_player2": game.p2_score
+                    "score_player2": game.p2_score,
+                    "finished_at": timestamp
                 }
             )
             print(

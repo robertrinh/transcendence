@@ -15,21 +15,16 @@ CONNECTED = set()
 LOBBIES: [GameInstance] = []
 
 
-def request_lobby_id() -> str:
-    hex = "0123456789abcdef"
-    lobby_id = []
-    for i in range(0, 10):
-        lobby_id.append(hex[rand.randint(0, 15)])
-    return "".join(lobby_id)
-
-
-def add_game_instance() -> GameInstance:
-    lobby_id = request_lobby_id()
-    LOBBIES.append(GameInstance(lobby_id))
+def add_game_instance(
+        db_game_id: int, db_p1_id: int, db_p2_id: int) -> GameInstance:
+    """
+    The gameserver receives all the game information from the backend server.
+    """
+    LOBBIES.append(GameInstance(db_game_id, db_p1_id, db_p2_id))
     return LOBBIES[-1]
 
 
-def find_game_instance_by_id(lobby_id: str) -> GameInstance | None:
+def find_game_instance_by_id(lobby_id: int) -> GameInstance | None:
     for lobby in LOBBIES:
         if lobby.lobby_id == lobby_id:
             return lobby
@@ -39,9 +34,21 @@ def find_game_instance_by_id(lobby_id: str) -> GameInstance | None:
 def find_game_instance_by_connection(
         websocket: ServerConnection) -> GameInstance | None:
     for lobby in LOBBIES:
-        if lobby.has_player(websocket):
+        if lobby.has_player_conn(websocket):
             return lobby
     return None
+
+
+def find_game_instance_by_player_id(player_id: int) -> GameInstance | None:
+    for lobby in LOBBIES:
+        if lobby.has_player_id(player_id):
+            return lobby
+    return None
+
+
+def validate_message(message_content: dict):
+    if 'type' not in message_content.keys():
+        raise RuntimeError('Message is missing type property')
 
 
 async def process_message(
@@ -78,6 +85,25 @@ async def process_message(
             }
         await websocket.send(json.dumps(response))
         return
+    if message_type == 'START_GAME':
+        game_instance = add_game_instance(
+            message_content['game_id'],
+            message_content['player1_id'],
+            message_content['player2_id']
+        )
+        response = {
+            'type': 'WHOAREYOU'
+        }
+        await websocket.send(json.dumps(response))
+        return
+    if message_type == 'ID':
+        # connect the player to the game instance
+        player_id = message_content['id']
+        lobby = find_game_instance_by_player_id(player_id)
+        await lobby.add_player(player_id, websocket)
+        if not lobby.lobby_full():
+            asyncio.create_task(lobby.start_lobby())
+        return
     # The message contains a game state update at this point so always look for
     # the related lobby first
     lobby = find_game_instance_by_connection(websocket)
@@ -92,27 +118,22 @@ async def process_message(
                 lobby.p1_input.append(['UP', message_content['timestamp']])
             else:
                 lobby.p2_input.append(['UP', message_content['timestamp']])
-        case 'WHOAMI':
-            if websocket == lobby.players[0]:
-                await websocket.send(json.dumps(
-                    {'type': 'ID', 'player_id': 1}
-                    ))
-            else:
-                await websocket.send(json.dumps(
-                    {'type': 'ID', 'player_id': 2}
-                    ))
+        case _:
+            raise RuntimeError(f"Unknown message type: {message_type}")
 
 
 async def handler(websocket: ServerConnection):
     CONNECTED.add(websocket)
+    print(f"connection added: {websocket}")
     async for message in websocket:
         try:
             message_content = json.loads(message)
-        except json.decoder.JSONDecodeError as e:
+            validate_message(message_content)
+            message_type = message_content['type']
+            await process_message(message_type, message_content, websocket)
+        except Exception as e:
             print(e, file=sys.stderr)
             continue
-        message_type = message_content['type']
-        await process_message(message_type, message_content, websocket)
 
 
 async def main(ip: str, port: int):
