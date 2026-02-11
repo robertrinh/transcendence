@@ -2,7 +2,7 @@ import {useState, useEffect} from 'react'
 import GameUI from '../components/game/gameUI.js'
 import websocket from '../static/websocket.js'
 
-type Screen = 'main' | 'online' | 'local' | 'host-lobby' | 'join-lobby' | 'searching' | 'game' | 'timeout' | 'error'
+type Screen = 'main' | 'online' | 'local' | 'host-lobby' | 'join-lobby' | 'tournament' | 'create-tournament' |'searching' | 'game' | 'timeout' | 'error'
 type GameMode = 'none' | 'singleplayer' | 'multiplayer' | 'online'
 
 export default function Game() {

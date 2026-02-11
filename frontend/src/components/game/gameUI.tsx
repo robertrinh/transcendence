@@ -1,10 +1,11 @@
 import { useEffect } from 'react'
 import GameCanvas from './gameCanvas.js'
 import { HostLobby, JoinLobby, LocalMenu, MainMenu, OnlineMenu } from './gameMenus.js';
+import {MainMenuTournament, MenuCreateTournament} from './tournamentMenus.js'
 import SearchingScreen from './searchingScreen.js';
 import  { TimeoutScreen, ErrorScreen } from './timeoutScreen.js';
 
-type Screen = 'main' | 'online' | 'local' | 'host-lobby' | 'join-lobby' | 'searching' | 'game' | 'timeout' | 'error'
+type Screen = 'main' | 'online' | 'local' | 'host-lobby' | 'join-lobby' | 'tournament' | 'create-tournament' |'searching' | 'game' | 'timeout' | 'error'
 type GameMode = 'none' | 'singleplayer' | 'multiplayer' | 'online'
 
 type gameProps = {
@@ -74,6 +75,7 @@ export default function GameUI({screen, gameMode, lobbyId, error, setScreen, set
 						onPlayRandom={handleRandomPlayer}
 						onHostLobby={() => {handleHostReq()}}
 						onJoinLobby={() => setScreen('join-lobby')}
+						onTournament={() => setScreen('tournament')}
 						onBack={() => setScreen('main')}
 					/>
 		case 'host-lobby':
@@ -102,6 +104,17 @@ export default function GameUI({screen, gameMode, lobbyId, error, setScreen, set
 							}
 							joinLobbyReq(lobbyID)
 						}}
+					/>
+		case 'tournament':
+			return <MainMenuTournament 
+						// onJoinTour={}
+						onCreateTour={() => setScreen('create-tournament')}
+						// onCreateTour={() => {setScreen('create-tournament'); alert('tournament creation coming soon!')}}
+						// onCreateTour={}
+					/>
+		case 'create-tournament':
+			return <MenuCreateTournament 
+						onCreate={() => handleTournamentCreation()}
 					/>
 		case 'searching':
 			return 	<SearchingScreen
