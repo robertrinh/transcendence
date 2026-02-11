@@ -1,5 +1,6 @@
 import { Ball } from './ball'
-import { playerOne, playerTwo, ball, clientTick, drawPlayerScores } from './lib'
+import { playerOne, playerTwo, ball, clientTick, drawPlayerScores,
+    intervals } from './lib'
 import websocket from './websocket'
 
 interface MoveTS {
@@ -268,5 +269,5 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
     ball.x = canvas.width / 2
     ball.y = canvas.height / 2
     requestAnimationFrame(draw)
-	setInterval(update, clientTick)
+	intervals.gameOnlineUpdate = setInterval(update, clientTick)
 }
