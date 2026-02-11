@@ -2,6 +2,24 @@ import { Ball } from "./ball"
 import { Player } from "./player"
 import { PlayerPaddle } from "./playerPaddle"
 
+class Intervals {
+    gameOfflineUpdate: number | undefined
+    gameOnlineUpdate: number | undefined
+
+    constructor(gameOfflineUpdate?: number, gameOnlineUpdate?: number) {
+        this.gameOfflineUpdate = gameOfflineUpdate
+        this.gameOnlineUpdate = gameOnlineUpdate
+    }
+
+    reset() {
+        if (this.gameOfflineUpdate !== undefined) {
+            clearInterval(this.gameOfflineUpdate)
+        }
+        if (this.gameOnlineUpdate !== undefined) {
+            clearInterval(this.gameOnlineUpdate)
+        }
+    }
+}
 /**
  * Globals
  */
@@ -25,7 +43,46 @@ export const playerOne = new Player(
 export const playerTwo = new Player(
     arenaWidth - ballSize, 0, ballSize, ballSize * 4, paddleMoveUnits,
     "#b8383b")
+export const intervals = new Intervals()
 export const textColor = "#36454f"
+
+function resetBall() {
+    ball.x = 0
+    ball.y = 0
+    ball.dirVector.x = 1
+    ball.dirVector.y = 1
+    ball.radius = ballRadius
+    ball.movementSpeed = ballSpeed
+    ball.color = "#160f29"
+    ball.speedX = 0
+    ball.maxSpeed = 7.5
+    ball.reset()
+}
+
+function resetPlayerOne() {
+    playerOne.paddle.x = 0
+    playerOne.paddle.y = 0
+    playerOne.roundScore = 0
+    playerOne.gameScore = 0
+    playerOne.ai = undefined
+    playerOne.humanControlled = true
+}
+
+function resetPlayerTwo() {
+    playerTwo.paddle.x = arenaWidth - ballSize
+    playerTwo.paddle.y = 0
+    playerTwo.roundScore = 0
+    playerTwo.gameScore = 0
+    playerTwo.ai = undefined
+    playerTwo.humanControlled = true
+}
+
+export function resetState() {
+    resetBall()
+    resetPlayerOne()
+    resetPlayerTwo()
+    intervals.reset()
+}
 
 export class Vector2
 {

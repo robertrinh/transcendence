@@ -3,7 +3,7 @@ import { PlayerPaddle } from './playerPaddle'
 import { playerOne, playerTwo, ball, Point, Vector2,
     applyBallHorizontalBounce, drawPlayerScores, arenaWidth, clientTick,
     roundMax, handlePaddleCollision, assertIsNotNull, printText, 
-    arenaHeight, textColor} from './lib'
+    arenaHeight, textColor, intervals } from './lib'
 import { DifficultyLevel } from './ai'
 
 export async function gameOfflineLobby(
@@ -210,5 +210,5 @@ export async function gameOfflineLobby(
     const app = {state: gameState.Start}
     ball.setStart(getRandomStartVec())
     requestAnimationFrame(draw)
-    setInterval(update, clientTick)
+    intervals.gameOfflineUpdate = setInterval(update, clientTick)
 }

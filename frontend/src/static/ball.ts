@@ -79,4 +79,8 @@ export class Ball
 		this.y = (arenaHeight / 2) - this.radius
 		this.dirVector = dirVect
 	}
+
+	reset() {
+		this.trailPos = new Array<Vector2>(this.trailLen)
+	}
 }
