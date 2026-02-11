@@ -3,8 +3,8 @@ import { Player } from "./player"
 import { PlayerPaddle } from "./playerPaddle"
 
 class Intervals {
-    gameOfflineUpdate: number | undefined
-    gameOnlineUpdate: number | undefined
+    gameOfflineUpdate: number | ReturnType<typeof setInterval> | undefined
+    gameOnlineUpdate: number | ReturnType<typeof setInterval> | undefined
 
     constructor(gameOfflineUpdate?: number, gameOnlineUpdate?: number) {
         this.gameOfflineUpdate = gameOfflineUpdate
