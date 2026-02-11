@@ -1,5 +1,6 @@
 import { Ball } from './ball'
-import { playerOne, playerTwo, ball, clientTick, drawPlayerScores } from './lib'
+import { playerOne, playerTwo, ball, clientTick, drawPlayerScores,
+    intervals } from './lib'
 import websocket from './websocket'
 
 interface MoveTS {
@@ -161,7 +162,7 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
     let scoreReceived = false
     let scoreCounter = 0
 
-    function gameSockOnMessage(event: MessageEvent) {
+    async function gameSockOnMessage(event: MessageEvent) {
         const JSONObject = JSON.parse(event.data)
         const p1Server = JSONObject.p1
         const p2Server = JSONObject.p2
@@ -231,17 +232,42 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
                         break
                 }
                 break
+            case "WHOAREYOU":
+                try {
+                    const token = localStorage.getItem('token');
+                    if (token === null) {
+                        throw Error("Failed to process message 'WHOAREYOU'; missing JWT token")
+                    }
+                    const response = await fetch(
+                        "/api/users/profile/me", {
+                            headers: {'Authorization': `Bearer ${token}`}
+                        }
+                    )
+                    if (!response.ok) {
+                        throw Error("Failed to process message 'WHOAREYOU'; backend error")
+                    }
+                    const parsed = await response.json()
+                    websocket.send(JSON.stringify(
+                        {
+                            'type': 'ID',
+                            'id': parsed.profile.id
+                        }
+                    ))
+                }
+                catch (error) {
+                    console.log(error)
+                }
+                break
             default:
                 console.log(`Unrecognized message type: ${JSONObject.type}`)
         }
     }
 
     websocket.onmessage = gameSockOnMessage
-    websocket.send(JSON.stringify({type: 'WHOAMI'}))
     canvas.addEventListener("keydown", handleKeyDown)
     canvas.addEventListener("keyup", handleKeyUp)
     ball.x = canvas.width / 2
     ball.y = canvas.height / 2
     requestAnimationFrame(draw)
-	setInterval(update, clientTick)
+	intervals.gameOnlineUpdate = setInterval(update, clientTick)
 }

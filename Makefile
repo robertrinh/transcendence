@@ -20,13 +20,11 @@ frontend:
 down:
 	@docker-compose -f docker-compose.dev.yaml down
 	@docker-compose -f docker-compose.yaml down
-	@rm -rf frontend/node_modules
 
 #removes volumes AND images
 clean:
 	@docker-compose -f docker-compose.dev.yaml down -v --rmi all
 	@docker-compose -f docker-compose.yaml down -v --rmi all
-	@rm -rf frontend/node_modules
 
 re: clean all
 

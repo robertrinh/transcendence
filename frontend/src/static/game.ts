@@ -2,26 +2,6 @@ import { assertIsNotNull } from './lib'
 import { gameOnlineLobby } from './gameOnline'
 import { gameOfflineLobby } from './gameOffline'
 
-class GameState {
-    runGame = true
-
-    stopGame() {
-        this.runGame = false
-        console.log("Stopping game...")
-        const canvasEle = document.getElementById("game-canvas")
-        if (canvasEle !== null) {
-            canvasEle.remove()
-        }
-    }
-
-    startGame() {
-        this.runGame = true
-        console.log("Starting game...")
-    }
-}
-
-export const gameInstance = new GameState
-
 export default async function gameInit (gameMode: string) {
     let canvas = document.getElementById('game-canvas') as HTMLCanvasElement | null
     if (canvas === null) {

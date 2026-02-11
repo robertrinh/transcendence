@@ -6,6 +6,7 @@ from websockets import ServerConnection, broadcast
 from ball import Ball
 from lib import Vector2, Rect
 from player_paddle import PlayerPaddle
+from datetime import datetime
 
 # game dimensions
 ARENA_WIDTH = 1024
@@ -33,9 +34,11 @@ class Point:
 
 
 class GameInstance:
-    lobby_id: str
+    lobby_id: str  # for private lobbies
+    is_private = False
     players: [ServerConnection]
     game_running = False
+    is_done = False
 
     p1_last_ts: int
     p1_input: []
@@ -54,8 +57,9 @@ class GameInstance:
     db_p1_id: int
     db_p2_id: int
 
-    def __init__(self, lobby_id: str):
-        self.lobby_id = lobby_id
+    def __init__(
+            self, db_game_id: int, db_p1_id: int, db_p2_id: int, lobby_id=None
+    ):
         self.ball = Ball(
             BALL_SPEED, BALL_SPEED * 2, BALL_RADIUS)
         self.ball.set_start(ARENA_HEIGHT, ARENA_WIDTH, random_ball_vec())
@@ -69,9 +73,10 @@ class GameInstance:
         )
         self.set_game_start()
         self.players = list()
-        self.db_game_id = 0
-        self.db_p1_id = 0
-        self.db_p2_id = 0
+        self.lobby_id = lobby_id
+        self.db_game_id = db_game_id
+        self.db_p1_id = db_p1_id
+        self.db_p2_id = db_p2_id
 
     def set_game_start(self):
         # player one
@@ -87,12 +92,45 @@ class GameInstance:
         self.p2_paddle.shape.y = 0
         self.p2_score = 0
 
-    def add_player(self, connection: ServerConnection):
-        self.players.append(connection)
-        print(f"lobby {self.lobby_id}: connection {connection} added")
+    def set_is_private(self):
+        self.is_private = True
 
-    def has_player(self, connection: ServerConnection):
+    def kill(self):
+        self.set_game_start()
+        self.players.clear()
+        self.db_game_id = -1
+        self.db_p1_id = -1
+        self.db_p2_id = -1
+        self.lobby_id = None
+        self.game_running = False
+        self.is_done = True
+
+    async def add_player(self, connection: ServerConnection, db_user_id=None):
+        if self.is_private:
+            if db_user_id is None:
+                self.players.append(connection)
+                return
+            # this means the player is already in the instance but we just
+            # received their db_id
+            if self.db_p1_id == -1:
+                self.db_p1_id = db_user_id
+        is_p1 = self.db_p1_id == db_user_id or self.db_p1_id == -1
+        if connection not in self.players:
+            self.players.append(connection)
+        game_player_id = 1 if is_p1 else 2
+        await connection.send(json.dumps(
+            {'type': 'ID', 'player_id': game_player_id}
+        ))
+        print(
+            f"lobby {self.lobby_id}: connection {connection} added with"
+            f" database id: {db_user_id}"
+        )
+
+    def has_player_conn(self, connection: ServerConnection):
         return connection in self.players
+
+    def has_player_id(self, db_user_id: int):
+        return db_user_id == self.db_p1_id or db_user_id == self.db_p2_id
 
     def lobby_full(self) -> bool:
         return len(self.players) == 2
@@ -241,16 +279,24 @@ def handle_score(game: GameInstance):
         return
     message = {'type': 'SCORE', 'scored_by': scored_by}
     broadcast(game.players, json.dumps(message))
+    game.ball.set_start(ARENA_HEIGHT, ARENA_WIDTH, random_ball_vec())
     # game is finished, we need to upload the results to the database
     if game.p1_score == ROUND_MAX or game.p2_score == ROUND_MAX:
-        game.game_running = False
+        winner_id = 0
+        if game.p1_score == ROUND_MAX:
+            winner_id = game.db_p1_id
+        else:
+            winner_id = game.db_p2_id
         print(f"lobby {game.lobby_id}: game finished, uploading results...")
         try:
+            timestamp = '{:%Y-%m-%d %H:%M:%S}'.format(datetime.now())
             response = requests.put(
-                f"http://backend/api/games/{game.db_game_id}",
+                f"http://backend:3000/api/games/{game.db_game_id}/finish",
                 json={
+                    "winner_id": winner_id,
                     "score_player1": game.p1_score,
-                    "score_player2": game.p2_score
+                    "score_player2": game.p2_score,
+                    "finished_at": timestamp
                 }
             )
             print(
@@ -258,7 +304,7 @@ def handle_score(game: GameInstance):
                 f"{response.status_code}")
         except requests.ConnectionError as e:
             print(f"lobby {game.lobby_id}: {repr(e)}")
-    game.ball.set_start(ARENA_HEIGHT, ARENA_WIDTH, random_ball_vec())
+        game.kill()
 
 
 def move_ball(ball: Ball, player_one: PlayerPaddle, player_two: PlayerPaddle):
