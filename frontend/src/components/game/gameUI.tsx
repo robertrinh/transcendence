@@ -114,14 +114,11 @@ export default function GameUI({screen, gameMode, lobbyId, error, setScreen, set
 					/>
 		case 'tournament':
 			return <MainMenuTournament 
-						// onJoinTour={}
 						onCreateTour={() => setScreen('create-tournament')}
-						// onCreateTour={() => {setScreen('create-tournament'); alert('tournament creation coming soon!')}}
-						// onCreateTour={}
 					/>
 		case 'create-tournament':
 			return <MenuCreateTournament 
-						onCreate={() => handleTournamentCreation()}
+						onCreate={() => alert('create tournament and put you in a waiting room') } //handleTournamentCreation()}
 					/>
 		case 'searching':
 			return 	<SearchingScreen
