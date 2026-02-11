@@ -51,14 +51,28 @@ export default function Game() {
 
   useEffect(() => {
     if (gameMode == 'online' && gameData) {
-      const game = JSON.stringify({
-        type: 'START_GAME',
-        game_id: gameData.id,
-        player1_id: gameData.player1_id,
-        player2_id: gameData.player2_id
-      })
-      websocket.send(game);
-	  console.log('game data sent to gameserver')
+      console.log(`sending game data to server, lobby_id: ${lobbyId}`)
+      // we are joining a random match
+      if (lobbyId === "") {
+        const game = JSON.stringify({
+          type: 'START_GAME',
+          game_id: gameData.id,
+          player1_id: gameData.player1_id,
+          player2_id: gameData.player2_id
+        })
+        websocket.send(game);
+      }
+      // we are joining a private lobby
+      else {
+        websocket.send(JSON.stringify({
+          type: 'START_GAME',
+          game_id: gameData.id,
+          player1_id: gameData.player1_id,
+          player2_id: gameData.player2_id,
+          lobby_id: lobbyId
+        }))
+      }
+      console.log('game data sent to gameserver')
     }
   }, [gameMode])
 
@@ -119,6 +133,7 @@ export default function Game() {
   }
 
   async function joinLobbyReq (lobby_id: string){
+    setLobbyId(lobby_id)
       try {
       const token = localStorage.getItem('token');
       const response = await fetch('/api/games/joinlobby', {

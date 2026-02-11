@@ -3,6 +3,7 @@ import GameCanvas from './gameCanvas.js'
 import { HostLobby, JoinLobby, LocalMenu, MainMenu, OnlineMenu } from './gameMenus.js';
 import SearchingScreen from './searchingScreen.js';
 import  { TimeoutScreen, ErrorScreen } from './timeoutScreen.js';
+import websocket from '../../static/websocket.js';
 
 type Screen = 'main' | 'online' | 'local' | 'host-lobby' | 'join-lobby' | 'searching' | 'game' | 'timeout' | 'error'
 type GameMode = 'none' | 'singleplayer' | 'multiplayer' | 'online'
@@ -85,6 +86,12 @@ export default function GameUI({screen, gameMode, lobbyId, error, setScreen, set
 							navigator.clipboard.writeText(lobbyElement.value)
 						}}
 						onJoinOwn={() => {
+							websocket.send(
+								JSON.stringify({
+									"type": "HOST_LOBBY",
+									"lobby_id": lobbyId
+								})
+							)
 							setGameMode('online')
 							setScreen('game')
 						}}
