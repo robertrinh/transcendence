@@ -9,7 +9,43 @@ export default function Game() {
   const [gameData, setGameData] = useState<any>(null)
   const [lobbyId, setLobbyId] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [wsReadyState, setWsReadyState] = useState<Number>(websocket.readyState)
 
+  // AliExpress setup but I tried using the WebSocket's internal readyState 
+  // property in the dependency array of the useEffect but that didn't work so 
+  // we have to duplicate the default behaviour sort of
+  websocket.onopen = () => {
+    setWsReadyState(WebSocket.OPEN)
+    console.log(`[connection opened]`)
+  }
+
+  websocket.onclose = () => {
+    setWsReadyState(WebSocket.CLOSED)
+    console.log(`[connection closed]`)
+  }
+
+  websocket.onerror = () => {
+    setWsReadyState(WebSocket.CLOSED)
+    console.log(`[error on connection]`)
+  }
+
+
+  useEffect(() => {
+    switch (wsReadyState) {
+      case WebSocket.CONNECTING: {
+        setScreen('websocket-connecting')
+        break
+      }
+      case WebSocket.OPEN: {
+        setScreen('main')
+        break
+      }
+      default: {
+        setScreen('websocket-closed')
+        break
+      }
+    }
+  }, [wsReadyState])
 
   useEffect(() => {
     if (screen !== 'searching')
