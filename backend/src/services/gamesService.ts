@@ -29,19 +29,6 @@ export const gamesService = {
 		return db.prepare('SELECT player_id, joined_at FROM game_queue WHERE player_id != ? AND private = 0 ORDER BY joined_at ASC LIMIT 1 ').get(player_id) as Queue | undefined;
 	},
 
-	addGame: (player1_id: number, player2_id: number) => {
-		try {
-			const game_created = db.prepare('INSERT INTO games (player1_id, player2_id, status) VALUES(?, ?, ?) RETURNING *').run(player, new_player, 'ready');
-			db.prepare('UPDATE users SET status = ? WHERE id = ? OR id = ?').run('playing', player, new_player);
-			db.prepare('DELETE FROM game_queue WHERE player_id = ?').run(player);
-			return game_created;
-		}
-		catch (err: any) {
-			dbError(err);
-		}
-		
-	},
-
 	createGame: (player: number, new_player: number) => {
 		if (player === new_player)
 			throw new ApiError(400, "duplicate player");
@@ -100,10 +87,6 @@ export const gamesService = {
 		catch (err:any) {
 			dbError(err);
 		}
-	},
-
-	fetchGameQueue: () =>{
-		return db.prepare('SELECT * FROM game_queue').get() as Player;
 	},
 
 	removeGame: (id: number) => {
