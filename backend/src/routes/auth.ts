@@ -1,8 +1,59 @@
-import { FastifyInstance, FastifyPluginOptions } from 'fastify'
+import { FastifyInstance, FastifyPluginOptions, FastifyReply } from 'fastify'
 import { db } from '../databaseInit.js'
 import bcrypt from 'bcrypt'
 import { authenticate } from '../auth/middleware.js'
 import { generateToken, verifyToken } from '../auth/utils.js'
+
+async function registerGuest(
+	reply: FastifyReply, username: string
+) {
+	const result = db.prepare(
+		'INSERT INTO users (username, is_guest) VALUES (?, ?)')
+		.run(username, 1)
+	const token = generateToken(Number(result.lastInsertRowid), username)
+	return reply.code(200).send({
+		success: true,
+		token: token,
+		user: { id: result.lastInsertRowid, username: username },
+		message: 'Guest registration successful for ' + username
+	})
+}
+
+async function registerUser(
+	reply: FastifyReply, username: string,
+	password: string | undefined, email: string | undefined
+) {
+	if (!email) {
+		return reply.code(400).send({
+			success: false,
+			error: 'Email is required'
+		})
+	}
+	if (!password) {
+		return reply.code(400).send({
+			success: false,
+			error: 'Password is required'
+		})
+	}
+	if (password.length < 6) {
+		return reply.code(400).send({
+			success: false,
+			error: 'Password must be at least 6 characters long'
+		})
+	}
+	const hashedPassword = await bcrypt.hash(password, 10)
+	const result = db.prepare(
+		'INSERT INTO users (username, password, email) VALUES (?, ?, ?)')
+		.run(username, hashedPassword, email || null)
+	const token = generateToken(Number(result.lastInsertRowid), username)
+	return reply.code(200).send({
+		success: true,
+		token: token,
+		user: { id: result.lastInsertRowid, username: username },
+		message: 'Registration successful for ' + username
+	})
+}
+
 
 export default async function authRoutes (
     fastify: FastifyInstance,
@@ -57,11 +108,16 @@ export default async function authRoutes (
 		schema: {
 			tags: ['auth']
 		}}, async (request, reply) => {
-		const { username, password, email } = request.body as { username: string, password: string, email: string }
-		if (!username || !password || !email) {
+		const { username, isGuest, password, email } = request.body as { 
+			username?: string,
+			isGuest?: boolean,
+			password?: string,
+			email?: string 
+		}
+		if (!username) {
 			return reply.code(400).send({
 				success: false,
-				error: 'Username, password and/or email are required'
+				error: 'Username is required'
 			})
 		}
 		if (username.length < 3) {
@@ -70,34 +126,29 @@ export default async function authRoutes (
 				error: 'Username must be at least 3 characters long'
 			})
 		}
-		if (password.length < 6) {
-			return reply.code(400).send({
-				success: false,
-				error: 'Password must be at least 6 characters long'
-			})
-		}
-		
 		//* check if username exists
-		const existingUser = db.prepare('SELECT id FROM users WHERE username = ?').get(username)
+		const existingUser = db.prepare(
+			'SELECT id FROM users WHERE username = ?')
+			.get(username)
 		if (existingUser) {
 			return reply.code(400).send({
 				success: false,
 				error: 'Username already exists'
 			})
 		}
-
-		const hashedPassword = await bcrypt.hash(password, 10)
-		const result = db.prepare('INSERT INTO users (username, password, email) VALUES (?, ?, ?)').run(username, hashedPassword, email || null)
-		const token = generateToken(Number(result.lastInsertRowid), username)
-		return reply.code(200).send({
-			success: true,
-			token: token,
-			user: { id: result.lastInsertRowid, username: username },
-			message: 'Registration successful for ' + username
-		})
+		if (isGuest === undefined) {
+			return reply.code(400).send({
+				succes: false,
+				error: 'Guest flag is required'
+			})
+		}
+		if (isGuest) {
+			return await registerGuest(reply, username)
+		}
+		return await registerUser(reply, username, password, email)
 	})
 
-		fastify.post('/auth/logout', {
+	fastify.post('/auth/logout', {
 		schema: {
 			tags: ['auth']
 		}}, async (request, reply) => {
