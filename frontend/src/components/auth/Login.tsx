@@ -32,6 +32,7 @@ const Login: React.FC<LoginProps> = ({
 	const [password, setPassword] = useState('');
 	const [error, setError] = useState('');
 	const [loading, setLoading] = useState(false);
+	const [guestLoading, setGuestLoading] = useState(false);
 
 	const [showTwoFactor, setShowTwoFactor] = useState(false);
 	const [pendingUser, setPendingUser] = useState<User | null>(null);
@@ -115,6 +116,30 @@ const Login: React.FC<LoginProps> = ({
 		setPassword('');
 	};
 
+	const handleContinueAsGuest = async () => {
+		setGuestLoading(true);
+		setError('');
+		const guestUsername = `guest_${Math.random().toString(36).slice(2, 8)}`;
+		try {
+			const response = await fetch(`/api/auth/register`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ username: guestUsername, isGuest: true }),
+			});
+			const data = await response.json();
+			if (response.ok) {
+				onLoginSuccess(data.user, data.token);
+			} else {
+				setError(data.error || 'Guest sign-in failed');
+			}
+		} catch (err) {
+			console.error('Guest sign-in error:', err);
+			setError('Network error. Please try again.');
+		} finally {
+			setGuestLoading(false);
+		}
+	};
+
 	// ========================================
 	// NEW: PANEL MODE RENDERING (Compact)
 	// ========================================
@@ -187,14 +212,12 @@ const Login: React.FC<LoginProps> = ({
 					<div className="border-t border-white/10 pt-4 mt-4">
 						<button
 							type="button"
-							disabled
-							className="w-full bg-white/10 text-white/40 p-3 rounded-lg cursor-not-allowed text-sm border border-white/10"
+							onClick={handleContinueAsGuest}
+							disabled={guestLoading}
+							className="w-full bg-slate-600 hover:bg-slate-500 text-white p-3 rounded-lg disabled:opacity-50 transition-all font-medium text-sm border border-slate-500/50"
 						>
-							Continue as Guest
+							{guestLoading ? 'Signing in...' : 'Continue as Guest'}
 						</button>
-						<p className="text-xs text-white/30 text-center mt-2">
-							Coming soon
-						</p>
 					</div>
 				</div>
 			</>
@@ -275,21 +298,12 @@ const Login: React.FC<LoginProps> = ({
 					<div className="mt-6 pt-6 border-t border-gray-200">
 						<button
 							type="button"
-							disabled
-							className="w-full bg-gray-200 text-gray-500 py-2 px-4 rounded-md cursor-not-allowed"
+							onClick={handleContinueAsGuest}
+							disabled={guestLoading}
+							className="w-full bg-slate-500 text-white py-2 px-4 rounded-md hover:bg-slate-600 disabled:opacity-50 transition-colors"
 						>
-							Continue as Guest
+							{guestLoading ? 'Signing in...' : 'Continue as Guest'}
 						</button>
-						<p className="text-xs text-gray-400 text-center mt-2">
-							Guest mode coming soon!
-						</p>
-					</div>
-
-					{/* Quick login hint for development */}
-					<div className="mt-4 p-3 bg-gray-50 rounded text-center">
-						<p className="text-xs text-gray-600">
-							Default admin: <strong>admin</strong> / <strong>admin123</strong>
-						</p>
 					</div>
 				</div>
 			</div>
