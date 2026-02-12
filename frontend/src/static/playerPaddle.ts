@@ -1,3 +1,5 @@
+import { arenaHeight } from "./lib"
+
 export class PlayerPaddle
 {
     x: number
@@ -18,47 +20,35 @@ export class PlayerPaddle
         this.color = color
     }
 
-    private hasVerticalCollision(canvas: HTMLCanvasElement, newY: number): boolean {
-        if (
-            newY < 0 ||
-            newY + this.height > canvas.height
-        ) {
-            return true
-        }
-        return false
-    }
+    moveUp() {
+        let newY = this.y - this.yVector
 
-    moveUp(canvas: HTMLCanvasElement, deltaTimeSeconds: number) {
-        const newY = this.y - this.yVector * deltaTimeSeconds
-
-        if (this.hasVerticalCollision(canvas, newY)) {
-            return
+        if (newY < 0) {
+            newY = 0
         }
         this.y = newY
     }
 
-    moveDown(canvas: HTMLCanvasElement, deltaTimeSeconds: number) {
-        const newY = this.y + this.yVector * deltaTimeSeconds
-
-        if (this.hasVerticalCollision(canvas, newY)) {
-            return
+    moveDown() {
+        let newY = this.y + this.yVector
+        if (newY + this.height > arenaHeight) {
+            newY = arenaHeight - this.height
         }
         this.y = newY
     }
 
-    update(canvas: HTMLCanvasElement, deltaTimeSeconds: number) {
+    update() {
         if (this.downPressed) {
-            this.moveDown(canvas, deltaTimeSeconds)
+            this.moveDown()
         }
         if (this.upPressed) {
-            this.moveUp(canvas, deltaTimeSeconds)
+            this.moveUp()
         }
     }
 
     draw(canvasCtx: CanvasRenderingContext2D) {
         canvasCtx.fillStyle = this.color
         canvasCtx.fillRect(this.x, this.y, this.width, this.height)
-        canvasCtx.fillStyle = "#ffffff"
     }
 }
 

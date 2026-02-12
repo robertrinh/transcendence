@@ -6,7 +6,8 @@ export const userService = {
     fetchAllUsers: () => {
         return db.prepare(`
             SELECT 
-                u.id, 
+                u.id,
+                u.status,
                 u.username, 
                 u.nickname,
                 u.display_name,
@@ -23,6 +24,7 @@ export const userService = {
         return db.prepare(`
             SELECT 
                 u.id, 
+                u.status,
                 u.username, 
                 u.nickname,
                 u.display_name,

@@ -39,6 +39,13 @@ export interface DatabaseRunResult {
 }
 
 export interface Player {
+	id: number;
+	status: 'idle' | 'searching' | 'matched' | 'playing';
+}
+
+export interface Queue {
 	player_id: number;
-	status: 'waiting' | 'playing';
+	joined_at: number;
+	lobby_id: string;
+	private: boolean;
 }

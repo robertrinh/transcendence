@@ -12,7 +12,7 @@ dev-d:
 
 #make real starts the nginx server, the one we will use for eval
 real:
-	@docker-compose -f docker-compose.yaml up --build -d
+	@docker-compose -f docker-compose.yaml up --build
 
 frontend:
 	@docker-compose -f docker-compose.dev.yaml up --build -d frontend
@@ -20,13 +20,11 @@ frontend:
 down:
 	@docker-compose -f docker-compose.dev.yaml down
 	@docker-compose -f docker-compose.yaml down
-	@rm -rf frontend/node_modules
 
 #removes volumes AND images
 clean:
 	@docker-compose -f docker-compose.dev.yaml down -v --rmi all
 	@docker-compose -f docker-compose.yaml down -v --rmi all
-	@rm -rf frontend/node_modules
 
 re: clean all
 

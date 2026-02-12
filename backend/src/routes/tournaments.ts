@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { tournamentController } from '../controllers/tournamentContr.js'
 import { IDSchema } from '../schemas/generic.schema.js'
 import { postTournamentSchemaBody, joinTournamentBody, tournamentResultSchema } from '../schemas/tournament.schema.js';
+import { authenticate } from '../auth/middleware.js'
 
 export default async function tournamentsRoutes (
     fastify: FastifyInstance,
@@ -15,10 +16,10 @@ export default async function tournamentsRoutes (
 
     fastify.post('/', {
 		schema: {
+			security: [{bearerAuth: []}],
 			tags: ['tournaments'],
 			body: postTournamentSchemaBody
-		}
-	}, tournamentController.createTournament)
+		}, preHandler: [authenticate]}, tournamentController.createTournament)
 
     fastify.get('/:id', {
 		schema: {
@@ -45,19 +46,17 @@ export default async function tournamentsRoutes (
 
 	fastify.post('/:id/join', {
 		schema: {
+			security: [{bearerAuth: []}],
 			tags: ['tournaments'],
 			params: IDSchema,
-			body: joinTournamentBody
-		}
-	}, tournamentController.joinTournament)
+		}, preHandler: [authenticate]}, tournamentController.joinTournament)
 
 	fastify.delete('/:id/leave', {
 		schema: {
 			tags: ['tournaments'],
 			params: IDSchema,
-			body: joinTournamentBody
-		}
-	}, tournamentController.leaveTournament)
+			security: [{bearerAuth: []}],
+		}, preHandler: [authenticate]}, tournamentController.leaveTournament)
 
 	fastify.get('/:id/participants', {
 		schema: {

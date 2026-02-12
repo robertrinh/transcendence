@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
     created_at DATETIME DEFAULT (datetime('now')),
     avatar_id INTEGER,
     email TEXT,
-    status TEXT CHECK (status IN ('waiting', 'playing', 'finished')) DEFAULT 'waiting',
+    status TEXT CHECK (status IN ('idle', 'searching', 'matched', 'playing')) DEFAULT 'idle',
     last_login DATETIME,
     two_factor_secret TEXT,              -- 2FA TOTP secret key
     two_factor_enabled BOOLEAN DEFAULT 0, -- to check if 2FA is enabled
@@ -26,7 +26,9 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS game_queue (
 	player_id INTEGER PRIMARY KEY,
-	joined_at DATETIME DEFAULT (datetime('now')),
+    joined_at INTEGER DEFAULT (strftime('%s','now')),
+    lobby_id TEXT,
+    private BOOLEAN DEFAULT 0,
 	UNIQUE(player_id)
 );
 
