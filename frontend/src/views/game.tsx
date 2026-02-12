@@ -1,9 +1,7 @@
 import {useState, useEffect} from 'react'
 import GameUI from '../components/game/gameUI.js'
 import websocket from '../static/websocket.js'
-
-type Screen = 'main' | 'online' | 'local' | 'host-lobby' | 'join-lobby' | 'tournament' | 'create-tournament' |'searching' | 'game' | 'timeout' | 'error'
-type GameMode = 'none' | 'singleplayer' | 'multiplayer' | 'online'
+import { Screen, GameMode } from '../components/game/types.js'
 
 export default function Game() {
   const [gameMode, setGameMode] = useState<GameMode>("none")
