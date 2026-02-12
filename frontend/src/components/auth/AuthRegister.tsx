@@ -36,9 +36,6 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
         setLoading(true);
         setError('');
 
-        const isGuest = false // I think this needs to be a useState variable
-        // based on the fact a user pressed 'Continue as Guest'
-
         try {
             console.log('Attempting registration with:', { username, email });
             console.log('API URL:', `${API_URL}/api/auth/register`);
@@ -49,7 +46,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
                 response = await fetch(`/api/auth/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, isGuest, password, email }),
+                    body: JSON.stringify({ username, password, email }),
                 });
             } catch (backendError) {
                 console.log('Backend container not reachable, trying localhost...');

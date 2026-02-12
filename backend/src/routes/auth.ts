@@ -136,13 +136,8 @@ export default async function authRoutes (
 				error: 'Username already exists'
 			})
 		}
-		if (isGuest === undefined) {
-			return reply.code(400).send({
-				succes: false,
-				error: 'Guest flag is required'
-			})
-		}
-		if (isGuest) {
+		//* simplified guest flow: true only when handleGuest is called, default = false
+		if (isGuest === true) {
 			return await registerGuest(reply, username)
 		}
 		return await registerUser(reply, username, password, email)
