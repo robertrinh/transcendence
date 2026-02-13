@@ -8,10 +8,10 @@
 		"build": "tsc",
 		"start": "node build/index.js",
 		"dev": "tsc --watch & node --watch build/index.js",
-		"test": "node --loader ts-node/esm --test src/tests/**/*.test.ts",
-		"test:unit": "node --loader ts-node/esm --test src/tests/unit/*.test.ts",
-		"test:integration": "node --loader ts-node/esm --test src/tests/integration/*.test.ts",
-		"test:ci": "node --loader ts-node/esm --test src/tests/unit/*.test.ts"
+		"test": "node --experimental-strip-types --test src/tests/**/*.test.ts",
+		"test:unit": "npm run build && JWT_SECRET=test-secret JWT_EXPIRES_IN=10s node --test build/tests/unit/*.test.js",
+		"test:integration": "node --experimental-strip-types --test --test-concurrency=1 src/tests/integration/*.test.ts",
+		"test:ci": "npm run build && JWT_SECRET=test-secret JWT_EXPIRES_IN=10s node --test build/tests/unit/*.test.js"
 	},
 	"dependencies": {
 		"@fastify/multipart": "^9.3.0",
