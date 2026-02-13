@@ -4,10 +4,10 @@ import { HostLobby, JoinLobby, LocalMenu, MainMenu, OnlineMenu } from './gameMen
 import {MainMenuTournament, MenuCreateTournament} from './tournamentMenus.js'
 import SearchingScreen from './searchingScreen.js';
 import  { TimeoutScreen, ErrorScreen } from './timeoutScreen.js';
+import { WebSocketConnectingScreen, WebSocketClosedScreen } 
+from './webSocketWaitScreen.js';
 import websocket from '../../static/websocket.js';
-
-type Screen = 'main' | 'online' | 'local' | 'host-lobby' | 'join-lobby' | 'tournament' | 'create-tournament' |'searching' | 'game' | 'timeout' | 'error'
-type GameMode = 'none' | 'singleplayer' | 'multiplayer' | 'online'
+import { Screen, GameMode } from './types.js'
 
 type gameProps = {
 	lobbyId: string;
@@ -136,5 +136,9 @@ export default function GameUI({screen, gameMode, lobbyId, error, setScreen, set
 						error={error}
 						onExit={() => {setGameMode('none'); setScreen('main'); resetPlayerStatus()}}
 					/>
+		case 'websocket-connecting':
+			return <WebSocketConnectingScreen/>
+		case 'websocket-closed':
+			return <WebSocketClosedScreen/>
 	}
   }
