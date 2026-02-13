@@ -99,6 +99,14 @@ export const gamesController = {
 			success: true, 
 			message: 'Game deleted' 
 		}
+	},
+
+	getGameByUserID: async (req: FastifyRequest, reply: FastifyReply) => {
+		const result = gamesService.getGameByUserID(req.user!.userId)
+		return {
+			success: true,
+			result: result
+		};
 	}
 
 	//What happens if a player exits mid game? 

@@ -100,6 +100,12 @@ export const gamesService = {
 
 	removeGame: (id: number) => {
 		return db.prepare('DELETE FROM games WHERE id = ?').run(id)
+	},
+
+	getGameByUserID: (id: number) => {
+		return db.prepare(
+			'SELECT * FROM GAMES WHERE player1_id = ? OR player2_id = ?')
+			.get(id, id)
 	}
 }
 
