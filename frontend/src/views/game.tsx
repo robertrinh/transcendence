@@ -14,7 +14,6 @@ export default function Game() {
   // AliExpress setup but I tried using the WebSocket's internal readyState 
   // property in the dependency array of the useEffect but that didn't work so 
   // we have to duplicate the default behaviour sort of
-useEffect(() => {
   websocket.onopen = () => {
     setWsReadyState(WebSocket.OPEN)
     console.log(`[connection opened]`)
@@ -29,7 +28,7 @@ useEffect(() => {
     setWsReadyState(WebSocket.CLOSED)
     console.log(`[error on connection]`)
   }
-}, [])
+
 
   useEffect(() => {
     switch (wsReadyState) {
