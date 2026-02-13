@@ -5,11 +5,13 @@ export interface User {
     nickname?: string;
     display_name?: string;
     avatar_url?: string;
-    two_factor_enabled?: boolean;
     wins?: number;
     losses?: number;
     total_games?: number;
     winRate?: string;
+    is_anonymous?: boolean;
+    anonymized_at?: string;
+    two_factor_enabled?: boolean;
 }
 
 export const fetchUserProfile = async (token: string): Promise<User | null> => {

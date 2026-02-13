@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { getMessages } from '../controllers/chatcontrollers.js';
 import { verifyToken } from '../auth/utils.js';  // NEW: Import token verification
 import { db } from '../databaseInit.js'
+import { userService } from '../services/userService.js';
 
 // Store active SSE connections and messages
 const sseConnections = new Map<string, any>();
@@ -27,6 +28,11 @@ export default async function chatRoutes (
         if (!payload) {
             console.error('Invalid or expired token');
             return reply.status(401).send({ error: 'Invalid or expired token' });
+        }
+
+        if (userService.isUserAnonymous(payload.userId)) {
+            // console.log(`🚫 Anonymous user ${payload.username} attempted to connect to chat`);
+            return reply.status(403).send({ error: 'Anonymous users cannot access chat' });
         }
 
         console.log(`✅ New SSE connection from user: ${payload.username} (ID: ${payload.userId})`);
@@ -121,6 +127,12 @@ fastify.post('/join', async (request, reply) => {
             return reply.status(401).send({ error: 'Invalid or expired token' });
         }
 
+        if (userService.isUserAnonymous(payload.userId)) {
+            return reply.status(403).send({ 
+                error: 'Anonymous users cannot access chat' 
+            });
+        }
+
         const { connectionId } = request.body as any;
         
         const connection = sseConnections.get(connectionId);
@@ -163,6 +175,12 @@ fastify.post('/send', async (request, reply) => {
 
         if (!payload) {
             return reply.status(401).send({ error: 'Invalid or expired token' });
+        }
+
+        if (userService.isUserAnonymous(payload.userId)) {
+            return reply.status(403).send({ 
+                error: 'Anonymous users cannot send messages' 
+            });
         }
 
         const { connectionId, message } = request.body as any;
