@@ -22,6 +22,8 @@ CREATE TABLE IF NOT EXISTS users (
     last_login DATETIME,
     two_factor_secret TEXT,              -- 2FA TOTP secret key
     two_factor_enabled BOOLEAN DEFAULT 0, -- to check if 2FA is enabled
+    is_anonymous BOOLEAN DEFAULT 0,
+    anonymized_at DATETIME,
     FOREIGN KEY(avatar_id) REFERENCES avatars(id)
 );
 
@@ -32,6 +34,8 @@ CREATE TABLE IF NOT EXISTS game_queue (
     private BOOLEAN DEFAULT 0,
 	UNIQUE(player_id)
 );
+-- for performance, instead of looping all the user's, it sorts the ones with the anonymous mode. less QUERY search
+CREATE INDEX IF NOT EXISTS idx_users_anonymous ON users(is_anonymous);
 
 CREATE TABLE IF NOT EXISTS games (
     id INTEGER PRIMARY KEY,

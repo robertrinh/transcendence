@@ -165,5 +165,3 @@ export default async function authRoutes (
 		return reply.code(200).send({ success: true, user: payload })
 	})
 }
-
-
