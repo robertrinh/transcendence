@@ -4,8 +4,10 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    env_file:
+      - ./backend/.env
     environment:
-      - NODE_ENV=production #TODO fix an env file
+      - NODE_ENV=production
       - DB_PATH=/app/database/transcendence.db
     ports:
       - 3000:3000
@@ -57,5 +59,3 @@ volumes:
 networks:
   transcendence:
     driver: bridge
-  
-# to add in service: env file 
