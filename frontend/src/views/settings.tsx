@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { getAvatarUrl } from '../components/util/profileUtils';
+import TwoFactorSetup from '../components/auth/TwoFactorSetup';
 
 interface User {
     id: string;
@@ -216,7 +217,7 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('/api/2fa/disable', {
+            const response = await fetch('/api/auth/2fa/disable', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -245,13 +246,13 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
     };
 
 const handleAnonymizeProfile = async () => {
-    console.log('🔴 handleAnonymizeProfile called'); // ✅ ADD THIS
+    console.log('🔴 handleAnonymizeProfile called'); 
     setLoading(true);
     try {
         const token = localStorage.getItem('token');
-        console.log('🔴 Token:', token ? 'exists' : 'missing'); // ✅ ADD THIS
+        console.log('🔴 Token:', token ? 'exists' : 'missing'); 
         
-        console.log('🔴 Sending request to /api/users/anonymize'); // ✅ ADD THIS
+        console.log('🔴 Sending request to /api/users/anonymize'); 
         const response = await fetch('/api/users/anonymize', {
             method: 'POST',
             headers: {
@@ -259,9 +260,9 @@ const handleAnonymizeProfile = async () => {
             }
         });
 
-        console.log('🔴 Response status:', response.status); // ✅ ADD THIS
+        console.log('🔴 Response status:', response.status); 
         const data = await response.json();
-        console.log('🔴 Response data:', data); // ✅ ADD THIS
+        console.log('🔴 Response data:', data); 
         
         if (response.ok) {
            showMessage('success', 'Profile anonymized successfully. Logging out...');
@@ -272,7 +273,7 @@ const handleAnonymizeProfile = async () => {
             showMessage('error', data.error || 'Failed to anonymize profile');
         }
     } catch (error) {
-        console.error('🔴 Error:', error); // ✅ MODIFY THIS
+        console.error('🔴 Error:', error);
         showMessage('error', 'Network error. Please try again.');
     } finally {
         setLoading(false);
@@ -491,6 +492,31 @@ const handleAnonymizeProfile = async () => {
                                 Cancel
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {show2FASetup && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-bold">Enable Two-Factor Authentication</h2>
+                            <button
+                                onClick={() => setShow2FASetup(false)}
+                                className="text-gray-500 hover:text-gray-700 text-2xl leading-none"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <TwoFactorSetup 
+                            onSuccess={() => {
+                                setShow2FASetup(false);
+                                showMessage('success', '2FA enabled successfully!');
+                                if (onUserUpdate && user) {
+                                    onUserUpdate({ ...user, two_factor_enabled: true });
+                                }
+                            }}
+                        />
                     </div>
                 </div>
             )}

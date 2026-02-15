@@ -1,20 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { fetchUserProfile, getAvatarUrl } from '../components/util/profileUtils';
-
-interface User {
-    id: string;
-    username: string;
-    email?: string;
-    nickname?: string;
-    display_name?: string;
-    avatar_url?: string;
-    wins?: number;
-    losses?: number;
-    total_games?: number;
-    winRate?: string;
-    is_anonymous?: boolean;
-    anonymized_at?: string;
-}
+import { useState, useEffect } from 'react';
+import { User, fetchUserProfile, getAvatarUrl } from '../components/util/profileUtils';
 
 interface ProfileProps {
     user: User | null;
@@ -60,6 +45,9 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
     }
 
     const displayUser = profileData || user;
+    if (!displayUser) {
+        return <div className="p-6 text-center text-gray-500">No user data available</div>;
+    }
     const avatarUrl = getAvatarUrl(displayUser.avatar_url);
 
     return (
