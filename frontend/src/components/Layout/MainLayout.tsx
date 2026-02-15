@@ -2,12 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import ChatMiniWindow from '../chat/ChatMiniWindow';
 import Login from '../auth/Login';
 import AuthRegister from '../auth/AuthRegister';
-
-interface User {
-    id: string;
-    username: string;
-    email?: string;
-}
+import { User, getAvatarUrl } from '../util/profileUtils';
 
 interface MainLayoutProps {
     user: User | null;
@@ -30,15 +25,22 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 }) => {
     const [showAuthPanel, setShowAuthPanel] = useState(false);
     const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+    const [showUserMenu, setShowUserMenu] = useState(false); // new for avata + dropmenu
     const authPanelRef = useRef<HTMLDivElement>(null);
     const authButtonRef = useRef<HTMLButtonElement>(null);
+    const userMenuRef = useRef<HTMLDivElement>(null); // new for avata + dropmenu
+    const userButtonRef = useRef<HTMLButtonElement>(null); // new for avata + dropmenu
+
+    useEffect(() => {
+        console.log('🔍 MainLayout user changed:', user);
+        console.log('🔍 MainLayout avatar_url:', user?.avatar_url);
+    }, [user]);
 
     const handleLoginSuccess = (userData: User, token: string) => {
         onLogin(userData, token);
         setShowAuthPanel(false);
     };
 
-    // Close panel when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (
@@ -59,21 +61,43 @@ const MainLayout: React.FC<MainLayoutProps> = ({
         }
     }, [showAuthPanel]);
 
+    // Close panel when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                userMenuRef.current && 
+                userButtonRef.current &&
+                !userMenuRef.current.contains(event.target as Node) &&
+                !userButtonRef.current.contains(event.target as Node)
+            ) {
+                setShowUserMenu(false);
+            }
+        };
+
+        if (showUserMenu) {
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => {
+                document.removeEventListener('mousedown', handleClickOutside);
+            };
+        }
+    }, [showUserMenu]);
+
     // Close panel when pressing Escape
     useEffect(() => {
         const handleEscapeKey = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
                 setShowAuthPanel(false);
+                setShowUserMenu(false); // new for avata + dropmenu
             }
         };
 
-        if (showAuthPanel) {
+        if (showAuthPanel || showUserMenu) {
             document.addEventListener('keydown', handleEscapeKey);
             return () => {
                 document.removeEventListener('keydown', handleEscapeKey);
             };
         }
-    }, [showAuthPanel]);
+    }, [showAuthPanel, showUserMenu]);
 
     // Auto-close after 30 seconds of inactivity
     useEffect(() => {
@@ -99,12 +123,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                 <div className="max-w-7xl mx-auto px-4 h-full">
                     <div className="flex items-center justify-between h-full">
                         {/* Logo/Brand */}
-                        <div className="bg-gray-900/80 text-white px-6 py-2 rounded-md backdrop-blur-sm">
-                            <span className="font-bold">TRANSCENDENCE</span>
-                        </div>
-
-                        {/* MENU NAVIGATION BUTTONS */}
-                        <div className="flex items-center space-x-2">
+                        <div className={`px-4 py-2 rounded-md ${
+                            currentView === 'home'
+                        }`}>
                             <button
                                 onClick={() => setCurrentView('home')}
                                 className={`px-4 py-2 rounded-md border-2 transition-colors backdrop-blur-sm ${
@@ -113,69 +134,129 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                         : 'bg-white/30 text-gray-900 border-gray-900/50 hover:bg-white/40'
                                 }`}
                             >
-                                Home
+                                TRANSCENDENCE
                             </button>
-
+                        </div>
+                        {/* MENU NAVIGATION BUTTONS */}
+                        <div className="flex items-center space-x-6">
                             <button
                                 onClick={() => setCurrentView('game')}
-                                className={`px-4 py-2 rounded-md border-2 transition-colors backdrop-blur-sm ${
-                                    currentView === 'game' 
-                                        ? 'bg-gray-900/80 text-white border-gray-900/80' 
-                                        : 'bg-white/30 text-gray-900 border-gray-900/50 hover:bg-white/40'
+                                className={`relative px-6 py-2 rounded-lg font-black uppercase tracking-wider transition-all duration-300 ${
+                                    currentView === 'game'
+                                        ? 'bg-yellow-400 text-black shadow-[0_0_20px_rgba(234,179,8,0.6)]'
+                                        : 'bg-yellow-500 text-black hover:bg-yellow-400 hover:shadow-[0_0_15px_rgba(234,179,8,0.5)]'
                                 }`}
+                                style={{
+                                    textShadow: currentView === 'game' ? '2px 2px 0px rgba(248, 4, 4, 0.34)' : 'none',
+                                    transform: currentView === 'game' ? 'translateY(-2px)' : 'none'
+                                }}
                             >
-                                Game
+                                <span className={`${currentView === 'game' ? 'animate-pulse' : ''}`}>
+                                    🎮 GAME
+                                </span>
+                                {currentView === 'game' && (
+                                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                                    </span>
+                                )}
                             </button>
-
                             <button
                                 onClick={() => setCurrentView('leaderboard')}
-                                className={`px-4 py-2 rounded-md border-2 transition-colors backdrop-blur-sm ${
-                                    currentView === 'leaderboard' 
-                                        ? 'bg-gray-900/80 text-white border-gray-900/80' 
-                                        : 'bg-white/30 text-gray-900 border-gray-900/50 hover:bg-white/40'
+                                className={`relative px-6 py-2 rounded-lg font-bold uppercase tracking-wide transition-all duration-300 ${
+                                    currentView === 'leaderboard'
+                                        ? 'bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-gray-900 shadow-[0_0_20px_rgba(251,191,36,0.6)] scale-105'
+                                        : 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:shadow-[0_0_15px_rgba(251,191,36,0.5)] hover:scale-105'
                                 }`}
+                                style={{
+                                    textShadow: currentView === 'leaderboard' ? '1px 1px 2px rgba(0,0,0,0.2)' : 'none',
+                                    border: '2px solid rgba(255,255,255,0.3)'
+                                }}
                             >
-                                Leaderboard
-                            </button>
-
-                            <button
-                                onClick={() => setCurrentView('tournaments')}
-                                className={`px-4 py-2 rounded-md border-2 transition-colors backdrop-blur-sm ${
-                                    currentView === 'tournaments' 
-                                        ? 'bg-gray-900/80 text-white border-gray-900/80' 
-                                        : 'bg-white/30 text-gray-900 border-gray-900/50 hover:bg-white/40'
-                                }`}
-                            >
-                                Tournaments
-                            </button>
-
-                            {/* Show profile only if logged in */}
-                            {user && (
-                                <button
-                                    onClick={() => setCurrentView('profile')}
-                                    className={`px-4 py-2 rounded-md border-2 transition-colors backdrop-blur-sm ${
-                                        currentView === 'profile' 
-                                            ? 'bg-gray-900/80 text-white border-gray-900/80' 
-                                            : 'bg-white/30 text-gray-900 border-gray-900/50 hover:bg-white/40'
-                                    }`}
-                                >
-                                    Profile
-                                </button>
-                            )}
+                                <span className="flex items-center gap-2">
+                                    🏆 LEADERBOARD
+                                </span>
+                                {currentView === 'leaderboard' && (
+                                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                                        1
+                                    </span>
+                                )}
+                            </button> 
                         </div>
 
                         {/* USER AUTHENTICATION AREA */}
-                        <div className="flex items-center space-x-4 relative">
+                       <div className="flex items-center space-x-4 relative">
                             {user ? (
-                                <>
-                                    <span className="text-gray-900 font-medium">Hello, {user.username}!</span>
+                                <div className="relative">
                                     <button
-                                        onClick={onLogout}
-                                        className="px-4 py-2 rounded-md border-2 border-red-600 bg-red-500/80 text-white hover:bg-red-500 backdrop-blur-sm transition-colors"
+                                        ref={userButtonRef}
+                                        onClick={() => setShowUserMenu(!showUserMenu)}
+                                        className="w-20 h-15 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold overflow-hidden border-2 border-white/50 hover:border-white transition-all shadow-md hover:shadow-lg cursor-pointer"
                                     >
-                                        Logout
+                                        {user.avatar_url ? (
+                                            <img 
+                                                src={getAvatarUrl(user.avatar_url)}
+                                                alt="Avatar"
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    e.currentTarget.style.display = 'none';
+                                                    e.currentTarget.parentElement!.textContent = user.username.charAt(0).toUpperCase();
+                                                }}
+                                            />
+                                        ) : (
+                                            user.username.charAt(0).toUpperCase()
+                                        )}
                                     </button>
-                                </>
+
+                                    {/* Dropdown Menu */}
+                                    {showUserMenu && (
+                                        <div
+                                            ref={userMenuRef}
+                                            className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-lg rounded-lg shadow-xl border border-white/50 py-1 z-50"
+                                        >
+                                             <button
+                                                onClick={() => {
+                                                    setCurrentView('profile');
+                                                    setShowUserMenu(false);
+                                                }}
+                                                className="w-full text-left px-4 py-2 text-gray-700 hover:bg-blue-50 transition-colors flex items-center space-x-2"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                                <span>Profile</span>
+                                            </button>
+                                            <hr className="my-1 border-gray-200" />
+                                            <button
+                                                onClick={() => {
+                                                    setCurrentView('settings');
+                                                    setShowUserMenu(false);
+                                                }}
+                                                className="w-full text-left px-4 py-2 text-gray-700 hover:bg-blue-50 transition-colors flex items-center space-x-2"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                                <span>Settings</span>
+                                            </button>
+                                            <hr className="my-1 border-gray-200" />
+                                            <button
+                                                onClick={() => {
+                                                    onLogout();
+                                                    setShowUserMenu(false);
+                                                }}
+                                                className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition-colors flex items-center space-x-2"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                                </svg>
+                                                <span>Logout</span>
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             ) : (
                                 <button
                                     ref={authButtonRef}
@@ -207,7 +288,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                         {/* Panel Header */}
                         <div className="flex justify-between items-center p-4 border-b border-white/30 bg-white/80 rounded-t-xl">
                             <div className="flex space-x-2">
-                                <button
+                                <button 
                                     onClick={() => setAuthMode('login')}
                                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                                         authMode === 'login' 
@@ -297,8 +378,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                             </div>
                         )}
                     </div>
-                </div>
-            </main>
+                </div> 
+           </main>
 
             {/* BOTTOM STATUS BAR */}
             <footer className="bg-gray-900/80 backdrop-blur-sm text-white h-6 flex items-center px-4 flex-shrink-0 border-t border-white/10 z-30">

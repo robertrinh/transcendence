@@ -7,7 +7,6 @@ import { pipeline } from 'stream/promises'
 import path from 'path'
 import { randomUUID } from 'crypto'
 
-// Ensure uploads directory exists
 const uploadsDir = path.resolve('./uploads/avatars')
 try {
     if (!existsSync(uploadsDir)) {
@@ -16,7 +15,6 @@ try {
     }
 } catch (error) {
     console.warn('Could not create uploads directory, will try at runtime:', error)
-    // Directory will be created when first upload happens
 }
 
 export const userController = {
@@ -41,12 +39,52 @@ export const userController = {
         return {success: true, message: 'User created, welcome to the game!'};
     },
 
+    // GET OWN PROFILE - Always full data
     getMyProfile: async (req: FastifyRequest, reply: FastifyReply) => {
         const user_id = req.user!.userId;
         const profile = userService.fetchOwnProfile(user_id);
-        if (!profile)
-            throw new ApiError(404, 'profile not found');
-        return {success: true, profile}
+        
+        if (!profile) {
+            throw new ApiError(404, 'Profile not found');
+        }
+        
+        // Return full profile even if anonymous
+        return { success: true, profile };
+    },
+
+    // GET PUBLIC PROFILE - Limited if anonymous
+    getUserProfileByUsername: async (req: FastifyRequest, reply: FastifyReply) => {
+        const { username } = req.params as { username: string };
+        const user = userService.fetchPublicProfile(username);
+
+        if (!user) {
+            throw new ApiError(404, 'User not found', 'USER_NOT_FOUND');
+        }
+
+        // Service already handles anonymous logic
+        return { success: true, profile: user };
+    },
+
+    //ANONYMIZE PROFILE
+    anonymizeProfile: async (req: FastifyRequest, reply: FastifyReply) => {
+        const userId = req.user!.userId;
+        
+        // Check if already anonymous
+        if (userService.isUserAnonymous(userId)) {
+            throw new ApiError(400, 'Profile is already anonymized', 'ALREADY_ANONYMOUS');
+        }
+
+        const result = userService.anonymizeProfile(userId);
+        
+        if (!result) {
+            throw new ApiError(500, 'Failed to anonymize profile', 'ANONYMIZE_FAILED');
+        }
+
+        return {
+            success: true,
+            message: 'Profile anonymized successfully.',
+            user: result
+        };
     },
     
     updateProfile: async (req: FastifyRequest, reply: FastifyReply) => {
@@ -96,38 +134,35 @@ export const userController = {
     uploadAvatar: async (req: FastifyRequest, reply: FastifyReply) => {
        try {
             if (!existsSync(uploadsDir)) {
-            try {
-                mkdirSync(uploadsDir, { recursive: true })
-                console.log('Created uploads directory at runtime:', uploadsDir)
-            } catch (dirError) {
-                console.error('Failed to create uploads directory:', dirError)
-                return reply.code(500).send({ 
-                    success: false, 
-                    error: 'Server configuration error - uploads not available' 
-                })
+                try {
+                    mkdirSync(uploadsDir, { recursive: true })
+                    console.log('Created uploads directory at runtime:', uploadsDir)
+                } catch (dirError) {
+                    console.error('Failed to create uploads directory:', dirError)
+                    return reply.code(500).send({ 
+                        success: false, 
+                        error: 'Server configuration error - uploads not available' 
+                    })
+                }
             }
-        }
             const data = await req.file()
             
             if (!data) {
                 return reply.code(400).send({ success: false, error: 'No file uploaded' })
             }
 
-            // Check file type
-            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png']
+            const allowedTypes = ['image/jpg']
             if (!allowedTypes.includes(data.mimetype)) {
                 return reply.code(400).send({ 
                     success: false, 
-                    error: 'Only JPG and PNG files are allowed' 
+                    error: 'Only JPG files are allowed' 
                 })
             }
 
-            // Generate unique filename
-            const fileExtension = data.mimetype === 'image/png' ? '.png' : '.jpg'
+            const fileExtension = '.jpg'
             const fileName = `${randomUUID()}${fileExtension}`
             const filePath = path.join(uploadsDir, fileName)
 
-            // Save file
             await pipeline(data.file, createWriteStream(filePath))
 
             userService.uploadAvatar(fileName, req.user!.userId)
@@ -135,50 +170,55 @@ export const userController = {
             return {
                 success: true,
                 message: 'Avatar uploaded successfully',
-                avatarUrl: fileName
+                avatar_url: fileName
             }
         } catch (error) {
             console.error('Avatar upload error:', error)
             throw new ApiError(500, 'Failed to upload avatar')
-            }
-        },
-
-    //for profile view
-    getUserProfileByUsername: async (req: FastifyRequest, reply: FastifyReply) => {
-        const { username } = req.params as { username: string };
-        const user = userService.fetchPublicProfile(username) as any;
-
-        if (!user) {
-            throw new ApiError(404, 'User not found', 'USER_NOT_FOUND');
         }
-        const winRate = user.total_games > 0
-            ? `${((user.wins / user.total_games) * 100).toFixed(1)}%`
-            : '0%';
-        const profile = {
-            id: user.id.toString(),
-            username: user.username,
-            nickname: user.nickname || null,
-            display_name: user.display_name || null,
-            avatar_url: user.avatar_url || null,
-            wins: user.wins || 0,
-            losses: user.losses || 0,
-            total_games: user.total_games || 0,
-            winRate
-        };
-        return { success : true, profile };
     },
 
-    deleteUser: async (req: FastifyRequest, reply: FastifyReply) => {
-        const { id } = req.params as { id: number }
-        if (req.user!.userId !== Number(id)) {
-            throw new ApiError(403, 'Stay away from other profiles!! You cannot banish others to the shadow realm');
-        }
-        const result = userService.deleteUser(id);
-        if (result.changes == 0)
-            throw new ApiError(404, 'User not found', 'USER_NOT_FOUND');
-        return { 
-            success: true, 
-            message: 'User deleted (banished to the shadow realm)' 
+   deleteUser: async (request: FastifyRequest, reply: FastifyReply) => {
+        try {
+            const userId = (request.user as any).userId;
+            const { password } = request.body as { password?: string };
+
+            if (!password) {
+                return reply.status(400).send({
+                    error: 'Password is required to delete account'
+                });
+            }
+
+            // Get user with password hash - cast as any to access password property
+            const user = userService.fetchUser(userId) as { id: number; username: string; password: string };
+            if (!user) {
+                return reply.status(404).send({
+                    error: 'User not found'
+                });
+            }
+
+            // Verify password before deletion
+            const isPasswordValid = await bcrypt.compare(password, user.password);
+            if (!isPasswordValid) {
+                return reply.status(401).send({
+                    error: 'Invalid password'
+                });
+            }
+
+            // Delete user and related data
+            const deleteResult = userService.deleteUser(userId);
+            console.log('✅ User deleted:', userId, deleteResult);
+
+            return reply.status(200).send({
+                success: true,
+                message: 'Account deleted successfully'
+            });
+        } catch (error: any) {
+            console.error('❌ Error deleting user:', error.message, error.stack);
+            return reply.status(500).send({
+                error: 'Failed to delete account',
+                details: error.message
+            });
         }
     }
 }
