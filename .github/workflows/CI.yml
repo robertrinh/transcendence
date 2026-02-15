@@ -11,7 +11,7 @@ on:
     branches: [ main, develop ]
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '22'
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -92,6 +92,18 @@ jobs:
       - name: Build docker images
         run: |
           docker compose build --no-cache
+
+      - name: Create backend dummy .env for CI
+        run: |
+          cat << 'EOF' > backend/.env
+          NODE_ENV=production
+          DB_PATH=/app/database/transcendence.db
+          JWT_SECRET=ci-test-secret-do-not-use-in-production
+          JWT_EXPIRES_IN=5m
+          PORT=3000
+          HOST=0.0.0.0
+          APP_NAME=Transcendence
+          EOF
 
       - name: Start services
         run: |

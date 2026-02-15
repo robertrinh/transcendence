@@ -1,9 +1,9 @@
-import { test } from 'node:test'
+import { test, mock } from 'node:test'
 import assert from 'node:assert'
 import { generateToken, verifyToken } from '../../auth/utils.js'
-import { authenticate } from '../../auth/middleware.js';
-import { FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 
+//* Token/utils tests – no DB, no middleware
 test('generateToken creates valid JWT', () => {
 	const token = generateToken(1, 'testuser');
 	const parts = token.split('.');
@@ -20,82 +20,109 @@ test('verifyToken returns payload for valid token', () => {
 });
 
 test('verifyToken returns null for empty string or invalid token', () => {
-	//* test: empty string
 	const token = '';
 	const payload = verifyToken(token);
 	assert.strictEqual(payload, null, 'Payload should be null');
 
-	//* test: verifyToken returns null for invalid token
 	const second_token = 'invalid.token';
 	const second_payload = verifyToken(second_token);
 	assert.strictEqual(second_payload, null, 'Payload should be null');
 });
 
-//* Middleware tests
-test('authenticate middleware sets request.user for valid token', async () => {
-	const token = generateToken(1, 'testuser');
-	const request = { headers: { authorization: `Bearer ${token}` } } as FastifyRequest;
-	const reply = {
-		code: (code: number) => ({
-			send: (body: any) => body
-		})
-	} as FastifyReply;
+//* Middleware tests – use mocked db so no real DB is touched
+test('authenticate middleware', async (t) => {
+	// Mock db: prepare().get(userId) returns configurable value (user exists vs deleted)
+	let mockUserExists: { id: number } | undefined = { id: 1 };
+	const mockDb = {
+		prepare: (_sql: string) => ({
+			get: (_userId?: number) => mockUserExists,
+		}),
+	};
 
-	await authenticate(request, reply);
-	assert.ok(request.user, 'request.user should be defined');
-	assert.strictEqual(request.user?.userId, 1, 'User ID should be 1');
-	assert.strictEqual(request.user?.username, 'testuser', 'Username should be testuser');
-});
+	const databaseInitSpecifier = new URL('../../databaseInit.js', import.meta.url).href;
+	mock.module(databaseInitSpecifier, {
+		namedExports: { db: mockDb },
+	});
 
-test('authenticate returns 401 when no Authorization header', async () => {
-	const request = { headers: {} } as FastifyRequest;
-	let responseCode: number | undefined;
-	let responseBody: any;
+	const { authenticate } = await import('../../auth/middleware.js');
 
-	const reply = {
-		code: (code: number) => {
-			responseCode = code;
-			return {
-				send: (body: any) => {
-					responseBody = body;
-					return body;
-				}
-			};
-		}
-	} as unknown as FastifyReply;
+	await t.test('sets request.user for valid token when user exists', async () => {
+		mockUserExists = { id: 1 };
+		const token = generateToken(1, 'testuser');
+		const request = { headers: { authorization: `Bearer ${token}` } } as FastifyRequest;
+		const reply = {
+			code: (code: number) => ({ send: (body: any) => body }),
+		} as FastifyReply;
 
-	await authenticate(request, reply);
-	assert.strictEqual(responseCode, 401);
-	assert.strictEqual(responseBody.success, false);
-});
+		await authenticate(request, reply);
+		assert.ok(request.user, 'request.user should be defined');
+		assert.strictEqual(request.user?.userId, 1, 'User ID should be 1');
+		assert.strictEqual(request.user?.username, 'testuser', 'Username should be testuser');
+	});
 
-test('authenticate returns 401 when Authorization header missing Bearer prefix', async () => {
-	const token = generateToken(1, 'testuser');
-	const request = { headers: { authorization: token } } as FastifyRequest;  //* No "Bearer "
-	let responseCode: number | undefined;
+	await t.test('returns 401 when no Authorization header', async () => {
+		mockUserExists = { id: 1 };
+		const request = { headers: {} } as FastifyRequest;
+		let responseCode: number | undefined;
+		let responseBody: any;
+		const reply = {
+			code: (code: number) => {
+				responseCode = code;
+				return { send: (body: any) => { responseBody = body; return body; } };
+			},
+		} as unknown as FastifyReply;
 
-	const reply = {
-		code: (code: number) => {
-			responseCode = code;
-			return { send: (body: any) => body };
-		}
-	} as unknown as FastifyReply;
+		await authenticate(request, reply);
+		assert.strictEqual(responseCode, 401);
+		assert.strictEqual(responseBody?.success, false);
+	});
 
-	await authenticate(request, reply);
-	assert.strictEqual(responseCode, 401);
-});
+	await t.test('returns 401 when Authorization header missing Bearer prefix', async () => {
+		mockUserExists = { id: 1 };
+		const token = generateToken(1, 'testuser');
+		const request = { headers: { authorization: token } } as FastifyRequest;
+		let responseCode: number | undefined;
+		const reply = {
+			code: (code: number) => {
+				responseCode = code;
+				return { send: (_body: any) => ({}) };
+			},
+		} as unknown as FastifyReply;
 
-test('authenticate returns 401 for invalid token', async () => {
-	const request = { headers: { authorization: 'Bearer invalid.token.here' } } as FastifyRequest;
-	let responseCode: number | undefined;
+		await authenticate(request, reply);
+		assert.strictEqual(responseCode, 401);
+	});
 
-	const reply = {
-		code: (code: number) => {
-			responseCode = code;
-			return { send: (body: any) => body };
-		}
-	} as unknown as FastifyReply;
+	await t.test('returns 401 for invalid token', async () => {
+		mockUserExists = { id: 1 };
+		const request = { headers: { authorization: 'Bearer invalid.token.here' } } as FastifyRequest;
+		let responseCode: number | undefined;
+		const reply = {
+			code: (code: number) => {
+				responseCode = code;
+				return { send: (_body: any) => ({}) };
+			},
+		} as unknown as FastifyReply;
 
-	await authenticate(request, reply);
-	assert.strictEqual(responseCode, 401);
+		await authenticate(request, reply);
+		assert.strictEqual(responseCode, 401);
+	});
+
+	await t.test('returns 401 when user does not exist (e.g. account deleted)', async () => {
+		mockUserExists = undefined; // mock: user no longer in DB
+		const token = generateToken(1, 'testuser');
+		const request = { headers: { authorization: `Bearer ${token}` } } as FastifyRequest;
+		let responseCode: number | undefined;
+		let responseBody: any;
+		const reply = {
+			code: (code: number) => {
+				responseCode = code;
+				return { send: (body: any) => { responseBody = body; return body; } };
+			},
+		} as unknown as FastifyReply;
+
+		await authenticate(request, reply);
+		assert.strictEqual(responseCode, 401);
+		assert.strictEqual(responseBody?.error, 'Account no longer exists');
+	});
 });
