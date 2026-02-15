@@ -25,6 +25,8 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
     const [show2FADisable, setShow2FADisable] = useState(false);
     const [disableCode, setDisableCode] = useState('');
     const [showAnonymousConfirm, setShowAnonymousConfirm] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deletePassword, setDeletePassword] = useState('');
 
     const [profileForm, setProfileForm] = useState({
         display_name: '',
@@ -278,6 +280,45 @@ const handleAnonymizeProfile = async () => {
     }
 };
 
+    const handleDeleteAccount = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (!deletePassword) {
+            showMessage('error', 'Please enter your password to confirm deletion');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/users/me', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ password: deletePassword })
+            });
+
+            if (response.ok) {
+                showMessage('success', 'Account deleted. Redirecting...');
+                setTimeout(() => {
+                    localStorage.removeItem('token');
+                    window.location.href = '/';
+                }, 2000);
+            } else {
+                const data = await response.json();
+                showMessage('error', data.error || 'Failed to delete account');
+            }
+        } catch (error) {
+            showMessage('error', 'Network error. Please try again.');
+        } finally {
+            setLoading(false);
+            setShowDeleteConfirm(false);
+            setDeletePassword('');
+        }
+    };
+
     if (!user) {
         return (
             <div className="p-6 text-center">
@@ -307,6 +348,84 @@ const handleAnonymizeProfile = async () => {
                         : 'bg-red-50 border border-red-200 text-red-800'
                 }`}>
                     {message.text}
+                </div>
+            )}
+
+            {/* Delete Account Modal */}
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
+                        <div className="text-center mb-6">
+                            <div className="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </div>
+                            <h2 className="text-2xl font-bold text-red-600 mb-2">Delete Account</h2>
+                            <p className="text-gray-600 text-sm">This action is permanent and cannot be undone</p>
+                        </div>
+                        
+                        <div className="bg-red-50 rounded-lg p-4 mb-6">
+                            <h3 className="font-semibold text-red-900 mb-3">This will permanently:</h3>
+                            <ul className="space-y-2 text-sm text-red-800">
+                                <li className="flex items-start gap-2">
+                                    <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                    <span>Delete your account and all data</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                    <span>Remove all game history</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                    <span>Clear all profile information</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <form onSubmit={handleDeleteAccount} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Enter your password to confirm
+                                </label>
+                                <input
+                                    type="password"
+                                    value={deletePassword}
+                                    onChange={(e) => setDeletePassword(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                    placeholder="Your password"
+                                    required
+                                />
+                            </div>
+
+                            <div className="flex gap-3">
+                                <button
+                                    type="submit"
+                                    disabled={loading || !deletePassword}
+                                    className="flex-1 bg-red-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    {loading ? 'Deleting...' : 'Delete Account'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowDeleteConfirm(false);
+                                        setDeletePassword('');
+                                    }}
+                                    disabled={loading}
+                                    className="flex-1 bg-gray-200 text-gray-800 py-3 px-4 rounded-lg font-medium hover:bg-gray-300 transition-colors disabled:opacity-50"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             )}
 
@@ -784,7 +903,7 @@ const handleAnonymizeProfile = async () => {
                         </div>
                     )}
 
-                    {/* Privacy Tab */}
+                   {/* Privacy Tab */}
                     {activeTab === 'privacy' && (
                         <div className="space-y-6">
                             <div className="bg-white rounded-lg shadow border border-gray-200">
@@ -886,6 +1005,26 @@ const handleAnonymizeProfile = async () => {
                                             </button>
                                         </>
                                     )}
+                                </div>
+                            </div>
+
+                            {/* Delete Account Section */}
+                            <div className="bg-white rounded-lg shadow border border-gray-200">
+                                <div className="p-4 border-b border-gray-200">
+                                    <h4 className="font-semibold text-red-900 mb-2">Delete Account</h4>
+                                </div>
+                                <div className="p-6">
+                                    <div className="bg-red-50 rounded-lg p-4">
+                                        <p className="text-sm text-red-800 mb-4">
+                                            Permanently delete your account and all associated data. This action cannot be undone.
+                                        </p> 
+                                        <button
+                                            onClick={() => setShowDeleteConfirm(true)}
+                                            className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+                                        >
+                                            Delete Account
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

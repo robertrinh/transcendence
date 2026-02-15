@@ -79,7 +79,6 @@ export default async function usersRoutes (
             security: [{ bearerAuth: [] }],
             tags: ['users'],
             summary: 'Delete user',
-            params: IDSchema
         }, preHandler: [authenticate] }, userController.deleteUser);
 
 }
