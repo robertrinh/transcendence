@@ -105,7 +105,7 @@ export const gamesService = {
 	getGameByUserID: (id: number) => {
 		return db.prepare(
 			'SELECT * FROM GAMES WHERE player1_id = ? OR player2_id = ?')
-			.get(id, id)
+			.all(id, id)
 	}
 }
 
