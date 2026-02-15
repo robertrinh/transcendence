@@ -1,15 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { User } from '../util/profileUtils';
 
-interface User {
+interface Message {
     id: string;
     username: string;
-    email?: string;
-    nickname?: string;
-    display_name?: string;
-    avatar_url?: string;
-    is_anonymous?: boolean;
-    anonymized_at?: string;
+    message: string;
+    timestamp: Date;
+    isPrivate?: boolean;
+    toUser?: string;
 }
 
 interface Friend {
