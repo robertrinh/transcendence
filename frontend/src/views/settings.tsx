@@ -189,21 +189,22 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
 
     const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        if (file) {
-            if (!file.type.startsWith('image/')) {
-                showMessage('error', 'Please select an image file');
-                return;
-            }
-            
-            if (file.size > 5 * 1024 * 1024) {
-                showMessage('error', 'File size must be less than 5MB');
-                return;
-            }
+        if (!file) return;
 
-            setAvatarFile(file);
-            const url = URL.createObjectURL(file);
-            setPreviewUrl(url);
+        if (file.type !== 'image/jpg') {
+            showMessage('error', 'Only JPG files are allowed');
+            event.target.value = '';
+            return;
         }
+
+        if (file.size > 5 * 1024 * 1024) {
+            showMessage('error', 'File size must be less than 5MB');
+            event.target.value = '';
+            return;
+        }
+
+        setAvatarFile(file);
+        setPreviewUrl(URL.createObjectURL(file));
     };
 
     const handleDisable2FA = async (e: React.FormEvent) => {
@@ -645,7 +646,7 @@ const handleAnonymizeProfile = async () => {
                                         <div className="flex-1">
                                             <input
                                                 type="file"
-                                                accept="image/*"
+                                                accept=".jpg,image/jpg"
                                                 onChange={handleFileSelect}
                                                 className="hidden"
                                                 id="avatar-upload"
