@@ -5,6 +5,7 @@ import Login from './components/auth/Login';
 import AuthRegister from './components/auth/AuthRegister';
 import AuthLayout from './components/auth/AuthLayout';
 import UserProfile from './components/chat/publicProfile';
+import { fetchWithAuth } from './config/api';
 import { User, fetchUserProfile } from './components/util/profileUtils';
 
 // Import your views
@@ -116,7 +117,7 @@ export function App() {
 		};
 		window.addEventListener('auth:unauthorized', onUnauthorized);
 		return () => window.removeEventListener('auth:unauthorized', onUnauthorized);
-    }, []);
+	}, []);
 
 	const checkSession = async () => {
 		try {
@@ -125,21 +126,19 @@ export function App() {
 				setLoading(false);
 				return;
 			}
-			const response = await fetch('/api/auth/validate', {
-				headers: {
-					'Authorization': `Bearer ${token}`
-				}
-			});
+			const response = await fetchWithAuth('/api/auth/validate');
 			if (response.ok) {
 				const data = await response.json();
 				setUser(data.user);
 				setIsAuthenticated(true);
-				const profile = await fetchUserProfile(token);
+				const profile = await fetchUserProfile();
             if (profile) {
                 setUser((prevUser: User | null) => prevUser ? { ...prevUser, ...profile } : profile);
             }
 			} else {
 				localStorage.removeItem('token');
+				setUser(null);
+				setIsAuthenticated(false);
 			}
 		} catch (error) {
 			console.error('Session check failed:', error);
@@ -151,7 +150,7 @@ export function App() {
 		localStorage.setItem('token', token);
 		setUser(userData);
 		setIsAuthenticated(true);
-		const profile = await fetchUserProfile(token);
+		const profile = await fetchUserProfile();
     if (profile) {
         setUser((prevUser: User | null) => prevUser ? { ...prevUser, ...profile } : profile);
     }

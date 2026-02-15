@@ -234,15 +234,8 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
                 break
             case "WHOAREYOU":
                 try {
-                    const token = localStorage.getItem('token');
-                    if (token === null) {
-                        throw Error("Failed to process message 'WHOAREYOU'; missing JWT token")
-                    }
-                    const response = await fetch(
-                        "/api/users/profile/me", {
-                            headers: {'Authorization': `Bearer ${token}`}
-                        }
-                    )
+                    const { fetchWithAuth } = await import('../config/api');
+                    const response = await fetchWithAuth("/api/users/profile/me");
                     if (!response.ok) {
                         throw Error("Failed to process message 'WHOAREYOU'; backend error")
                     }
