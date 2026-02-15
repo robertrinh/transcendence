@@ -151,7 +151,7 @@ export const userController = {
                 return reply.code(400).send({ success: false, error: 'No file uploaded' })
             }
 
-            const allowedTypes = ['image/jpeg', 'image/jpg']
+            const allowedTypes = ['image/jpg']
             if (!allowedTypes.includes(data.mimetype)) {
                 return reply.code(400).send({ 
                     success: false, 
@@ -159,7 +159,7 @@ export const userController = {
                 })
             }
 
-            const fileExtension = data.mimetype === 'image/png' ? '.png' : '.jpg'
+            const fileExtension = '.jpg'
             const fileName = `${randomUUID()}${fileExtension}`
             const filePath = path.join(uploadsDir, fileName)
 
