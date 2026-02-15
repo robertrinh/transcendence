@@ -10,13 +10,15 @@ interface User {
     losses?: number;
     total_games?: number;
     winRate?: string;
+    is_anonymous?: boolean;
+    anonymized_at?: string;
 }
 
-interface UserProfileProps { // ADD THIS INTERFACE
+interface UserProfileProps {
     username: string;
 }
 
-const UserProfile: React.FC<UserProfileProps> = ({ username }) => { // FIX: UserProfileProps, not UserProfilePeops
+const UserProfile: React.FC<UserProfileProps> = ({ username }) => {
     const [profileData, setProfileData] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -42,7 +44,6 @@ const UserProfile: React.FC<UserProfileProps> = ({ username }) => { // FIX: User
                 setProfileData(data.profile);
             } else if (response.status === 404) {
                 alert('User not found');
-                // REMOVE: navigateToUserProfile('/'); - This doesn't exist here
             }
         } catch (error) {
             console.error('Failed to fetch profile:', error);
@@ -86,6 +87,56 @@ const UserProfile: React.FC<UserProfileProps> = ({ username }) => { // FIX: User
         );
     }
 
+    // CHECK IF USER IS ANONYMOUS - Show limited profile
+    if (profileData.is_anonymous) {
+        return (
+            <div className="p-6">
+                <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-8 mb-6">
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="w-16 h-16 bg-gray-400 rounded-full flex items-center justify-center">
+                            <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-bold text-yellow-900">Anonymous User</h2>
+                            <p className="text-yellow-700">This user has chosen to keep their profile private</p>
+                        </div>
+                    </div>
+                    {profileData.anonymized_at && (
+                        <p className="text-sm text-yellow-600 mt-2">
+                            Anonymized on: {new Date(profileData.anonymized_at).toLocaleDateString()}
+                        </p>
+                    )}
+                </div>
+
+                {/* Show only game stats for anonymous users */}
+                <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+                    <h3 className="text-xl font-semibold mb-4 text-gray-900">Game Statistics</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-green-50 p-4 rounded-lg text-center">
+                            <div className="text-3xl font-bold text-green-600">{profileData.wins || 0}</div>
+                            <div className="text-sm text-gray-600 mt-1">Wins</div>
+                        </div>
+                        <div className="bg-red-50 p-4 rounded-lg text-center">
+                            <div className="text-3xl font-bold text-red-600">{profileData.losses || 0}</div>
+                            <div className="text-sm text-gray-600 mt-1">Losses</div>
+                        </div>
+                        <div className="bg-blue-50 p-4 rounded-lg text-center">
+                            <div className="text-3xl font-bold text-blue-600">{profileData.total_games || 0}</div>
+                            <div className="text-sm text-gray-600 mt-1">Total Games</div>
+                        </div>
+                        <div className="bg-purple-50 p-4 rounded-lg text-center">
+                            <div className="text-3xl font-bold text-purple-600">{profileData.winRate || '0%'}</div>
+                            <div className="text-sm text-gray-600 mt-1">Win Rate</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // NORMAL PROFILE - Show full data for non-anonymous users
     const avatarUrl = getAvatarUrl(profileData.avatar_url);
 
     return (

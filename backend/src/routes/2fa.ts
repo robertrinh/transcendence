@@ -98,7 +98,7 @@ export default async function twofaRoutes(
 		const { code } = request.body as { code: string };
 
 		//* fetch user's 2FA data
-		const user = db.prepare('SELECT two_factor_enabled, two_factor_secret FROM users WHERE id = ?').get(userId) as { two_factor_enabled: number, two_factor_secret: string } | undefined
+		const user = db.prepare('SELECT two_factor_enabled, two_factor_secret FROM users WHERE id = ?').get(userId) as { two_factor_enabled: number, two_factor_secret: string } | undefined;
 		if (!user || !user.two_factor_enabled) {
 			return reply.code(400).send({ success: false, error: '2FA not enabled, protect yourself!' });
 		}
@@ -112,6 +112,6 @@ export default async function twofaRoutes(
 		}
 
 		return reply.code(200).send({ success: true, message: 'Login complete!' });
-	})
+	});
 
 }

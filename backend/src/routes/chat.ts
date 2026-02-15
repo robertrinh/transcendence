@@ -2,19 +2,20 @@ import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { getMessages } from '../controllers/chatcontrollers.js';
 import { verifyToken } from '../auth/utils.js';  // NEW: Import token verification
 import { db } from '../databaseInit.js'
+import { userService } from '../services/userService.js';
 
 // Store active SSE connections and messages
 const sseConnections = new Map<string, any>();
 const chatMessages: any[] = [];
 
-// CHANGED: SSE endpoint - get token from query parameter
+//  SSE endpoint - get token from query parameter
 export default async function chatRoutes (
     	fastify: FastifyInstance,
     	options: FastifyPluginOptions
     ) {
     fastify.get('/stream', async (request, reply) => {
     try {
-        // CHANGED: Get token from query parameter (EventSource limitation)
+        //  Get token from query parameter (EventSource limitation)
         const token = (request.query as any).token;
         
         if (!token) {
@@ -27,6 +28,11 @@ export default async function chatRoutes (
         if (!payload) {
             console.error('Invalid or expired token');
             return reply.status(401).send({ error: 'Invalid or expired token' });
+        }
+
+        if (userService.isUserAnonymous(payload.userId)) {
+            // console.log(`🚫 Anonymous user ${payload.username} attempted to connect to chat`);
+            return reply.status(403).send({ error: 'Anonymous users cannot access chat' });
         }
 
         console.log(`✅ New SSE connection from user: ${payload.username} (ID: ${payload.userId})`);
@@ -105,10 +111,10 @@ export default async function chatRoutes (
     }
 });
 
-// CHANGED: Join chat endpoint with JWT verification
+//  Join chat endpoint with JWT verification
 fastify.post('/join', async (request, reply) => {
     try {
-        // CHANGED: Get token from Authorization header
+        //  Get token from Authorization header
         const authHeader = request.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return reply.status(401).send({ error: 'No token provided' });
@@ -119,6 +125,12 @@ fastify.post('/join', async (request, reply) => {
 
         if (!payload) {
             return reply.status(401).send({ error: 'Invalid or expired token' });
+        }
+
+        if (userService.isUserAnonymous(payload.userId)) {
+            return reply.status(403).send({ 
+                error: 'Anonymous users cannot access chat' 
+            });
         }
 
         const { connectionId } = request.body as any;
@@ -149,10 +161,10 @@ fastify.post('/join', async (request, reply) => {
     }
 });
 
-// CHANGED: Send message endpoint with JWT verification
+//  Send message endpoint with JWT verification
 fastify.post('/send', async (request, reply) => {
     try {
-        // CHANGED: Get token from Authorization header
+        //  Get token from Authorization header
         const authHeader = request.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return reply.status(401).send({ error: 'No token provided' });
@@ -163,6 +175,12 @@ fastify.post('/send', async (request, reply) => {
 
         if (!payload) {
             return reply.status(401).send({ error: 'Invalid or expired token' });
+        }
+
+        if (userService.isUserAnonymous(payload.userId)) {
+            return reply.status(403).send({ 
+                error: 'Anonymous users cannot send messages' 
+            });
         }
 
         const { connectionId, message } = request.body as any;

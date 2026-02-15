@@ -3,7 +3,7 @@ import { userController } from '../controllers/userController.js'
 import { IDSchema } from '../schemas/generic.schema.js'
 import { userBody, userParamSchema } from '../schemas/users.schema.js'
 import { authenticate } from '../auth/middleware.js'
-
+import { anonymizeResponseSchema } from '../schemas/users.schema.js'
 //* curl http://localhost:3000/api/db/tables?tablename=users for testing hashed passwords
 
 export default async function usersRoutes (
@@ -17,6 +17,19 @@ export default async function usersRoutes (
             summary: 'Get all users',
         }}, userController.getAllUsers);
 
+    fastify.post('/anonymize', {
+        schema: {
+            security: [{ bearerAuth: [] }],
+            tags: ['users', 'privacy'],
+            summary: 'Anonymize user profile (permanent action)',
+            description: 'Permanently anonymize user profile. This action cannot be undone.',
+            response: {
+                200: anonymizeResponseSchema
+            }
+        }, 
+        preHandler: [authenticate]
+    }, userController.anonymizeProfile);
+    
     fastify.get('/:id', {
         schema: {
             tags: ['users'],
@@ -46,13 +59,6 @@ export default async function usersRoutes (
             body: userBody
         }}, userController.createUser);
 
-    fastify.put('/profile/me', {
-        schema: {
-            security: [{ bearerAuth: [] }],
-            tags: ['users'],
-            summary: 'Update user',
-        }, preHandler: [authenticate]} , userController.updateProfile);
-
     fastify.post('/profile/avatar', {
         schema: {
             security: [{ bearerAuth: [] }],
@@ -60,12 +66,19 @@ export default async function usersRoutes (
             summary: 'Upload an avatar',
         }, preHandler: [authenticate]} , userController.uploadAvatar);
 
+            
+    fastify.put('/profile/me', {
+        schema: {
+            security: [{ bearerAuth: [] }],
+            tags: ['users'],
+            summary: 'Update user',
+        }, preHandler: [authenticate]} , userController.updateProfile);
+
     fastify.delete('/me', {
         schema: {
             security: [{ bearerAuth: [] }],
             tags: ['users'],
             summary: 'Delete user',
-            params: IDSchema
         }, preHandler: [authenticate] }, userController.deleteUser);
 
 }

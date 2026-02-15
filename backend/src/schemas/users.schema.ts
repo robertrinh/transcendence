@@ -22,6 +22,16 @@ export const publicProfileSchema = S.object()
   .prop('total_games', S.number())
   .prop('winRate', S.string());
 
+export const anonymizeResponseSchema = S.object()
+    .prop('success', S.boolean())
+    .prop('message', S.string())
+    .prop('profile', S.object()
+        .prop('id', S.number())
+        .prop('username', S.string())
+        .prop('is_anonymous', S.boolean())
+        .prop('anonymized_at', S.string())
+    );
+
 export const userParamSchema = S.object()
   .prop('username', S.string().required());
 /*
