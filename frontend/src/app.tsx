@@ -99,6 +99,25 @@ export function App() {
         checkSession();
     }, []);
 
+	//* re-validate session when tab becomes visible (e.g. account deleted in another tab)
+	useEffect(() => {
+		const onVisibilityChange = () => {
+			if (document.visibilityState === 'visible') checkSession();
+		};
+		document.addEventListener('visibilitychange', onVisibilityChange);
+		return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+	}, []);
+
+	//* global 401 handling: e.g. account deleted in another tab, token invalidated
+	useEffect(() => {
+		const onUnauthorized = () => {
+			setUser(null);
+			setIsAuthenticated(false);
+		};
+		window.addEventListener('auth:unauthorized', onUnauthorized);
+		return () => window.removeEventListener('auth:unauthorized', onUnauthorized);
+    }, []);
+
 	const checkSession = async () => {
 		try {
 			const token = localStorage.getItem('token');

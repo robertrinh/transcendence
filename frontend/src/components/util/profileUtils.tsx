@@ -1,3 +1,5 @@
+import { fetchWithAuth, notifyAuthFailure } from '../../config/api';
+
 export interface User {
     id: string;
     username: string;
@@ -14,19 +16,16 @@ export interface User {
     two_factor_enabled?: boolean;
 }
 
-export const fetchUserProfile = async (token: string): Promise<User | null> => {
+export const fetchUserProfile = async (): Promise<User | null> => {
     try {
-        const response = await fetch('/api/users/profile/me', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        
+        const response = await fetchWithAuth('/api/users/profile/me');
         if (response.ok) {
             const data = await response.json();
             return data.profile;
-        } else if (response.status === 401) {
-            localStorage.removeItem('token');
+        }
+        if (response.status === 404) {
+            // profile not found (e.g. account deleted); 401 already handled by fetchWithAuth
+            notifyAuthFailure();
             return null;
         }
         return null;

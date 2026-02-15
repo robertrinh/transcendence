@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { fetchWithAuth } from '../../config/api'
 import GameCanvas from './gameCanvas.js'
 import { HostLobby, JoinLobby, LocalMenu, MainMenu, OnlineMenu } from './gameMenus.js';
 import {MainMenuTournament, MenuCreateTournament} from './tournamentMenus.js'
@@ -59,11 +60,16 @@ export default function GameUI({screen, gameMode, lobbyId, error, setScreen, set
 			})
 		}
 	}, [])
+	const validateThen = async (next: () => void) => {
+		const res = await fetchWithAuth('/api/auth/validate')
+		if (res.ok) next()
+	}
+
 	switch (screen) {
 		case 'main':
 			return 	<MainMenu
-						onPlayLocal={() => setScreen('local')}
-						onPlayOnline={() => setScreen('online')}
+						onPlayLocal={() => validateThen(() => setScreen('local'))}
+						onPlayOnline={() => validateThen(() => setScreen('online'))}
 					/>
 		case 'local': 
 			return 	<LocalMenu
