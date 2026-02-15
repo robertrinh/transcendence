@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, fetchUserProfile, getAvatarUrl } from '../components/util/profileUtils';
+import { User, fetchUserProfile, getAvatarUrl, fetchUserGameHistory, GameHistoryItem } from '../components/util/profileUtils';
 
 interface ProfileProps {
     user: User | null;
@@ -7,10 +7,18 @@ interface ProfileProps {
 const Profile: React.FC<ProfileProps> = ({ user }) => {
     const [profileData, setProfileData] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [gameHistory, setGameHistory] = useState<GameHistoryItem[]>([]);
+    const [gamesLoading, setGamesLoading] = useState(true);
 
     useEffect(() => {
         if (user) {
             loadProfile();
+        }
+    }, [user]);
+
+    useEffect(() => {
+        if (user) {
+            loadGameHistory();
         }
     }, [user]);
 
@@ -22,6 +30,13 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
             setProfileData(profile);
         }
         setLoading(false);
+    };
+
+    const loadGameHistory = async () => {
+        setGamesLoading(true);
+        const history = await fetchUserGameHistory();
+        setGameHistory(history);
+        setGamesLoading(false);
     };
 
     if (loading && !profileData) {
@@ -135,6 +150,61 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
                         )}
                     </div>
                 </div>
+            </div>
+
+            {/* Match History */}
+            <div className="mt-6 bg-white p-6 rounded-lg shadow border border-gray-200">
+                <h3 className="text-xl font-semibold mb-4 text-gray-900">Match History</h3>
+                {gamesLoading ? (
+                    <div className="animate-pulse space-y-3">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="h-12 bg-gray-100 rounded" />
+                        ))}
+                    </div>
+                ) : gameHistory.length === 0 ? (
+                    <p className="text-gray-500 text-center py-4">No games played yet</p>
+                ) : (
+                    <ul className="divide-y divide-gray-200">
+                        {gameHistory.map((game) => {
+                            const userId = Number(displayUser.id);
+                            const isWinner = game.winner_id != null && game.winner_id === userId;
+                            const score1 = game.score_player1 ?? '-'; //* ?? means if score_player1 is null, use '-'
+                            const score2 = game.score_player2 ?? '-';
+                            const dateStr = game.finished_at
+                                ? new Date(game.finished_at).toLocaleDateString(undefined, { dateStyle: 'medium' })
+                                : game.created_at
+                                    ? new Date(game.created_at).toLocaleDateString(undefined, { dateStyle: 'medium' })
+                                    : '—';
+                            return (
+                                <li key={game.id} className="py-3 flex items-center justify-between gap-4">
+                                    <div className="flex-1 min-w-0">
+                                        <span className="font-medium text-gray-900 truncate block">
+                                            vs {game.opponent_username ?? 'Unknown'}
+                                        </span>
+                                        <span className="text-sm text-gray-500">{dateStr}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 shrink-0">
+                                        <span className="text-gray-700 font-mono">
+                                            {score1} – {score2}
+                                        </span>
+                                        {game.status === 'finished' && (
+                                            <span
+                                                className={`px-2 py-0.5 rounded text-sm font-medium ${
+                                                    isWinner ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                                }`}
+                                            >
+                                                {isWinner ? 'Win' : 'Loss'}
+                                            </span>
+                                        )}
+                                    </div>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                )}
+                <p className="text-xs text-gray-500 mt-4 pt-3 border-t border-gray-100">
+                    Match history consists of games played against AI offline, 1v1 online and tournament scores.
+                </p>
             </div>
         </div>
     );
