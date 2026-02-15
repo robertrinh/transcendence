@@ -127,6 +127,11 @@ fastify.post('/join', async (request, reply) => {
             return reply.status(401).send({ error: 'Invalid or expired token' });
         }
 
+        const userExistsJoin = db.prepare('SELECT id FROM users WHERE id = ?').get(payload.userId);
+        if (!userExistsJoin) {
+            return reply.status(401).send({ error: 'Account no longer exists' });
+        }
+
         if (userService.isUserAnonymous(payload.userId)) {
             return reply.status(403).send({ 
                 error: 'Anonymous users cannot access chat' 
@@ -177,6 +182,11 @@ fastify.post('/send', async (request, reply) => {
             return reply.status(401).send({ error: 'Invalid or expired token' });
         }
 
+        const userExistsSend = db.prepare('SELECT id FROM users WHERE id = ?').get(payload.userId);
+        if (!userExistsSend) {
+            return reply.status(401).send({ error: 'Account no longer exists' });
+        }
+
         if (userService.isUserAnonymous(payload.userId)) {
             return reply.status(403).send({ 
                 error: 'Anonymous users cannot send messages' 
@@ -206,10 +216,7 @@ fastify.post('/send', async (request, reply) => {
 
         console.log(`💬 New message from ${payload.username}: "${message.trim()}"`);
 
-        // Save to memory
-        chatMessages.push(messageData);
-
-        // Save to database
+        //* save to database first; if user was deleted, do not broadcast
         try {
             const insertMessage = db.prepare(`
                 INSERT INTO chat_messages (user_id, username, message, timestamp) 
@@ -217,11 +224,16 @@ fastify.post('/send', async (request, reply) => {
             `);
             insertMessage.run(payload.userId, payload.username, message.trim(), new Date().toISOString());
             console.log(`✅ Message saved to database`);
-        } catch (dbError) {
+        } catch (dbError: any) {
             console.error('Error saving message to database:', dbError);
+            if (dbError?.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
+                return reply.status(401).send({ error: 'Account no longer exists' });
+            }
+            return reply.status(500).send({ error: 'Failed to save message' });
         }
 
-        // Broadcast to all connections
+        //* save to memory and broadcast only after successful DB write
+        chatMessages.push(messageData);
         console.log(`📡 Broadcasting message to ${sseConnections.size} connections`);
         broadcastSSE(messageData);
 

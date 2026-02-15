@@ -115,7 +115,11 @@ export default async function authRoutes (
 		if (!payload) {
 			return reply.code(401).send({ success: false, error: 'Invalid or expired token' })
 		}
-		
+		//* reject tokens for deleted users (e.g. account deleted in another tab)
+		const userExists = db.prepare('SELECT id FROM users WHERE id = ?').get(payload.userId)
+		if (!userExists) {
+			return reply.code(401).send({ success: false, error: 'Account no longer exists' })
+		}
 		return reply.code(200).send({ success: true, user: payload })
 	})
 }
