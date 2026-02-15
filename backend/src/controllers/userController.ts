@@ -151,11 +151,11 @@ export const userController = {
                 return reply.code(400).send({ success: false, error: 'No file uploaded' })
             }
 
-            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png']
+            const allowedTypes = ['image/jpeg', 'image/jpg']
             if (!allowedTypes.includes(data.mimetype)) {
                 return reply.code(400).send({ 
                     success: false, 
-                    error: 'Only JPG and PNG files are allowed' 
+                    error: 'Only JPG files are allowed' 
                 })
             }
 
@@ -178,17 +178,47 @@ export const userController = {
         }
     },
 
-    deleteUser: async (req: FastifyRequest, reply: FastifyReply) => {
-        const { id } = req.params as { id: number }
-        if (req.user!.userId !== Number(id)) {
-            throw new ApiError(403, 'Stay away from other profiles!! You cannot banish others to the shadow realm');
-        }
-        const result = userService.deleteUser(id);
-        if (result.changes == 0)
-            throw new ApiError(404, 'User not found', 'USER_NOT_FOUND');
-        return { 
-            success: true, 
-            message: 'User deleted (banished to the shadow realm)' 
+   deleteUser: async (request: FastifyRequest, reply: FastifyReply) => {
+        try {
+            const userId = (request.user as any).userId;
+            const { password } = request.body as { password?: string };
+
+            if (!password) {
+                return reply.status(400).send({
+                    error: 'Password is required to delete account'
+                });
+            }
+
+            // Get user with password hash - cast as any to access password property
+            const user = userService.fetchUser(userId) as { id: number; username: string; password: string };
+            if (!user) {
+                return reply.status(404).send({
+                    error: 'User not found'
+                });
+            }
+
+            // Verify password before deletion
+            const isPasswordValid = await bcrypt.compare(password, user.password);
+            if (!isPasswordValid) {
+                return reply.status(401).send({
+                    error: 'Invalid password'
+                });
+            }
+
+            // Delete user and related data
+            const deleteResult = userService.deleteUser(userId);
+            console.log('✅ User deleted:', userId, deleteResult);
+
+            return reply.status(200).send({
+                success: true,
+                message: 'Account deleted successfully'
+            });
+        } catch (error: any) {
+            console.error('❌ Error deleting user:', error.message, error.stack);
+            return reply.status(500).send({
+                error: 'Failed to delete account',
+                details: error.message
+            });
         }
     }
 }

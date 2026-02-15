@@ -27,6 +27,7 @@ export const userService = {
                 u.id, 
                 u.status,
                 u.username, 
+                u.password,
                 u.nickname,
                 u.display_name,
                 u.email,
@@ -178,8 +179,22 @@ export const userService = {
         db.prepare('UPDATE users SET avatar_id = ? WHERE id = ?').run(avatarResult.lastInsertRowid, id)
     },
 
-    deleteUser: (id: number) => {
-        return db.prepare('DELETE FROM users WHERE id = ?').run(id)
+   deleteUser: (id: number) => {
+        try {
+            // Delete related data first (cascading)
+            db.prepare('DELETE FROM chat_messages WHERE user_id = ?').run(id);
+            db.prepare('DELETE FROM user_sessions WHERE user_id = ?').run(id);
+            db.prepare('DELETE FROM tournament_participants WHERE user_id = ?').run(id);
+            db.prepare('DELETE FROM games WHERE player1_id = ? OR player2_id = ? OR winner_id = ?').run(id, id, id);
+            
+            // Delete the user
+            const result = db.prepare('DELETE FROM users WHERE id = ?').run(id);
+            
+            return result;
+        } catch (err: any) {
+            dbError(err);
+            throw err;
+        }
     }
 }
 

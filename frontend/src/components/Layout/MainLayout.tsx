@@ -4,13 +4,6 @@ import Login from '../auth/Login';
 import AuthRegister from '../auth/AuthRegister';
 import { User, getAvatarUrl } from '../util/profileUtils';
 
-// interface User {
-//     id: string;
-//     username: string;
-//     email?: string;
-//     avatar_url?: string;
-// }
-
 interface MainLayoutProps {
     user: User | null;
     currentView: string;
@@ -143,26 +136,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                             >
                                 TRANSCENDENCE
                             </button>
-                            {/* <button
-                                onClick={() => setCurrentView('home')}
-                                className="font-bold"
-                            >
-                                TRANSCENDENCE
-                            </button> */}
                         </div>
-
                         {/* MENU NAVIGATION BUTTONS */}
                         <div className="flex items-center space-x-6">
-                            {/* <button
-                                onClick={() => setCurrentView('home')}
-                                className={`px-4 py-2 rounded-md border-2 transition-colors backdrop-blur-sm ${
-                                    currentView === 'home' 
-                                        ? 'bg-gray-900/80 text-white border-gray-900/80' 
-                                        : 'bg-white/30 text-gray-900 border-gray-900/50 hover:bg-white/40'
-                                }`}
-                            >
-                                Home
-                            </button> */}
                             <button
                                 onClick={() => setCurrentView('game')}
                                 className={`relative px-6 py-2 rounded-lg font-black uppercase tracking-wider transition-all duration-300 ${
@@ -185,8 +161,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                     </span>
                                 )}
                             </button>
-{/* -------------------------------------------- */}
-
                             <button
                                 onClick={() => setCurrentView('leaderboard')}
                                 className={`relative px-6 py-2 rounded-lg font-bold uppercase tracking-wide transition-all duration-300 ${
@@ -225,7 +199,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                                 alt="Avatar"
                                                 className="w-full h-full object-cover"
                                                 onError={(e) => {
-                                                    // Fallback to initial if image fails to load
                                                     e.currentTarget.style.display = 'none';
                                                     e.currentTarget.parentElement!.textContent = user.username.charAt(0).toUpperCase();
                                                 }}
@@ -315,7 +288,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                         {/* Panel Header */}
                         <div className="flex justify-between items-center p-4 border-b border-white/30 bg-white/80 rounded-t-xl">
                             <div className="flex space-x-2">
-                                <button
+                                <button 
                                     onClick={() => setAuthMode('login')}
                                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                                         authMode === 'login' 
@@ -405,8 +378,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                             </div>
                         )}
                     </div>
-                </div>
-            </main>
+                </div> 
+           </main>
 
             {/* BOTTOM STATUS BAR */}
             <footer className="bg-gray-900/80 backdrop-blur-sm text-white h-6 flex items-center px-4 flex-shrink-0 border-t border-white/10 z-30">
