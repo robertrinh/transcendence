@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { fetchWithAuth } from '../../config/api';
 
 interface User {
     id: string;
@@ -32,12 +33,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ username }) => {
         setLoading(true);
         
         try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`/api/users/profile/${username}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const response = await fetchWithAuth(`/api/users/profile/${username}`);
             
             if (response.ok) {
                 const data = await response.json();

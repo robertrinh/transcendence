@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { fetchWithAuth } from '../config/api';
 import { getAvatarUrl } from '../components/util/profileUtils';
 import TwoFactorSetup from '../components/auth/TwoFactorSetup';
 
@@ -65,9 +66,7 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
         setLoading(true);
 
         try {
-            const token = localStorage.getItem('token');
             const updateData: Partial<typeof profileForm> = {};
-            
             if (editingField === 'display_name') {
                 updateData.display_name = profileForm.display_name;
             } else if (editingField === 'nickname') {
@@ -76,12 +75,9 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
                 updateData.email = profileForm.email;
             }
 
-            const response = await fetch('/api/users/profile/me', {
+            const response = await fetchWithAuth('/api/users/profile/me', {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updateData)
             });
 
@@ -119,13 +115,9 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
         setLoading(true);
 
         try {
-            const token = localStorage.getItem('token');
-            const response = await fetch('/api/users/change-password', {
+            const response = await fetchWithAuth('/api/users/change-password', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     current_password: passwordForm.current_password,
                     new_password: passwordForm.new_password
@@ -156,15 +148,11 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
 
         setLoading(true);
         try {
-            const token = localStorage.getItem('token');
             const formData = new FormData();
             formData.append('file', avatarFile);
 
-            const response = await fetch('/api/users/profile/avatar', {
+            const response = await fetchWithAuth('/api/users/profile/avatar', {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
                 body: formData
             });
 
@@ -217,13 +205,9 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
 
         setLoading(true);
         try {
-            const token = localStorage.getItem('token');
-            const response = await fetch('/api/auth/2fa/disable', {
+            const response = await fetchWithAuth('/api/auth/2fa/disable', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ code: disableCode })
             });
 
@@ -250,16 +234,8 @@ const handleAnonymizeProfile = async () => {
     console.log('🔴 handleAnonymizeProfile called'); 
     setLoading(true);
     try {
-        const token = localStorage.getItem('token');
-        console.log('🔴 Token:', token ? 'exists' : 'missing'); 
-        
-        console.log('🔴 Sending request to /api/users/anonymize'); 
-        const response = await fetch('/api/users/anonymize', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
+        console.log('🔴 Sending request to /api/users/anonymize');
+        const response = await fetchWithAuth('/api/users/anonymize', { method: 'POST' });
 
         console.log('🔴 Response status:', response.status); 
         const data = await response.json();
@@ -292,13 +268,9 @@ const handleAnonymizeProfile = async () => {
 
         setLoading(true);
         try {
-            const token = localStorage.getItem('token');
-            const response = await fetch('/api/users/me', {
+            const response = await fetchWithAuth('/api/users/me', {
                 method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ password: deletePassword })
             });
 
