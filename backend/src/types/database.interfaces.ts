@@ -37,3 +37,15 @@ export interface DatabaseRunResult {
 	changes: number;
 	lastInsertRowid: number | bigint;
 }
+
+export interface Player {
+	id: number;
+	status: 'searching' | 'matched' | 'playing';
+}
+
+export interface Queue {
+	player_id: number;
+	joined_at: number;
+	lobby_id: string;
+	private: boolean;
+}

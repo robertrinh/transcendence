@@ -125,66 +125,70 @@ const Login: React.FC<LoginProps> = ({
 					/>
 				)}
 				<div className="space-y-4">
-					<form onSubmit={handleSubmit} className="space-y-3">
-						<input
-							type="text"
-							placeholder="Username"
-							value={username}
-							onChange={(e) => setUsername(e.target.value)}
-							className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-							required
-						/>
-						<input
-							type="password"
-							placeholder="Password"
-							value={password}
-							onChange={(e) => setPassword(e.target.value)}
-							className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-							required
-						/>
+					<form onSubmit={handleSubmit} className="space-y-4">
+						<div>
+							<label className="block text-white/70 text-sm font-medium mb-1.5">
+								Username
+							</label>
+							<input
+								type="text"
+								placeholder="Enter your username"
+								value={username}
+								onChange={(e) => setUsername(e.target.value)}
+								className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+								required
+							/>
+						</div>
+						<div>
+							<label className="block text-white/70 text-sm font-medium mb-1.5">
+								Password
+							</label>
+							<input
+								type="password"
+								placeholder="Enter your password"
+								value={password}
+								onChange={(e) => setPassword(e.target.value)}
+								className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+								required
+							/>
+						</div>
 						<button
 							type="submit"
 							disabled={loading}
-							className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 disabled:opacity-50 transition-colors"
+							className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white p-3 rounded-lg hover:from-blue-500 hover:to-blue-400 disabled:opacity-50 transition-all font-medium shadow-lg shadow-blue-500/25"
 						>
 							{loading ? 'Logging in...' : 'Login'}
 						</button>
 					</form>
 
 					{error && (
-						<div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">
+						<div className="bg-red-500/20 border border-red-500/30 text-red-300 px-4 py-3 rounded-lg text-sm">
 							{error}
 						</div>
 					)}
 
 					{onSwitchToRegister && (
-						<p className="text-center text-sm text-gray-600">
+						<p className="text-center text-sm text-white/60">
 							Don't have an account?{' '}
 							<button
 								onClick={onSwitchToRegister}
-								className="text-blue-500 hover:text-blue-600 hover:underline"
+								className="text-blue-400 hover:text-blue-300 hover:underline transition-colors"
 							>
 								Register here
 							</button>
 						</p>
 					)}
-					<div className="border-t border-gray-200 pt-3 mt-3">
+					
+					<div className="border-t border-white/10 pt-4 mt-4">
 						<button
 							type="button"
 							disabled
-							className="w-full bg-gray-200 text-gray-500 p-2 rounded cursor-not-allowed text-sm"
+							className="w-full bg-white/10 text-white/40 p-3 rounded-lg cursor-not-allowed text-sm border border-white/10"
 						>
 							Continue as Guest
 						</button>
-						<p className="text-xs text-gray-400 text-center mt-1">
+						<p className="text-xs text-white/30 text-center mt-2">
 							Coming soon
-						</p>
-					</div>
-
-					{/* Quick login hint for development */}
-					<div className="border-t border-gray-200 pt-3">
-						<p className="text-xs text-gray-500 text-center">
-							Default admin: <code className="bg-gray-100 px-1 rounded">admin</code> / <code className="bg-gray-100 px-1 rounded">admin123</code>
 						</p>
 					</div>
 				</div>

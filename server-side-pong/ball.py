@@ -1,23 +1,9 @@
-import pygame
+from lib import Vector2, Rect
 from math import pow
 
 
-class Vector2:
-    x: int
-    y: int
-
-    def __init__(self, x: int, y: int):
-        self.x = x
-        self.y = y
-
-    def normalize(self):
-        magnitude = pow(self.x, 2) + pow(self.y, 2)
-        self.x = self.x / magnitude
-        self.y = self.y / magnitude
-
-
 class Ball:
-    shape: pygame.Rect
+    shape: Rect
     dir_vect: Vector2
     movement_speed: int
     max_speed: int
@@ -27,7 +13,7 @@ class Ball:
     def __init__(
             self, movement_speed: int,
             max_speed: int, radius_px: int):
-        self.shape = pygame.Rect(0, 0, radius_px * 2, radius_px * 2)
+        self.shape = Rect(0, 0, radius_px * 2, radius_px * 2)
         self.dir_vect = (0, 0)
         self.movement_speed = movement_speed
         self.max_speed = max_speed
@@ -46,11 +32,3 @@ class Ball:
             self.speed_incr += 1
         if self.movement_speed > self.max_speed:
             self.movement_speed = self.max_speed
-
-    def draw(self, surface: pygame.Surface):
-        pygame.draw.circle(surface, (151, 3, 204), (
-            self.shape.x + self.radius_px,
-            self.shape.y + self.radius_px
-            ),
-            self.radius_px
-        )

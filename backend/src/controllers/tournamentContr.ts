@@ -1,7 +1,7 @@
 import { ApiError } from '../Errors/errors.js';
 import { tournamentService } from '../services/tournamentService.js'
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { Tournament, TournamentParticipant } from '../types/tournament.types.js';
+import { Tournament, TournamentParticipant } from '../types/database.interfaces.js';
 
 
 export const tournamentController = {
@@ -25,23 +25,26 @@ export const tournamentController = {
 
 	//this endpoint can be called if a player clicks "join tournament" and NO open tournament exist currently
 	//add a alternative in frontend when clicking join tournament for how many participants. 2 4 8 or 16 so its fixed size tournament
+	//returns the id of the tournament to be used when polling from the frontend to check if tournament is starting
 	createTournament: async (req: FastifyRequest, reply: FastifyReply) => {
+		const user_id = req.user!.userId;
 		const {name, description, max_participants } = req.body as {name: string, description: string, max_participants: number };
 		const result = tournamentService.createTournament(name, description, max_participants);
 		if (result.changes == 0)
-			throw new ApiError(404, 'something went wrong creating tournament'); //but when can this actually go wrong except internal server error i guess
-		return {success: true, message: 'Tournament successfully cerated!'};
+			throw new ApiError(404, 'something went wrong creating tournament');
+		tournamentService.joinTournament(result.lastInsertRowid as number, user_id); 
+		return {success: true, data: result.lastInsertRowid, message: 'Tournament successfully cerated and creator joined!'};
 	},
 
 	//player clicks "join tournament" and an open tournament exists --> player will be added AND start Tournament if full
 	joinTournament: async (req: FastifyRequest, reply: FastifyReply) => {
 		const { id } = req.params as {id: number};
-		const { user_id } = req.body as { user_id: number };
+		const user_id = req.user!.userId;
 
 		const tournament = tournamentService.getTournamentByID(id) as Tournament;
 		const participants = tournamentService.getTournamentParticipants(id);
 
-		if (participants.length >= tournament.max_participants || tournament.status === 'ongoing')
+		if (participants.length >= tournament.max_participants || tournament.status !== 'open')
 			throw new ApiError(400, 'tournament full');
 		tournamentService.joinTournament(id, user_id);
 
@@ -77,7 +80,7 @@ export const tournamentController = {
 	//or only allow when tournament.status === 'open'?
 	leaveTournament: async (req: FastifyRequest, reply: FastifyReply) => {
 		const { id } = req.params as {id: number};
-		const { user_id } = req.body as { user_id: number };
+		const user_id = req.user!.userId;
 		tournamentService.leaveTournament(id, user_id);
 		return {success: true, message: 'Player left tournament!'}
 	},
