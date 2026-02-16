@@ -1,6 +1,6 @@
-# Privacy Police Ft_transcendence
+# Privacy Policy Ft_transcendence
 
-**Last Updated:** 16-12-2025
+**Last Updated:** 16-2-2026
 
 ---
 
@@ -18,7 +18,7 @@ When you use ft_transcendence, we collect and store:
 - **Profile Data:** Display name, avatar, user preferences
 - **Game Data:** Tournament participation, match results, statistics, win/loss records
 - **Communication:** Direct messages and chat history with other users
-- **Technical Data:** Login times, cookies
+- **Technical Data:** Login times
 
 ---
 
@@ -30,8 +30,8 @@ You can view all personal data we have stored about you at any time.
 
 **How to exercise:**
 
-1. Navigate to **Profile → Settings**
-2. You will see a complete overview of your stored information
+1. Navigate to **Avatar icon → Profile**
+2. You will see a complete overview of your stored information on the profile page
 
 ### 2.2 Right to Edit Your Data
 
@@ -39,43 +39,28 @@ You can update or correct your personal information whenever needed.
 
 **How to exercise:**
 
-1. Navigate to **Profile → Settings** to update your information
+1. Navigate to **Avatar icon → Settings** to update your information: such as Display name, Nickname, e-mail and avatar.
 2. Changes take effect immediately
 
-### 2.3 Right to Delete Your Data
 
-You can delete specific personal information from your account.
+### 2.3 Right to Anonymize Your Account
 
-**What you can delete:**
-
-- Profile information (avatar, display name)
-- Messages within 1 minute of sending
-- Game statistics (optional)
-
-**How to exercise:**
-
-1. Navigate to **Profile → Settings → Privacy & Data → Manage My Data**
-2. Select the data you want to remove
-3. Confirm deletion
-
-### 2.4 Right to Anonymize Your Account
-
-If you want to stop using ft_transcendence but preserve historical tournament data, you can anonymize your account.
+If you don't want your data to be shown using ft_transcendence, you can anonymize your account.
 
 **What happens:**
 
 - Your email and personal identifiers are removed
-- Your username is replaced with `Anonymous User [ID]`
+- Your username is replaced with `Anonymous User`
 - Your match history remains visible but not linked to you
 - You will not have access to the chat
 - You cannot recover your account after anonymization
 
 **How to exercise:**
 
-1. Navigate to **Profile → Settings → Privacy & Data → Anonymize My Account**
+1. Navigate to **Avatar icon → Settings → Privacy & Data → Anonymous Mode**
 2. ⚠️ This action is irreversible
 
-### 2.5 Right to Delete Your Account
+### 2.4 Right to Delete Your Account
 
 You can permanently delete your account and all associated personal data.
 
@@ -89,7 +74,7 @@ You can permanently delete your account and all associated personal data.
 
 **How to exercise:**
 
-1. Navigate to **Profile → Settings → Privacy & Data → Delete My Account**
+1. Navigate to **Avatar icon → Settings → Privacy & Data → Delete Account**
 2. Confirm your decision
 3. Your data will be permanently deleted
 
@@ -110,9 +95,9 @@ You can permanently delete your account and all associated personal data.
 We implement security measures to protect your information:
 
 - Passwords encrypted using bcrypt hashing
-- All connections use HTTPS encryption
+- All connections use HTTPS encryption and wss
 - Authentication uses JWT tokens with optional 2FA
-- Regular security monitoring and updates
+- Database setup for to prevent SQL injections and Cross site scripting
 
 ---
 
@@ -150,6 +135,7 @@ We may update this document to reflect changes in our practices or legal require
 
 **Version History:**
 
+- v1.1 - 16-2-2026 - Updated flow regarding exercising rights according to the technical architecture development
 - v1.0 - 16-12-2025 - Initial release
 
 ---
