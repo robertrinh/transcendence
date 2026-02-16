@@ -92,11 +92,13 @@ async def process_message(
             game_instance.db_game_id = message_content['game_id']
             game_instance.db_p2_id = message_content['player2_id']
         else:
-            add_game_instance(
-                message_content['game_id'],
-                message_content['player1_id'],
-                message_content['player2_id']
-            )
+            game_instance = find_game_instance_by_db_game_id(message_content['game_id'])
+            if game_instance is None:
+                add_game_instance(
+                    message_content['game_id'],
+                    message_content['player1_id'],
+                    message_content['player2_id']
+                )
         response = {
             'type': 'WHOAREYOU'
         }
