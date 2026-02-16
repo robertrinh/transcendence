@@ -1,6 +1,6 @@
 NAME = ft_transcendence
 
-all: dev-d
+all: real-d
 
 default:
 	./setup.sh
@@ -13,9 +13,12 @@ dev: default
 dev-d: default
 	@docker-compose -f docker-compose.dev.yaml up --build -d
 
-#make real starts the nginx server, the one we will use for eval
 real: default
 	@docker-compose -f docker-compose.yaml up --build
+
+#make real-d starts the nginx server, detached, the one we will use for eval
+real-d: default
+	@docker-compose -f docker-compose.yaml up --build -d
 
 frontend: default
 	@docker-compose -f docker-compose.dev.yaml up --build -d frontend
