@@ -89,6 +89,9 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Run setup script (creates nginx certs and .env for build)
+        run: ./setup.sh
+
       - name: Build docker images
         run: |
           docker compose build --no-cache
@@ -112,8 +115,7 @@ jobs:
 
       - name: Run health checks
         run: |
-          curl -f http://localhost:8080 || exit 1
-          # Small frontend test: running frontend
+          curl -f -k https://localhost:443 || curl -f -k https://localhost || exit 1
 
       - name: Run integration tests
         run: |
