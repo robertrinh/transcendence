@@ -154,7 +154,7 @@ async def main(ip: str, port: int):
     loop.add_signal_handler(signal.SIGINT, stop.set_result, signal.SIGINT)
     asyncio.create_task(reap_lobbies())
     async with serve(handler, ip, port) as server:
-        print(f"Lobby server is listening on: {ip}:{port}")
+        print("Game server is running")
         await stop
         signal_print = None
         match stop.result():
