@@ -119,11 +119,24 @@ server.register(
 const start = async () => {
     try {
         await server.listen({ port: 3000, host: '0.0.0.0' });
-        console.log('🚀 Backend server running on http://0.0.0.0:3000');
-        console.log('📝 API Documentation available at http://localhost:3000/docs');
-        console.log('🌐 Frontend should be accessible at http://localhost:8080');
-        console.log('📡 SSE Chat endpoint: http://localhost:3000/api/chat/stream?token=YOUR_JWT_TOKEN');
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        const devBackendURL = `http://${process.env.HOST}:${process.env.BACKEND_PORT}`
+        const devFrontendURL = `http://${process.env.HOST}:${process.env.FRONTEND_PORT}`
+        const prodURL = `https://${process.env.HOST}`
+        console.log(
+            `Development access points:\n` + 
+            `\t - 🚀 Backend server running on ${devBackendURL}\n` +
+            `\t - 📝 API Documentation available at ${devBackendURL}/api/docs\n` +
+            `\t - 🌐 Frontend should be accessible at ${devFrontendURL}\n` +
+            `\t - 📡 SSE Chat endpoint: ${devBackendURL}/api/chat/stream?token=YOUR_JWT_TOKEN\n` + 
+            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
+        )
+        console.log(
+            `Production access points:\n` + 
+            `\t - 📝 API Documentation available at ${prodURL}/api/docs\n` +
+            `\t - 🌐 Frontend should be accessible at ${prodURL}\n` +
+            `\t - 📡 SSE Chat endpoint: ${prodURL}/api/chat/stream?token=YOUR_JWT_TOKEN\n` + 
+            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
+        )
     } catch (err) {
         server.log.error(err);
         process.exit(1);
