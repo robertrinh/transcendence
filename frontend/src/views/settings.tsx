@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { fetchWithAuth } from '../config/api';
 import { getAvatarUrl } from '../components/util/profileUtils';
 import TwoFactorSetup from '../components/auth/TwoFactorSetup';
+import PrivacyPolicy from './privacy';
 
 interface User {
     id: string;
@@ -28,6 +29,7 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
     const [disableCode, setDisableCode] = useState('');
     const [showAnonymousConfirm, setShowAnonymousConfirm] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showPrivacyModal, setShowPrivacyModal] = useState(false);
     const [deletePassword, setDeletePassword] = useState('');
 
     const [profileForm, setProfileForm] = useState({
@@ -323,6 +325,11 @@ const handleAnonymizeProfile = async () => {
                 }`}>
                     {message.text}
                 </div>
+            )}
+
+            {/* Privacy Policy Modal */}
+            {showPrivacyModal && (
+                <PrivacyPolicy isModal lightMode onClose={() => setShowPrivacyModal(false)} />
             )}
 
             {/* Delete Account Modal */}
@@ -906,6 +913,25 @@ const handleAnonymizeProfile = async () => {
                    {/* Privacy Tab */}
                     {activeTab === 'privacy' && (
                         <div className="space-y-6">
+                            <div className="bg-white rounded-lg shadow border border-gray-200">
+                                <div className="p-4 border-b border-gray-200">
+                                    <h3 className="text-lg font-semibold text-gray-900">Privacy policy Ft_transcendence</h3>
+                                </div>
+                                <div className="p-6">
+                                    <p className="text-sm text-gray-700 leading-relaxed">
+                                        If you want to read the privacy policy,{' '}
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPrivacyModal(true)}
+                                            className="text-sm text-blue-600 hover:text-blue-500 font-medium underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded"
+                                        >
+                                            click here
+                                        </button>
+                                        .
+                                    </p>
+                                </div>
+                            </div>
+
                             <div className="bg-white rounded-lg shadow border border-gray-200">
                                 <div className="p-4 border-b border-gray-200">
                                     <h3 className="text-lg font-semibold text-gray-900">Anonymous Mode</h3>
