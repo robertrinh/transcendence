@@ -50,7 +50,7 @@ server.register(swagger, {
 })
 
 server.register(swaggerUI, {
-  routePrefix: '/docs'
+  routePrefix: '/api/docs'
 })
 
 //* User logic routes
