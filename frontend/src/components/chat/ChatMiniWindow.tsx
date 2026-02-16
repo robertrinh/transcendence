@@ -1,9 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-
-interface User {
-    id: string;
-    username: string;
-}
+import { useState, useEffect, useRef } from 'react';
+import { fetchWithAuth } from '../../config/api';
+import { User } from '../util/profileUtils';
 
 interface Message {
     id: string;
@@ -29,15 +26,37 @@ type ChatMode = 'public' | 'private';
 type TabMode = 'chat' | 'friends' | 'blocked';
 
 const ChatMiniWindow: React.FC<ChatMiniWindowProps> = ({ user, navigateToUserProfile }) => {
-      const viewUserProfile = (username: string) => {
+
+if (user.is_anonymous) {
+        return (
+            <div className="h-full flex items-center justify-center p-6 bg-gray-50">
+                <div className="text-center max-w-md">
+                    <div className="w-20 h-20 bg-gray-300 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <svg className="w-10 h-10 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Chat Unavailable</h3>
+                    <p className="text-gray-600">
+                        Anonymous users cannot access the chat feature.
+                    </p>
+                    <p className="text-sm text-gray-500 mt-2">
+                        This restriction is permanent for anonymous profiles.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+ 
+ const viewUserProfile = (username: string) => {
         if (navigateToUserProfile) {
             navigateToUserProfile(username);
         }
     };
-    // CHANGED: Start with empty messages - will be filled by SSE
+    //  Start with empty messages - will be filled by SSE
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
-    const [connected, setConnected] = useState(false); // CHANGED: Track SSE connection
+    const [connected, setConnected] = useState(false); //  Track SSE connection
     const [connectionId, setConnectionId] = useState<string | null>(null); // NEW: Store connection ID
     const [toast, setToast ] = useState<string | null>(null); // new for public profile
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -70,6 +89,11 @@ const ChatMiniWindow: React.FC<ChatMiniWindowProps> = ({ user, navigateToUserPro
     // NEW: Helper to connect to SSE stream
     const connectSSE = () => {
         try {
+            if (user.is_anonymous) {
+                console.log('⏭️ Skipping SSE connection for anonymous user');
+                setConnected(false);
+                return;
+            }
             const token = localStorage.getItem('token');
             console.log('🔍 Token from localStorage:', token ? 'EXISTS' : 'MISSING');
             
@@ -79,7 +103,7 @@ const ChatMiniWindow: React.FC<ChatMiniWindowProps> = ({ user, navigateToUserPro
             }
 
             console.log('🔗 Connecting to SSE with token...');
-            // CHANGED: Pass token as query parameter
+            //  Pass token as query parameter
             const sseUrl = `/api/chat/stream?token=${token}`;
             console.log('📡 SSE URL:', sseUrl);
             
@@ -101,7 +125,7 @@ const ChatMiniWindow: React.FC<ChatMiniWindowProps> = ({ user, navigateToUserPro
                         case 'connected':
                             console.log('🎯 Connected event:', data);
                             setConnectionId(data.connectionId);
-                            joinChat(data.connectionId, token);
+                            joinChat(data.connectionId);
                             if (data.onlineUsers)
                                     setOnlineUsers(data.onlineUsers);
                             break;
@@ -193,15 +217,12 @@ const ChatMiniWindow: React.FC<ChatMiniWindowProps> = ({ user, navigateToUserPro
     };
 
     // NEW: Join chat endpoint
-    const joinChat = async (connId: string, token: string) => {
+    const joinChat = async (connId: string) => {
         try {
             console.log('🔗 Joining chat with connectionId:', connId);
-            const response = await fetch('/api/chat/join', {
+            const response = await fetchWithAuth('/api/chat/join', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     connectionId: connId,
                     userId: user.id,
@@ -222,8 +243,6 @@ const ChatMiniWindow: React.FC<ChatMiniWindowProps> = ({ user, navigateToUserPro
         }
     };
 
-    const getToken = () => localStorage.getItem('token');
-
     const confirmAction = (action: 'remove' | 'block', username: string) => {
         setConfirmation({ action, username });
     };
@@ -231,34 +250,22 @@ const ChatMiniWindow: React.FC<ChatMiniWindowProps> = ({ user, navigateToUserPro
     const handleConfirm = () => {
         if (confirmation.action === 'remove' && confirmation.username) {
             setFriends(prev => prev.filter(f => f.username !== confirmation.username));
-            const token = getToken();
-            if (token) {
-                fetch('/api/friends/remove', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ username: confirmation.username })
-                }).catch(error => console.error('Failed to remove friend:', error));
-            }
+            fetchWithAuth('/api/friends/remove', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: confirmation.username })
+            }).catch(error => console.error('Failed to remove friend:', error));
         } else if (confirmation.action === 'block' && confirmation.username) {
             if (!blockedUsers.includes(confirmation.username) && confirmation.username !== user.username) {
                 // for type guard, avoid test error
                 const userToBlock = confirmation.username;
                 setBlockedUsers(prev => [...prev, userToBlock]);
                 setFriends(prev => prev.filter(f => f.username !== userToBlock));
-                const token = getToken();
-                if (token) {
-                    fetch('/api/friends/block', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify({ username: userToBlock })
-                    }).catch(error => console.error('Failed to block user:', error));
-                }
+                fetchWithAuth('/api/friends/block', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: userToBlock })
+                }).catch(error => console.error('Failed to block user:', error));
             }
         }
         setConfirmation({ action: null, username: null });
@@ -300,15 +307,11 @@ const ChatMiniWindow: React.FC<ChatMiniWindowProps> = ({ user, navigateToUserPro
         console.log('📤 Sending message:', msgToSend);
         setNewMessage('');
         
-        const token = getToken();
-        if (token && connectionId) {
+        if (connectionId) {
             console.log('📡 POST /api/chat/send with connectionId:', connectionId);
-            fetch('/api/chat/send', {
+            fetchWithAuth('/api/chat/send', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     connectionId,
                     message: msgToSend,
@@ -333,33 +336,21 @@ const ChatMiniWindow: React.FC<ChatMiniWindowProps> = ({ user, navigateToUserPro
                 isOnline: onlineUsers.includes(username)
             };
             setFriends(prev => [...prev, newFriend]);
-            const token = getToken();
-            if (token) {
-                fetch('/api/friends/add', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ username })
-                }).catch(error => console.error('Failed to add friend:', error));
-            }
+            fetchWithAuth('/api/friends/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username })
+            }).catch(error => console.error('Failed to add friend:', error));
         }
     };
 
     const unblockUser = (username: string) => {
         setBlockedUsers(prev => prev.filter(u => u !== username));
-        const token = getToken();
-        if (token) {
-            fetch('/api/friends/unblock', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ username })
-            }).catch(error => console.error('Failed to unblock user:', error));
-        }
+        fetchWithAuth('/api/friends/unblock', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username })
+        }).catch(error => console.error('Failed to unblock user:', error));
     };
 
     const startPrivateChat = (username: string) => {

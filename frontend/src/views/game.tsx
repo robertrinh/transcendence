@@ -1,4 +1,5 @@
 import {useState, useEffect} from 'react'
+import { fetchWithAuth } from '../config/api'
 import GameUI from '../components/game/gameUI.js'
 import websocket from '../static/websocket.js'
 import { Screen, GameMode } from '../components/game/types.js'
@@ -51,12 +52,9 @@ useEffect(() => {
   useEffect(() => {
     if (screen !== 'searching')
         return;
-    const interval = setInterval(async () => {
+        const interval = setInterval(async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('/api/games/matchmaking', {
-          headers: {'Authorization': `Bearer ${token}`}
-        })
+        const response = await fetchWithAuth('/api/games/matchmaking')
         if (!response.ok) {
           const errorData = await response.json().catch(() => {})
           console.error('error: MATCHMAKING POLL: ', errorData)
@@ -119,11 +117,7 @@ useEffect(() => {
   const handleRandomPlayer = async () => {
 	  setScreen('searching')
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/games/matchmaking', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`}
-      })
+      const response = await fetchWithAuth('/api/games/matchmaking', { method: 'POST' })
       if (!response.ok) {
         const errordata = await response.json().catch(() => {})
         console.log('errordata: ', errordata)
@@ -142,11 +136,7 @@ useEffect(() => {
 
   async function handleHostReq() {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/games/host', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`}
-      })
+      const response = await fetchWithAuth('/api/games/host', { method: 'POST' })
       if (!response.ok) {
         const errordata = await response.json().catch(() => {})
         console.log('errordata: ', errordata)
@@ -170,13 +160,9 @@ useEffect(() => {
   async function joinLobbyReq (lobby_id: string){
     setLobbyId(lobby_id)
       try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/games/joinlobby', {
+      const response = await fetchWithAuth('/api/games/joinlobby', {
         method: 'POST',
-        headers: {
-			'Content-Type': 'application/json',
-			'Authorization': `Bearer ${token}`
-		},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lobby_id }),
       })
       if (!response.ok) {
@@ -203,11 +189,7 @@ useEffect(() => {
   async function resetPlayerStatus() {
     console.log('resetting the player_status to none')
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/games/matchmaking/cancel', {
-        method: 'PUT',
-        headers: {'Authorization': `Bearer ${token}`}
-      })
+      const response = await fetchWithAuth('/api/games/matchmaking/cancel', { method: 'PUT' })
       if (!response.ok)
         throw new Error('could not reset user status on backend..')
 	  setGameMode('none')
