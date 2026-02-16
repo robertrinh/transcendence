@@ -335,6 +335,7 @@ const handleAnonymizeProfile = async () => {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
                             </div>
+                            <p className="text-2xl font-bold text-red-600 mb-2">!FINAL WARNING!</p>
                             <h2 className="text-2xl font-bold text-red-600 mb-2">Delete Account</h2>
                             <p className="text-gray-600 text-sm">This action is permanent and cannot be undone</p>
                         </div>
@@ -366,7 +367,7 @@ const handleAnonymizeProfile = async () => {
                         <form onSubmit={handleDeleteAccount} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Enter your password to confirm
+                                    If you are still absolutely sure, enter your password to confirm
                                 </label>
                                 <input
                                     type="password"
@@ -551,8 +552,8 @@ const handleAnonymizeProfile = async () => {
                             }`}
                         >
                             <div className="flex items-center gap-3">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
                                 </svg>
                                 <span className="font-medium">Profile</span>
                             </div>
@@ -567,8 +568,8 @@ const handleAnonymizeProfile = async () => {
                             }`}
                         >
                             <div className="flex items-center gap-3">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
                                 </svg>
                                 <span className="font-medium">Security</span>
                             </div>
@@ -583,10 +584,10 @@ const handleAnonymizeProfile = async () => {
                             }`}
                         >
                             <div className="flex items-center gap-3">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
                                 </svg>
-                                <span className="font-medium">Privacy</span>
+                                <span className="font-medium">Privacy & Data</span>
                             </div>
                         </button>
                     </nav>
@@ -880,8 +881,8 @@ const handleAnonymizeProfile = async () => {
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                                                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
                                                     </svg>
                                                 </div>
                                                 <div>
@@ -963,7 +964,7 @@ const handleAnonymizeProfile = async () => {
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                                     </svg>
                                                     <div>
-                                                        <h4 className="text-yellow-900 font-semibold mb-2">⚠️ Warning: Permanent Action</h4>
+                                                        <h4 className="text-yellow-900 font-semibold mb-2">Warning: Permanent Action</h4>
                                                         <p className="text-sm text-yellow-800 leading-relaxed">
                                                             Enabling anonymous mode is <strong>permanent and cannot be reversed</strong>. Your profile will be hidden, personal information removed, and chat access will be permanently restricted.
                                                         </p>
@@ -1010,7 +1011,7 @@ const handleAnonymizeProfile = async () => {
                             {/* Delete Account Section */}
                             <div className="bg-white rounded-lg shadow border border-gray-200">
                                 <div className="p-4 border-b border-gray-200">
-                                    <h4 className="font-semibold text-red-900 mb-2">Delete Account</h4>
+                                    <h4 className="text-lg font-semibold text-gray-900">Delete Account</h4>
                                 </div>
                                 <div className="p-6">
                                     <div className="bg-red-50 rounded-lg p-4">
@@ -1019,8 +1020,11 @@ const handleAnonymizeProfile = async () => {
                                         </p> 
                                         <button
                                             onClick={() => setShowDeleteConfirm(true)}
-                                            className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+                                            className="w-full bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
                                         >
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
                                             Delete Account
                                         </button>
                                     </div>
