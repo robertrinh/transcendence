@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { User, fetchUserProfile, getAvatarUrl, fetchUserGameHistory, GameHistoryItem } from '../components/util/profileUtils';
+import { User, fetchUserProfile, getAvatarUrl, fetchUserGameHistory,
+    GameHistoryItem, calculateWinRate } from '../components/util/profileUtils';
 
 interface ProfileProps {
     user: User | null;
@@ -56,6 +57,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
     if (!displayUser) {
         return <div className="p-6 text-center text-gray-500">No user data available</div>;
     }
+    const winRate = calculateWinRate(displayUser.wins || 0, displayUser.total_games || 0);
     const avatarUrl = getAvatarUrl(displayUser.avatar_url);
 
     return (
@@ -110,7 +112,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
                         </div>
                         <div className="flex justify-between items-center p-3 bg-purple-50 rounded">
                             <span className="text-gray-700 font-medium">Win Rate</span>
-                            <span className="text-purple-600 font-bold text-xl">{displayUser.winRate || '0%'}</span>
+                            <span className="text-purple-600 font-bold text-xl">{winRate || '0%'}</span>
                         </div>
                     </div>
                     {(displayUser.total_games || 0) === 0 && (

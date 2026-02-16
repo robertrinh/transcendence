@@ -81,3 +81,9 @@ export const getAvatarUrl = (avatarPath?: string): string | undefined => {
     
     return `/api/avatars/${avatarPath}`;
 };
+
+export const calculateWinRate = (wins: number, totalGames: number): string => {
+    return totalGames > 0
+        ? `${((wins / totalGames) * 100).toFixed(1)}%`
+        : '0%';
+};
