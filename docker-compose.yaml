@@ -9,8 +9,8 @@ services:
     environment:
       - NODE_ENV=production
       - DB_PATH=/app/database/transcendence.db
-    ports:
-      - 3000:3000
+    expose:
+      - 3000
     volumes:
       - database:/app/database
       - uploads:/app/uploads  
@@ -29,7 +29,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.real
     ports:
-      - 8080:8080
+      - 443:443
     depends_on:
       - backend
     restart: always
@@ -41,8 +41,8 @@ services:
     build:
       context: ./server-side-pong
       dockerfile: Dockerfile.dev
-    ports:
-      - 8081:8081
+    expose:
+      - 8081
     environment:
       - PYTHONUNBUFFERED=1
     restart: always

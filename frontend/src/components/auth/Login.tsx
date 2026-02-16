@@ -1,20 +1,13 @@
 import React, { useState } from 'react';
 import TwoFactorVerify from './TwoFactorVerify';
 import { User } from '../util/profileUtils';
+import { getApiUrl } from './lib';
 
 interface LoginProps {
 	onLoginSuccess: (userData: User, token: string) => void;
 	onSwitchToRegister?: () => void;
 	isInPanel?: boolean;  // ← NEW: Add panel mode support
 }
-
-// Same API URL logic as register
-const getApiUrl = () => {
-	if (typeof window !== 'undefined') {
-		return 'http://backend:3000';
-	}
-	return 'http://localhost:3000';
-};
 
 const API_URL = getApiUrl();
 
