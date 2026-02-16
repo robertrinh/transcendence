@@ -107,7 +107,7 @@ useEffect(() => {
       }
       console.log('game data sent to gameserver')
     }
-  }, [gameMode])
+  }, [gameMode, lobbyId, gameData])
 
   function updateGameMode(gameMode: GameMode) {
     console.log("Selected mode: ", gameMode)
