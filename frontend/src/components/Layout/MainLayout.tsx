@@ -212,8 +212,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                     {showUserMenu && (
                                         <div
                                             ref={userMenuRef}
-                                            className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-lg rounded-lg shadow-xl border border-white/50 py-1 z-50"
+                                            className="absolute right-0 mt-2 w-52 bg-white/95 backdrop-blur-lg rounded-lg shadow-xl border border-white/50 z-50 overflow-hidden"
                                         >
+                                            <div className="px-4 pt-3 pb-2 border-b border-gray-100">
+                                                <p className="text-gray-800 font-medium">Sup, {user.username}!</p>
+                                            </div>
+                                            <div className="py-1">
                                              <button
                                                 onClick={() => {
                                                     setCurrentView('profile');
@@ -254,6 +258,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                                 </svg>
                                                 <span>Logout</span>
                                             </button>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
