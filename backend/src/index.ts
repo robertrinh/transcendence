@@ -1,7 +1,5 @@
 import fastify from 'fastify';
-import dotenv from 'dotenv/config';
 import databaseRoutes from './routes/database.js';
-import { getMessages } from './controllers/chatcontrollers.js';
 import usersRoutes from './routes/users.js';
 import chatRoutes from './routes/chat.js';
 import gamesRoutes from './routes/games.js';
@@ -9,7 +7,6 @@ import tournamentsRoutes from './routes/tournaments.js';
 import fastifyStatic from '@fastify/static';
 import swagger from '@fastify/swagger'
 import swaggerUI from '@fastify/swagger-ui'
-// import database from './database.js';
 import authRoutes from './routes/auth.js';
 import multipart from '@fastify/multipart';
 
@@ -18,7 +15,6 @@ const __dirname = path.dirname(__filename);
 import twofaRoutes from './routes/2fa.js';
 
 import { fileURLToPath } from 'node:url';
-import { dirname } from 'node:path'
 import path from 'node:path';
 
 const server = fastify({ logger: true });
@@ -71,20 +67,6 @@ server.register(
         prefix: "/api"
     }
 );
-
-// Root endpoint
-server.get('/', async (request, reply) => {
-    return { 
-        message: 'ft_transcendence Backend API',
-        status: 'running',
-        endpoints: {
-            health: '/api/health',
-            auth: '/api/auth/*',
-            chat: '/api/chat/*',
-            chatStream: '/api/chat/stream (SSE with token query param)'
-        }
-    };
-});
 
 //* 2FA routes
 server.register(

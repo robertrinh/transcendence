@@ -4,7 +4,6 @@ import { IDSchema } from '../schemas/generic.schema.js'
 import { userBody, userParamSchema } from '../schemas/users.schema.js'
 import { authenticate } from '../auth/middleware.js'
 import { anonymizeResponseSchema } from '../schemas/users.schema.js'
-//* curl http://localhost:3000/api/db/tables?tablename=users for testing hashed passwords
 
 export default async function usersRoutes (
     fastify: FastifyInstance,
