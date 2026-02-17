@@ -6,6 +6,7 @@ nginx_dir=$(dirname "$BASH_SOURCE")/./frontend/nginx
 backend_port=3000
 frontend_port=8080
 game_server_port=8081
+nginx_port=8443
 
 function create_ssl () {
 	openssl req -x509 -newkey rsa:4096 -keyout $nginx_dir/nginx-selfsigned.key \
@@ -46,6 +47,8 @@ function create_frontend_env () {
 	VITE_GAME_SERVER_PORT=$game_server_port
 	VITE_BACKEND_PORT=$backend_port
 	VITE_FRONTEND_PORT=$frontend_port
+	VITE_NGINX_PORT=$nginx_port
+
 	# Use 1 for production and 0 for development
 	VITE_USE_WSS=1
 	EOF
