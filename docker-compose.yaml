@@ -29,7 +29,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.real
     ports:
-      - 443:443
+      - 8443:8443
     depends_on:
       - backend
     restart: always
