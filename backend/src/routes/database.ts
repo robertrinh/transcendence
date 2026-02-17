@@ -34,4 +34,41 @@ export default async function databaseRoutes (
             };
         }
     });
+
+    // Clear all data endpoint (for development)
+    fastify.delete('/clear', {
+		schema: {
+			tags: ['db']
+		}}, async (request, reply) => {
+        try {
+            const clearQueries = [
+                'DELETE FROM tournament_participants',
+                'DELETE FROM tournaments',
+                'DELETE FROM games',
+                'DELETE FROM chat_users',
+                'DELETE FROM chat_messages',
+                'DELETE FROM user_sessions',
+                'DELETE FROM users WHERE username != "admin"'
+            ];
+
+            const clearData = db.transaction(() => {
+                for (const query of clearQueries) {
+                    db.prepare(query).run();
+                }
+            });
+
+            clearData();
+
+            return {
+                success: true,
+                message: 'All data cleared (except admin user)'
+            };
+        } catch (error: any) {
+            return {
+                success: false,
+                error: 'Failed to clear data',
+                message: error.message
+            };
+        }
+    });
 }
