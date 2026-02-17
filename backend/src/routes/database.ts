@@ -9,7 +9,8 @@ export default async function databaseRoutes (
     // Database test endpoint
     fastify.get('/test', {
 		schema: {
-			tags: ['db']
+			tags: ['db'],
+            summary: 'To test if the database is up'
 		}}, async (request, reply) => {
         try {
             const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();

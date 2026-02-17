@@ -76,7 +76,7 @@ export default async function usersRoutes (
     fastify.delete('/me', {
         schema: {
             security: [{ bearerAuth: [] }],
-            tags: ['users'],
+            tags: ['users', 'privacy'],
             summary: 'Delete user',
         }, preHandler: [authenticate] }, userController.deleteUser);
 

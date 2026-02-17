@@ -10,7 +10,8 @@ export default async function authRoutes (
 ) {
 	fastify.post('/auth/login', {
 		schema: {
-			tags: ['auth']
+			tags: ['auth'],
+			summary: 'Login as a user'
 		}}, async (request, reply) => {
 		const { username, password } = request.body as { username: string, password: string}
 		if (!username || !password) {
@@ -55,7 +56,8 @@ export default async function authRoutes (
 
 	fastify.post('/auth/register', {
 		schema: {
-			tags: ['auth']
+			tags: ['auth'],
+			summary: 'Register a new user or guest'
 		}}, async (request, reply) => {
 		const { username, password, email } = request.body as { username: string, password: string, email: string }
 		if (!username || !password || !email) {
@@ -99,12 +101,17 @@ export default async function authRoutes (
 
 		fastify.post('/auth/logout', {
 		schema: {
-			tags: ['auth']
+			tags: ['auth'],
+			summary: 'Logout as a user'
 		}}, async (request, reply) => {
 			return { success: true, message: 'Logged out successfully' }
 		})
 		
-	fastify.get('/auth/validate', async (request, reply) => {
+	fastify.get('/auth/validate', {
+		schema: {
+			tags: ['auth'],
+			summary: 'Validate JWT token'
+		}}, async (request, reply) => {
 		const authHeader = request.headers.authorization
 		if (!authHeader?.startsWith('Bearer ')) {
 			return reply.code(401).send({ success: false, error: 'No token provided' })
