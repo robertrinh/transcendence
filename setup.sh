@@ -1,17 +1,25 @@
 #!/bin/bash
 backend_env=$(dirname "$BASH_SOURCE")/./backend/.env
 frontend_env=$(dirname "$BASH_SOURCE")/./frontend/.env
+game_env=$(dirname "$BASH_SOURCE")/./server-side-pong/.env
 hostname=$(hostname)
 nginx_dir=$(dirname "$BASH_SOURCE")/./frontend/nginx
 backend_port=3000
 frontend_port=8080
 game_server_port=8081
+passwd=$(openssl passwd -1 "")	
 nginx_port=8443
 
 function create_ssl () {
 	openssl req -x509 -newkey rsa:4096 -keyout $nginx_dir/nginx-selfsigned.key \
 	-out $nginx_dir/nginx-selfsigned.crt -sha256 -days 3650 -nodes -subj \
 	"/C=XX/ST=Noord-Holland/L=Amsterdam/O=Codam Coding College/OU=/CN=$hostname"
+}
+
+function create_htpasswd () {
+	cat <<- EOF > $nginx_dir/.htpasswd
+	gameserver:$passwd
+	EOF
 }
 
 function create_backend_env () {
@@ -54,6 +62,16 @@ function create_frontend_env () {
 	EOF
 }
 
+function create_game_env () {
+	cat <<- EOF > $game_env
+	BACKEND_PORT=$backend_port
+	
+	# Password to use for the “HTTP Basic Authentication” protocol, used by the
+	# game server to finish games
+	HTTP_PASSWD='$passwd'
+	EOF
+}
+
 if [ -f "$backend_env" ]; then
 	echo "Found backend .env file"
 else
@@ -68,6 +86,13 @@ else
 	create_frontend_env
 fi
 
+if [ -f "$game_env" ]; then
+	echo "Found game .env file"
+else
+	echo "Creating default game .env..."
+	create_game_env
+fi
+
 if [ -d "$nginx_dir" ]; then
 	echo "Found SSL key directory"
 else
@@ -75,4 +100,6 @@ else
 	mkdir $nginx_dir
 	echo "Creating self-signed SSL certificate..."
 	create_ssl
+	echo "Creating htpasswd file..."
+	create_htpasswd
 fi

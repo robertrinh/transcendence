@@ -13,7 +13,11 @@ export default async function chatRoutes (
     	fastify: FastifyInstance,
     	options: FastifyPluginOptions
     ) {
-    fastify.get('/stream', async (request, reply) => {
+    fastify.get('/stream', {
+        schema: {
+            tags: ['chat'],
+            summary: 'Server-Sent Events (SSE) endpoint'
+        }}, async (request, reply) => {
     try {
         //  Get token from query parameter (EventSource limitation)
         const token = (request.query as any).token;
@@ -112,7 +116,12 @@ export default async function chatRoutes (
 });
 
 //  Join chat endpoint with JWT verification
-fastify.post('/join', async (request, reply) => {
+fastify.post('/join', {
+        schema: {
+            tags: ['chat'],
+            summary: 'Join chat endpoint with JWT verification'
+        }},
+        async (request, reply) => {
     try {
         //  Get token from Authorization header
         const authHeader = request.headers.authorization;
@@ -167,7 +176,11 @@ fastify.post('/join', async (request, reply) => {
 });
 
 //  Send message endpoint with JWT verification
-fastify.post('/send', async (request, reply) => {
+fastify.post('/send', {
+        schema: {
+            tags: ['chat'],
+            summary: 'Send message endpoint with JWT verification'
+        }}, async (request, reply) => {
     try {
         //  Get token from Authorization header
         const authHeader = request.headers.authorization;
@@ -271,13 +284,18 @@ function broadcastSSE(message: any, excludeConnectionId?: string) {
 }
 
 // Get messages (HTTP endpoint for initial load)
-fastify.get('/messages', getMessages);
-
-// Register database routes
-// await fastify.register(databaseRoutes, { prefix: '/api/db' });
+fastify.get('/messages', {
+    schema: {
+        tags: ['chat'],
+        summary: 'Get chat messages'
+    }}, getMessages);
 
 // Chat status endpoint
-fastify.get('/status', async (request, reply) => {
+fastify.get('/status', {
+    schema: {
+        tags: ['chat'],
+        summary: 'Get the active users of the chat'
+    }}, async (request, reply) => {
     const activeUsers = Array.from(sseConnections.values())
         .filter(conn => conn.username)
         .map(conn => ({
