@@ -2,11 +2,20 @@ import asyncio
 import json
 import random as rand
 import requests
+import sys
 from websockets import ServerConnection, broadcast
 from ball import Ball
 from lib import Vector2, Rect
 from player_paddle import PlayerPaddle
 from datetime import datetime
+from os import getenv
+
+BACKEND_PORT = getenv('BACKEND_PORT')
+
+if BACKEND_PORT is None:
+    print('Missing BACKEND_PORT environment variable', file=sys.stderr)
+    exit(1)
+
 
 # game dimensions
 ARENA_WIDTH = 1024
@@ -291,7 +300,7 @@ def handle_score(game: GameInstance):
         try:
             timestamp = '{:%Y-%m-%d %H:%M:%S}'.format(datetime.now())
             response = requests.put(
-                f"http://backend:3000/api/games/{game.db_game_id}/finish",
+                f"http://backend:{BACKEND_PORT}/api/games/{game.db_game_id}/finish",
                 json={
                     "winner_id": winner_id,
                     "score_player1": game.p1_score,

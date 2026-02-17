@@ -1,6 +1,7 @@
 #!/bin/bash
 backend_env=$(dirname "$BASH_SOURCE")/./backend/.env
 frontend_env=$(dirname "$BASH_SOURCE")/./frontend/.env
+game_env=$(dirname "$BASH_SOURCE")/./server-side-pong/.env
 hostname=$(hostname)
 nginx_dir=$(dirname "$BASH_SOURCE")/./frontend/nginx
 backend_port=3000
@@ -51,6 +52,12 @@ function create_frontend_env () {
 	EOF
 }
 
+function create_game_env () {
+	cat <<- EOF > $game_env
+	BACKEND_PORT=$backend_port
+	EOF
+}
+
 if [ -f "$backend_env" ]; then
 	echo "Found backend .env file"
 else
@@ -63,6 +70,13 @@ if [ -f "$frontend_env" ]; then
 else
 	echo "Creating default frontend .env..."
 	create_frontend_env
+fi
+
+if [ -f "$game_env" ]; then
+	echo "Found game .env file"
+else
+	echo "Creating default game .env..."
+	create_game_env
 fi
 
 if [ -d "$nginx_dir" ]; then
