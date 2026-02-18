@@ -4,9 +4,16 @@ import random as rand
 import sys
 import signal
 from time import time
-from websockets import ServerConnection
+from websockets import ServerConnection, Request
 from websockets.asyncio.server import serve
 from gameinstance import GameInstance
+from os import getenv
+import jwt
+
+JWT_SECRET = getenv('JWT_SECRET')
+if JWT_SECRET is None:
+    print('Missing JWT_SECRET environment variable', file=sys.stderr)
+    exit(1)
 
 IP = "0.0.0.0"
 PORT = 8081  # change to envvar
@@ -148,6 +155,16 @@ async def handler(websocket: ServerConnection):
             continue
 
 
+async def process_request(connection: ServerConnection, request: Request):
+    try:
+        jwt_encoded = request.headers['Bearer']
+        jwt_decoded = jwt.decode(jwt_encoded, JWT_SECRET, algorithms="HS256")
+        print(jwt_decoded)
+    except Exception as e:
+        print(e, file=sys.stderr)
+        await connection.close()
+
+
 async def main(ip: str, port: int):
     loop = asyncio.get_running_loop()
     rand.seed(time())
@@ -155,7 +172,7 @@ async def main(ip: str, port: int):
     loop.add_signal_handler(signal.SIGTERM, stop.set_result, signal.SIGTERM)
     loop.add_signal_handler(signal.SIGINT, stop.set_result, signal.SIGINT)
     asyncio.create_task(reap_lobbies())
-    async with serve(handler, ip, port) as server:
+    async with serve(handler, ip, port, process_request=process_request) as server:
         print("Game server is running")
         await stop
         signal_print = None

@@ -21,7 +21,8 @@ export default function Game() {
 		const useWSS = Number(import.meta.env.VITE_USE_WSS)
 		let url = `ws://${serverHostname}:${gameServerPort}`
 		if (useWSS === 1) {
-			url = `wss://${serverHostname}:${nginxPort}/ws/`
+			const token = localStorage.getItem('token')
+			url = `wss://${serverHostname}:${nginxPort}/ws/${token}`
 		}
 		websocket.current = new WebSocket(url)
 		websocket.current.onopen = () => {
