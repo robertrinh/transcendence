@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Navigate } from 'react-router-dom';
 import { fetchWithAuth } from '../config/api';
 import { getAvatarUrl } from '../components/util/profileUtils';
 import TwoFactorSetup from '../components/auth/TwoFactorSetup';
@@ -13,6 +14,7 @@ interface User {
     avatar_url?: string;
     two_factor_enabled?: boolean;
     is_anonymous?: boolean;
+    is_guest?: boolean;
 }
 
 interface SettingsProps {
@@ -311,6 +313,10 @@ const handleAnonymizeProfile = async () => {
                 </div>
             </div>
         );
+    }
+
+    if (user.is_guest) {
+        return <Navigate to="/" replace />;
     }
 
     const avatarUrl = getAvatarUrl(user.avatar_url);
