@@ -28,7 +28,8 @@ export default {
             'marquee-right': {
                 '0%': { transform: 'translateX(-50%)' },
                 '100%': { transform: 'translateX(0%)' },
-            'gradient-shift': { // Add this
+            },
+            'gradient-shift': {
                 '0%, 100%': { backgroundPosition: '0% 50%' },
                 '50%': { backgroundPosition: '100% 50%' },
             },
