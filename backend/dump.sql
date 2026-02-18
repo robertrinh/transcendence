@@ -27,6 +27,9 @@ CREATE TABLE IF NOT EXISTS users (
     FOREIGN KEY(avatar_id) REFERENCES avatars(id)
 );
 
+-- for performance, instead of looping all the user's, it sorts the ones with the anonymous mode. less QUERY search
+CREATE INDEX IF NOT EXISTS idx_users_anonymous ON users(is_anonymous);
+
 CREATE TABLE IF NOT EXISTS game_queue (
 	player_id INTEGER PRIMARY KEY,
     joined_at INTEGER DEFAULT (strftime('%s','now')),

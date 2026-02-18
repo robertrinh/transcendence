@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
+<<<<<<< HEAD
 import { Navigate } from 'react-router-dom';
+=======
+>>>>>>> main
 import { fetchWithAuth } from '../config/api';
 import { getAvatarUrl } from '../components/util/profileUtils';
 import TwoFactorSetup from '../components/auth/TwoFactorSetup';

@@ -76,6 +76,14 @@ export default async function usersRoutes (
         }, preHandler: [authenticate, requireNonGuest]
     }, userController.updateProfile);
 
+            
+    fastify.put('/profile/me', {
+        schema: {
+            security: [{ bearerAuth: [] }],
+            tags: ['users'],
+            summary: 'Update user',
+        }, preHandler: [authenticate]} , userController.updateProfile);
+
     fastify.delete('/me', {
         schema: {
             security: [{ bearerAuth: [] }],
