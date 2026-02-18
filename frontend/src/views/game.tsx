@@ -1,8 +1,9 @@
-import {useState, useEffect} from 'react'
+import {useState, useEffect, useCallback} from 'react'
 import { fetchWithAuth } from '../config/api'
 import GameUI from '../components/game/gameUI.js'
 import websocket from '../static/websocket.js'
 import { Screen, GameMode } from '../components/game/types.js'
+import { useBeforeUnload } from 'react-router-dom'
 
 export default function Game() {
   const [gameMode, setGameMode] = useState<GameMode>("none")
@@ -12,25 +13,32 @@ export default function Game() {
   const [error, setError] = useState<string | null>(null)
   const [wsReadyState, setWsReadyState] = useState<Number>(websocket.readyState)
 
+  useBeforeUnload(
+    useCallback(() => {
+      websocket.close()
+      localStorage.setItem('bewijs', 'hackerz')
+      console.log(`Jajaja page reload`)
+    }, [])
+  )
   // AliExpress setup but I tried using the WebSocket's internal readyState 
   // property in the dependency array of the useEffect but that didn't work so 
   // we have to duplicate the default behaviour sort of
-useEffect(() => {
-  websocket.onopen = () => {
-    setWsReadyState(WebSocket.OPEN)
-    console.log(`[connection opened]`)
-  }
+  useEffect(() => {
+    websocket.onopen = () => {
+      setWsReadyState(WebSocket.OPEN)
+      console.log(`[connection opened]`)
+    }
 
-  websocket.onclose = () => {
-    setWsReadyState(WebSocket.CLOSED)
-    console.log(`[connection closed]`)
-  }
+    websocket.onclose = () => {
+      setWsReadyState(WebSocket.CLOSED)
+      console.log(`[connection closed]`)
+    }
 
-  websocket.onerror = () => {
-    setWsReadyState(WebSocket.CLOSED)
-    console.log(`[error on connection]`)
-  }
-}, [])
+    websocket.onerror = () => {
+      setWsReadyState(WebSocket.CLOSED)
+      console.log(`[error on connection]`)
+    }
+  }, [])
 
   useEffect(() => {
     switch (wsReadyState) {
