@@ -13,6 +13,7 @@ export interface User {
     winRate?: string;
     is_anonymous?: boolean;
     anonymized_at?: string;
+    is_guest?: boolean;
     two_factor_enabled?: boolean;
 }
 
