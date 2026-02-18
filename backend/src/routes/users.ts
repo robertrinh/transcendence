@@ -2,7 +2,7 @@ import { FastifyInstance, FastifyPluginOptions } from 'fastify'
 import { userController } from '../controllers/userController.js'
 import { IDSchema } from '../schemas/generic.schema.js'
 import { userBody, userParamSchema } from '../schemas/users.schema.js'
-import { authenticate } from '../auth/middleware.js'
+import { authenticate, requireNonGuest } from '../auth/middleware.js'
 import { anonymizeResponseSchema } from '../schemas/users.schema.js'
 //* curl http://localhost:3000/api/db/tables?tablename=users for testing hashed passwords
 
@@ -26,8 +26,8 @@ export default async function usersRoutes (
             response: {
                 200: anonymizeResponseSchema
             }
-        }, 
-        preHandler: [authenticate]
+        },
+        preHandler: [authenticate, requireNonGuest]
     }, userController.anonymizeProfile);
     
     fastify.get('/:id', {
@@ -64,7 +64,8 @@ export default async function usersRoutes (
             security: [{ bearerAuth: [] }],
             tags: ['users'],
             summary: 'Upload an avatar',
-        }, preHandler: [authenticate]} , userController.uploadAvatar);
+        }, preHandler: [authenticate, requireNonGuest]
+    }, userController.uploadAvatar);
 
             
     fastify.put('/profile/me', {
@@ -72,13 +73,15 @@ export default async function usersRoutes (
             security: [{ bearerAuth: [] }],
             tags: ['users'],
             summary: 'Update user',
-        }, preHandler: [authenticate]} , userController.updateProfile);
+        }, preHandler: [authenticate, requireNonGuest]
+    }, userController.updateProfile);
 
     fastify.delete('/me', {
         schema: {
             security: [{ bearerAuth: [] }],
             tags: ['users'],
             summary: 'Delete user',
-        }, preHandler: [authenticate] }, userController.deleteUser);
+        }, preHandler: [authenticate, requireNonGuest]
+    }, userController.deleteUser);
 
 }
