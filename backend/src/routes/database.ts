@@ -131,7 +131,8 @@ export default async function databaseRoutes (
     // Clear all data endpoint (for development)
     fastify.delete('/clear', {
 		schema: {
-			tags: ['db']
+			tags: ['db'],
+            summary: 'Clear all data from the database (except admin and tester user)'
 		}}, async (request, reply) => {
         try {
             const clearQueries = [
@@ -140,21 +141,21 @@ export default async function databaseRoutes (
                 'DELETE FROM games',
                 'DELETE FROM chat_users',
                 'DELETE FROM chat_messages',
-                'DELETE FROM user_sessions',
-                'DELETE FROM users WHERE username != "admin"'
+                'DELETE FROM user_sessions'
             ];
 
             const clearData = db.transaction(() => {
                 for (const query of clearQueries) {
                     db.prepare(query).run();
                 }
+                db.prepare('DELETE FROM users WHERE username != ? AND username != ?').run('admin', 'tester');
             });
 
             clearData();
 
             return {
                 success: true,
-                message: 'All data cleared (except admin user)'
+                message: 'All data cleared (except admin and tester user)'
             };
         } catch (error: any) {
             return {
