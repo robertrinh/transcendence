@@ -45,3 +45,27 @@ export const authenticate = async (request: FastifyRequest, reply: FastifyReply)
 	}
 	request.user = payload;
 }
+
+//* reject guests for routes that require a full account (profile update, avatar, delete, anonymize)
+//TODO (tournament create/join/leave)
+export const requireNonGuest = async (request: FastifyRequest, reply: FastifyReply) => {
+	if (!request.user?.userId) {
+		return reply.code(401).send({
+			success: false,
+			error: 'Authentication required'
+		});
+	}
+	const row = db.prepare('SELECT is_guest FROM users WHERE id = ?').get(request.user.userId) as { is_guest?: number } | undefined;
+	if (!row) {
+		return reply.code(401).send({
+			success: false,
+			error: 'Account no longer exists'
+		});
+	}
+	if (row.is_guest) {
+		return reply.code(403).send({
+			success: false,
+			error: 'Guest accounts cannot use this feature. Register for a full account.'
+		});
+	}
+};
