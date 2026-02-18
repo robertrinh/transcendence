@@ -2,7 +2,7 @@ import { assertIsNotNull } from './lib'
 import { gameOnlineLobby } from './gameOnline'
 import { gameOfflineLobby } from './gameOffline'
 
-export default async function gameInit (gameMode: string) {
+export default async function gameInit (gameMode: string, websocket: WebSocket) {
     let canvas = document.getElementById('game-canvas') as HTMLCanvasElement | null
     if (canvas === null) {
         canvas = document.createElement("canvas")
@@ -31,6 +31,6 @@ export default async function gameInit (gameMode: string) {
             await gameOfflineLobby(gameMode, canvas, ctx, drawCanvas, drawCtx)
             break
         case "online":
-            await gameOnlineLobby(canvas, ctx, drawCanvas, drawCtx)
+            await gameOnlineLobby(canvas, ctx, drawCanvas, drawCtx, websocket)
     }
 }

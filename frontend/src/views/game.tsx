@@ -1,7 +1,6 @@
-import {useState, useEffect} from 'react'
+import {useState, useEffect, useRef} from 'react'
 import { fetchWithAuth } from '../config/api'
 import GameUI from '../components/game/gameUI.js'
-import websocket from '../static/websocket.js'
 import { Screen, GameMode } from '../components/game/types.js'
 
 export default function Game() {
@@ -10,27 +9,40 @@ export default function Game() {
   const [gameData, setGameData] = useState<any>(null)
   const [lobbyId, setLobbyId] = useState("")
   const [error, setError] = useState<string | null>(null)
-  const [wsReadyState, setWsReadyState] = useState<Number>(websocket.readyState)
+  const [wsReadyState, setWsReadyState] = useState<Number>(WebSocket.CONNECTING)
+  const websocket = useRef<WebSocket|null>(null)
 
-  // AliExpress setup but I tried using the WebSocket's internal readyState 
-  // property in the dependency array of the useEffect but that didn't work so 
-  // we have to duplicate the default behaviour sort of
-useEffect(() => {
-  websocket.onopen = () => {
-    setWsReadyState(WebSocket.OPEN)
-    console.log(`[connection opened]`)
-  }
+	useEffect(() => {
+		const serverHostname = import.meta.env.VITE_SERVER_HOSTNAME
+		const gameServerPort = import.meta.env.VITE_GAME_SERVER_PORT
+		const nginxPort = import.meta.env.VITE_NGINX_PORT
+		// A little bit illegal because it's similar to this: 
+		// https://nodejs.org/en/learn/getting-started/nodejs-the-difference-between-development-and-production#why-is-node_env-considered-an-antipattern
+		const useWSS = Number(import.meta.env.VITE_USE_WSS)
+		let url = `ws://${serverHostname}:${gameServerPort}`
+		if (useWSS === 1) {
+			url = `wss://${serverHostname}:${nginxPort}/ws/`
+		}
+		websocket.current = new WebSocket(url)
+		websocket.current.onopen = () => {
+			setWsReadyState(WebSocket.OPEN)
+			console.log(`[connection opened]`)
+		}
 
-  websocket.onclose = () => {
-    setWsReadyState(WebSocket.CLOSED)
-    console.log(`[connection closed]`)
-  }
+		websocket.current.onclose = () => {
+			setWsReadyState(WebSocket.CLOSED)
+			console.log(`[connection closed]`)
+		}
 
-  websocket.onerror = () => {
-    setWsReadyState(WebSocket.CLOSED)
-    console.log(`[error on connection]`)
-  }
-}, [])
+		websocket.current.onerror = () => {
+			setWsReadyState(WebSocket.CLOSED)
+			console.log(`[error on connection]`)
+		}
+		return () => {
+			// cleanup, should also reset player state in db
+			websocket.current!.close()
+		}
+	}, [])
 
   useEffect(() => {
     switch (wsReadyState) {
@@ -93,11 +105,11 @@ useEffect(() => {
           player1_id: gameData.player1_id,
           player2_id: gameData.player2_id
         })
-        websocket.send(game);
+        websocket.current!.send(game);
       }
       // we are joining a private lobby
       else {
-        websocket.send(JSON.stringify({
+        websocket.current!.send(JSON.stringify({
           type: 'START_GAME',
           game_id: gameData.id,
           player1_id: gameData.player1_id,
@@ -209,7 +221,8 @@ return (
 			screen={screen}
 			gameMode={gameMode}
 			lobbyId={lobbyId}
-      error={error}
+			error={error}
+			websocket={websocket}
 			setScreen={setScreen}
 			setGameMode={setGameMode}
 			handleRandomPlayer={handleRandomPlayer}
