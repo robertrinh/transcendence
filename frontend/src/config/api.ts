@@ -122,8 +122,7 @@ export const API_ENDPOINTS = {
         join: `${API_BASE_URL}/api/chat/join`,
         leave: `${API_BASE_URL}/api/chat/leave`,
         users: `${API_BASE_URL}/api/chat/users`,
-    },
-    health: `${API_BASE_URL}/api/health`,
+    }
 };
 
 // Utility function to make API calls with fallback

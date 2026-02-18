@@ -10,7 +10,8 @@ export default async function tournamentsRoutes (
 ) {
     fastify.get('/', {
 		schema: {
-			tags: ['tournaments']
+			tags: ['tournaments'],
+			summary: 'Get all tournaments'
 		}
 	}, tournamentController.getAllTournaments)
 
@@ -18,12 +19,14 @@ export default async function tournamentsRoutes (
 		schema: {
 			security: [{bearerAuth: []}],
 			tags: ['tournaments'],
+			summary: 'Create a tournament',
 			body: postTournamentSchemaBody
 		}, preHandler: [authenticate]}, tournamentController.createTournament)
 
     fastify.get('/:id', {
 		schema: {
 			tags: ['tournaments'],
+			summary: 'Get a tournament by ID',
 			params: IDSchema
 		}
 	}, tournamentController.getTournamentByID)
@@ -32,6 +35,7 @@ export default async function tournamentsRoutes (
     fastify.put('/:id', {
 		schema: {
 			tags: ['tournaments'],
+			summary: 'Update a tournament by ID',
 			params: IDSchema,
 			body: tournamentResultSchema
 		}
@@ -40,6 +44,7 @@ export default async function tournamentsRoutes (
     fastify.delete('/:id', {
 		schema: {
 			tags: ['tournaments'],
+			summary: 'Delete a tournament by ID',
 			params: IDSchema
 		}
 	}, tournamentController.deleteTournament)
@@ -48,12 +53,14 @@ export default async function tournamentsRoutes (
 		schema: {
 			security: [{bearerAuth: []}],
 			tags: ['tournaments'],
+			summary: 'Join a tournament',
 			params: IDSchema,
 		}, preHandler: [authenticate]}, tournamentController.joinTournament)
 
 	fastify.delete('/:id/leave', {
 		schema: {
 			tags: ['tournaments'],
+			summary: 'Leave a tournament',
 			params: IDSchema,
 			security: [{bearerAuth: []}],
 		}, preHandler: [authenticate]}, tournamentController.leaveTournament)
@@ -61,6 +68,7 @@ export default async function tournamentsRoutes (
 	fastify.get('/:id/participants', {
 		schema: {
 			tags: ['tournaments'],
+			summary: 'Get tournament participants',
 			params: IDSchema
 		}
 	}, tournamentController.getTournamentParticipants)
@@ -68,6 +76,7 @@ export default async function tournamentsRoutes (
 	fastify.get('/:id/games', {
 		schema: {
 			tags: ['tournaments'],
+			summary: 'Get the games contained in the tournament',
 			params: IDSchema
 		}
 	}, tournamentController.getTournamentGames)

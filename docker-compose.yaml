@@ -29,7 +29,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.real
     ports:
-      - 443:443
+      - 8443:8443
     depends_on:
       - backend
     restart: always
@@ -41,6 +41,8 @@ services:
     build:
       context: ./server-side-pong
       dockerfile: Dockerfile.dev
+    env_file:
+      - ./server-side-pong/.env
     expose:
       - 8081
     environment:

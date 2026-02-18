@@ -188,7 +188,7 @@ export const userController = {
                     error: 'Password is required to delete account'
                 });
             }
-
+			
             // Get user with password hash - cast as any to access password property
             const user = userService.fetchUser(userId) as { id: number; username: string; password: string };
             if (!user) {
@@ -200,7 +200,7 @@ export const userController = {
             // Verify password before deletion
             const isPasswordValid = await bcrypt.compare(password, user.password);
             if (!isPasswordValid) {
-                return reply.status(401).send({
+                return reply.status(403).send({
                     error: 'Invalid password'
                 });
             }

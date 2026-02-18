@@ -24,9 +24,10 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 
 COPY nginx/ /etc/nginx/certs
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+RUN mv /etc/nginx/certs/.htpasswd /etc/nginx/conf.d
 
-# Expose port 443
-EXPOSE 443
+# Expose port 8443
+EXPOSE 8443
 
 # Start Nginx server
 CMD ["nginx", "-g", "daemon off;"]

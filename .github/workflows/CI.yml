@@ -115,7 +115,7 @@ jobs:
 
       - name: Run health checks
         run: |
-          curl -f -k https://localhost:443 || curl -f -k https://localhost || exit 1
+          curl -f -k https://localhost:8443 || curl -f -k https://localhost || exit 1
 
       - name: Run integration tests
         run: |

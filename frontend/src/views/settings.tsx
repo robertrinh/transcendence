@@ -36,6 +36,8 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showPrivacyModal, setShowPrivacyModal] = useState(false);
     const [deletePassword, setDeletePassword] = useState('');
+    const [deleteError, setDeleteError] = useState('');
+    const [deleteSuccess, setDeleteSuccess] = useState('');
 
     const [profileForm, setProfileForm] = useState({
         display_name: '',
@@ -282,21 +284,20 @@ const handleAnonymizeProfile = async () => {
             });
 
             if (response.ok) {
-                showMessage('success', 'Account deleted. Redirecting...');
+                setDeleteError('');
+                setDeleteSuccess('Account deleted. Going back to the login page...');
                 setTimeout(() => {
                     localStorage.removeItem('token');
                     window.location.href = '/';
                 }, 2000);
             } else {
                 const data = await response.json();
-                showMessage('error', data.error || 'Failed to delete account');
+                setDeleteError(data.error || 'Failed to delete account');
             }
         } catch (error) {
-            showMessage('error', 'Network error. Please try again.');
+            setDeleteError('Network error. Please try again.');
         } finally {
             setLoading(false);
-            setShowDeleteConfirm(false);
-            setDeletePassword('');
         }
     };
 
@@ -388,17 +389,27 @@ const handleAnonymizeProfile = async () => {
                                 <input
                                     type="password"
                                     value={deletePassword}
-                                    onChange={(e) => setDeletePassword(e.target.value)}
+                                    onChange={(e) => {
+                                        setDeletePassword(e.target.value);
+                                        setDeleteError('');
+                                    }}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                                     placeholder="Your password"
                                     required
+                                    disabled={!!deleteSuccess}
                                 />
+                                {deleteError && (
+                                    <p className="mt-2 text-sm text-red-600" role="alert">{deleteError}</p>
+                                )}
+                                {deleteSuccess && (
+                                    <p className="mt-2 text-sm text-green-600" role="status">{deleteSuccess}</p>
+                                )}
                             </div>
 
                             <div className="flex gap-3">
                                 <button
                                     type="submit"
-                                    disabled={loading || !deletePassword}
+                                    disabled={loading || !deletePassword || !!deleteSuccess}
                                     className="flex-1 bg-red-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                 >
                                     {loading ? 'Deleting...' : 'Delete Account'}
@@ -408,6 +419,8 @@ const handleAnonymizeProfile = async () => {
                                     onClick={() => {
                                         setShowDeleteConfirm(false);
                                         setDeletePassword('');
+                                        setDeleteError('');
+                                        setDeleteSuccess('');
                                     }}
                                     disabled={loading}
                                     className="flex-1 bg-gray-200 text-gray-800 py-3 px-4 rounded-lg font-medium hover:bg-gray-300 transition-colors disabled:opacity-50"
@@ -1054,7 +1067,7 @@ const handleAnonymizeProfile = async () => {
                                             Permanently delete your account and all associated data. This action cannot be undone.
                                         </p> 
                                         <button
-                                            onClick={() => setShowDeleteConfirm(true)}
+                                            onClick={() => { setShowDeleteConfirm(true); setDeleteError(''); setDeleteSuccess(''); }}
                                             className="w-full bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
                                         >
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

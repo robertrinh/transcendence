@@ -2,11 +2,26 @@ import asyncio
 import json
 import random as rand
 import requests
+import sys
 from websockets import ServerConnection, broadcast
 from ball import Ball
 from lib import Vector2, Rect
 from player_paddle import PlayerPaddle
 from datetime import datetime
+from base64 import b64encode
+from os import getenv
+
+HTTP_PASSWD = getenv('HTTP_PASSWD')
+BACKEND_PORT = getenv('BACKEND_PORT')
+
+if HTTP_PASSWD is None:
+    print('Missing HTTP_PASSWD environment variable', file=sys.stderr)
+    exit(1)
+
+if BACKEND_PORT is None:
+    print('Missing BACKEND_PORT environment variable', file=sys.stderr)
+    exit(1)
+
 
 # game dimensions
 ARENA_WIDTH = 1024
@@ -290,8 +305,11 @@ def handle_score(game: GameInstance):
         print(f"lobby {game.lobby_id}: game finished, uploading results...")
         try:
             timestamp = '{:%Y-%m-%d %H:%M:%S}'.format(datetime.now())
+            auth_header = "Basic " + b64encode(
+                f"gameserver:{HTTP_PASSWD}".encode()).decode()
             response = requests.put(
-                f"http://backend:3000/api/games/{game.db_game_id}/finish",
+                f"http://backend:{BACKEND_PORT}/api/games/{game.db_game_id}/finish",
+                headers={"Authorization": auth_header},
                 json={
                     "winner_id": winner_id,
                     "score_player1": game.p1_score,
