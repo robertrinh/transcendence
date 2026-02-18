@@ -7,7 +7,6 @@ import SearchingScreen from './searchingScreen.js';
 import  { TimeoutScreen, ErrorScreen } from './timeoutScreen.js';
 import { WebSocketConnectingScreen, WebSocketClosedScreen } 
 from './webSocketWaitScreen.js';
-import websocket from '../../static/websocket.js';
 import { Screen, GameMode } from './types.js'
 
 type gameProps = {
@@ -15,6 +14,7 @@ type gameProps = {
 	gameMode: GameMode;
 	screen: Screen;
 	error: string | null;
+	websocket: React.RefObject<null | WebSocket>
 
 	setScreen(screen: Screen): void
 	setGameMode(gameMode: GameMode): void
@@ -44,7 +44,9 @@ function resizeGameUI(gameUI: HTMLElement) {
         gameUI.style.height = String(gameUI.offsetWidth * widthRatio) + "px"
 }
 
-export default function GameUI({screen, gameMode, lobbyId, error, setScreen, setGameMode, handleRandomPlayer, handleHostReq, joinLobbyReq, resetPlayerStatus}:gameProps) {
+export default function GameUI({
+	screen, gameMode, lobbyId, error, websocket, setScreen, setGameMode,
+	handleRandomPlayer, handleHostReq, joinLobbyReq, resetPlayerStatus}:gameProps) {
 	useEffect(() => {
 		const gameUI = document.getElementById("game-ui")
 		if (gameUI === null) {
@@ -94,7 +96,7 @@ export default function GameUI({screen, gameMode, lobbyId, error, setScreen, set
 							navigator.clipboard.writeText(lobbyElement.value)
 						}}
 						onJoinOwn={() => {
-							websocket.send(
+							websocket.current!.send(
 								JSON.stringify({
 									"type": "HOST_LOBBY",
 									"lobby_id": lobbyId
@@ -131,7 +133,7 @@ export default function GameUI({screen, gameMode, lobbyId, error, setScreen, set
 						onCancel={() => {setGameMode('none'); setScreen('online'); resetPlayerStatus()}}
 					/>
 		case 'game':
-			return <GameCanvas mode={gameMode}/>
+			return <GameCanvas mode={gameMode} websocket={websocket}/>
 		case 'timeout':
 			return <TimeoutScreen
 						onExit={() => {setGameMode('none'); setScreen('main'); resetPlayerStatus()}}
