@@ -1,62 +1,106 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { User } from '../components/util/profileUtils';
 
 interface HomeProps {
-	user: User | null;  // ← Now optional
+	user: User | null;
+}
+
+interface MenuItemProps {
+	label: string;
+	oneLiner: string;
+	onClick: () => void;
+	enabled: boolean;
+	/** Navbar-style: outline by default, fill on hover. Tailwind classes for enabled state. */
+	enabledClass: string;
+}
+
+function MenuItem({ label, oneLiner, onClick, enabled, enabledClass }: MenuItemProps) {
+	return (
+		<button
+			type="button"
+			onClick={enabled ? onClick : undefined}
+			disabled={!enabled}
+			className={`group w-full text-center px-5 py-2 rounded-lg border-2 font-semibold uppercase tracking-wider transition-all duration-200 flex flex-col gap-0.5 items-center ${
+				enabled ? enabledClass : 'bg-white/5 border-white/10 text-white/40 cursor-not-allowed'
+			}`}
+			title={!enabled ? 'Login to access' : oneLiner}
+		>
+			<span>{label}</span>
+			<span className={`text-xs font-normal normal-case transition-opacity duration-200 ${
+				enabled ? 'opacity-0 group-hover:opacity-100 group-hover:text-black/70' : 'text-white/40'
+			}`}>
+				{enabled ? oneLiner : 'Login to access'}
+			</span>
+		</button>
+	);
 }
 
 const Home: React.FC<HomeProps> = ({ user }) => {
+	const navigate = useNavigate();
+	const isGuest = !user;
+
 	return (
-		<div className="p-6">
-			<h1 className="text-3xl font-bold text-gray-900 mb-6">
-				Welcome to ft_transcendence
+		<div className="p-6 flex flex-col min-h-full items-center">
+			<h1 className="text-3xl font-bold text-white mb-4 drop-shadow-sm text-center">
+				Welcome to <span className="text-brand-yellow">Ft_transcendence</span>
 			</h1>
 
 			{user ? (
-				<div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-					<p className="text-blue-800">
-						Hello, <strong>{user.username}</strong>! Welcome back.
-					</p>
-				</div>
+				<p className="text-white/80 mb-8 text-center">
+					O praise the user, <strong className="text-brand-hotPink">{user.username}</strong>! 
+				</p>
 			) : (
-				<div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
-					<p className="text-gray-700">
-						Welcome! You're browsing as a guest. Login or register to access all features.
-					</p>
-				</div>
+				<p className="text-white/70 mb-8 text-center">
+					You're browsing as a guest. Login or register to access Play, Profile and Settings.
+				</p>
 			)}
 
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-				<div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-					<h2 className="text-xl font-semibold mb-2">Play Game</h2>
-					<p className="text-gray-600 mb-4">Start a new Pong game with other players.</p>
-					<button
-						className={`px-4 py-2 rounded ${
-							user
-							? 'bg-blue-500 text-white hover:bg-blue-600'
-							: 'bg-gray-300 text-gray-500 cursor-not-allowed'
-							}`}
-						disabled={!user}
-					>
-						{user ? 'Play Now' : 'Login to Play'}
-					</button>
-				</div>
+			{/* Menu – Profile and Settings require login */}
+			<nav className="flex flex-col gap-3 w-full max-w-sm">
+				<MenuItem
+					label="Play"
+					oneLiner="Start a Pong game (local, online or tournament)"
+					onClick={() => navigate('/game')}
+					enabled={!isGuest}
+					enabledClass="bg-black/20 text-brand-cyan border-brand-cyan/50 hover:bg-brand-cyan hover:border-brand-cyan hover:text-black"
+				/>
+				<MenuItem
+					label="Leaderboards"
+					oneLiner="View rankings and stats"
+					onClick={() => navigate('/leaderboard')}
+					enabled={true}
+					enabledClass="bg-black/20 text-brand-acidGreen border-brand-acidGreen/50 hover:bg-brand-acidGreen hover:border-brand-acidGreen hover:text-black"
+				/>
+				<MenuItem
+					label="Profile"
+					oneLiner="View and edit your profile"
+					onClick={() => navigate('/profile')}
+					enabled={!isGuest}
+					enabledClass="bg-black/20 text-brand-magenta border-brand-magenta/50 hover:bg-brand-magenta hover:border-brand-magenta hover:text-black"
+				/>
+				<MenuItem
+					label="Settings"
+					oneLiner="Account and app settings"
+					onClick={() => navigate('/settings')}
+					enabled={!isGuest}
+					enabledClass="bg-black/20 text-brand-orange border-brand-orange/50 hover:bg-brand-orange hover:border-brand-orange hover:text-black"
+				/>
+			</nav>
 
-				<div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-					<h2 className="text-xl font-semibold mb-2">Leaderboard</h2>
-					<p className="text-gray-600 mb-4">Check rankings of all players.</p>
-					<button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-						View Rankings
-					</button>
-				</div>
+			<div className="mt-8 w-full max-w-md flex justify-center flex-shrink-0">
+				<img
+					src="/public/2-neo-pong.jpeg"
+					alt="Two Neo's playing Pong"
+					className="max-h-[220px] w-auto object-contain rounded-xl border border-white/10 shadow-[0_0_24px_rgba(0,255,128,0.15)]"
+				/>
+			</div>
 
-				<div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-					<h2 className="text-xl font-semibold mb-2">Tournaments</h2>
-					<p className="text-gray-600 mb-4">Browse competitive tournaments.</p>
-					<button className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">
-						Browse Tournaments
-					</button>
-				</div>
+			{/* Dev credits – centre bottom of home only */}
+			<div className="mt-auto pt-12 flex justify-center">
+				<p className="text-xs text-white/50">
+					Made with love (and time-pressure) by qtrinh, eeklund, rmeuzela and joviera			
+				</p>
 			</div>
 		</div>
 	);
