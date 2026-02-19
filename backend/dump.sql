@@ -11,9 +11,10 @@ CREATE TABLE IF NOT EXISTS avatars (
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
+    is_guest BOOLEAN DEFAULT 0,
     nickname TEXT UNIQUE,
     display_name TEXT,
-    password TEXT NOT NULL,
+    password TEXT,
     created_at DATETIME DEFAULT (datetime('now')),
     avatar_id INTEGER,
     email TEXT,

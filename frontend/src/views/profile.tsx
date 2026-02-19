@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Navigate } from 'react-router-dom';
 import { User, fetchUserProfile, getAvatarUrl } from '../components/util/profileUtils';
 
 interface ProfileProps {
@@ -9,7 +10,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (user) {
+        if (user && !user.is_guest) {
             loadProfile();
         }
     }, [user]);
@@ -23,6 +24,10 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
         }
         setLoading(false);
     };
+
+    if (user?.is_guest) {
+        return <Navigate to="/" replace />;
+    }
 
     if (loading && !profileData) {
         return (
