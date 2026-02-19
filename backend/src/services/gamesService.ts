@@ -16,12 +16,11 @@ export const gamesService = {
 	},
 
 	addtoGameQueue: (player: number) => {
-		const execute = db.transaction(() => {
-			const result = db.prepare('INSERT INTO game_queue (player_id) VALUES (?)').run(player);
+		const run_game_queue = db.transaction(() => {
+			db.prepare('INSERT INTO game_queue (player_id) VALUES (?)').run(player);
 			db.prepare('UPDATE users SET status = ? WHERE id = ?').run('searching', player);
-			return result;
 		})
-		return execute();
+		run_game_queue();
 	},
 
 	fetchGameQueue: () =>{
@@ -45,14 +44,13 @@ export const gamesService = {
 		if (player === new_player)
 			throw new ApiError(400, "duplicate player");
 		
-		const run = db.transaction(() => {
-			const game_created = db.prepare('INSERT INTO games (player1_id, player2_id, status) VALUES(?, ?, ?) RETURNING *').get(player, new_player, 'ready') as Game;
+		const create_game = db.transaction(() => {
 			db.prepare('UPDATE users SET status = ? WHERE id = ? OR id = ?').run('matched', player, new_player);
 			db.prepare('DELETE FROM game_queue WHERE player_id = ?').run(player);
-			return game_created;
+			return db.prepare('INSERT INTO games (player1_id, player2_id, status) VALUES(?, ?, ?) RETURNING *').get(player, new_player, 'ready') as Game;
 		})
 		try {
-			return run();
+			return create_game();
 		}
 		catch (err: any) {
 			dbError(err);
@@ -63,8 +61,8 @@ export const gamesService = {
 		const player = db.prepare('SELECT status FROM users WHERE id = ?').get(player_id) as Player;
 		if (player.status === 'matched') {
 			const returnGame = db.transaction(() => {
-			db.prepare('UPDATE users SET status = ? WHERE id = ?').run('playing', player_id);
-			return db.prepare('SELECT * FROM games WHERE player1_id = ? OR player2_id = ? ORDER BY created_at DESC LIMIT 1').get(player_id, player_id); //return gamedata
+				db.prepare('UPDATE users SET status = ? WHERE id = ?').run('playing', player_id);
+				return db.prepare('SELECT * FROM games WHERE player1_id = ? OR player2_id = ? ORDER BY created_at DESC LIMIT 1').get(player_id, player_id); //return gamedata
 			})
 			return returnGame();
 		}
@@ -83,21 +81,20 @@ export const gamesService = {
 
 	cancelMatchmaking: (player_id: number) => {
 		const cancel = db.transaction(() => {
-		db.prepare('UPDATE users SET status = ? WHERE id = ?').run('idle', player_id)
-		return db.prepare('DELETE FROM game_queue WHERE player_id = ?').run(player_id)
+			db.prepare('UPDATE users SET status = ? WHERE id = ?').run('idle', player_id)
+			db.prepare('DELETE FROM game_queue WHERE player_id = ?').run(player_id)
 		})
-		return cancel();
+		cancel();
 	},
 
 	hostLobby: (player_id: number) => {
 		const lobby_id = generateLobbyId();
-		const host = db.transaction(() => {
-			const queue = db.prepare('INSERT INTO game_queue (player_id, private, lobby_id) VALUES(?, ?, ?) RETURNING *').get(player_id, 1, lobby_id) as Queue;
+		const run_queue = db.transaction(() => {
 			db.prepare('UPDATE users SET status = ? WHERE id = ?').run('searching', player_id)
-			return queue;
+			return db.prepare('INSERT INTO game_queue (player_id, private, lobby_id) VALUES(?, ?, ?) RETURNING *').get(player_id, 1, lobby_id) as Queue;
 		})
 		try {
-			return host();
+			return run_queue();
 		}
 		catch (err: any) {
 			dbError(err);
