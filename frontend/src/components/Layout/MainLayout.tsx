@@ -25,16 +25,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 }) => {
     const [showAuthPanel, setShowAuthPanel] = useState(false);
     const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
-    const [showUserMenu, setShowUserMenu] = useState(false); // new for avata + dropmenu
+    const [showUserMenu, setShowUserMenu] = useState(false);
     const authPanelRef = useRef<HTMLDivElement>(null);
     const authButtonRef = useRef<HTMLButtonElement>(null);
-    const userMenuRef = useRef<HTMLDivElement>(null); // new for avata + dropmenu
-    const userButtonRef = useRef<HTMLButtonElement>(null); // new for avata + dropmenu
-
-    useEffect(() => {
-        console.log('🔍 MainLayout user changed:', user);
-        console.log('🔍 MainLayout avatar_url:', user?.avatar_url);
-    }, [user]);
+    const userMenuRef = useRef<HTMLDivElement>(null);
+    const userButtonRef = useRef<HTMLButtonElement>(null);
 
     const handleLoginSuccess = (userData: User, token: string) => {
         onLogin(userData, token);
@@ -119,73 +114,55 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     return (
         <div className="h-screen flex flex-col overflow-hidden relative">
             {/* TOP NAVBAR */}
-            <header className="bg-white/50 backdrop-blur-sm shadow-sm border-b border-white/20 h-16 flex-shrink-0 relative z-40">
-                <div className="max-w-7xl mx-auto px-4 h-full">
+            <header className="bg-slate-900/50 backdrop-blur-sm border-b border-white/10 h-16 flex-shrink-0 relative z-40">
+                <div className="max-w-7xl mx-auto px-4 h-full relative">
                     <div className="flex items-center justify-between h-full">
-                        {/* Logo/Brand */}
-                        <div className={`px-4 py-2 rounded-md ${
-                            currentView === 'home'
-                        }`}>
+                         {/* Logo/Brand */}
+                        <div>
                             <button
                                 onClick={() => setCurrentView('home')}
-                                className={`px-4 py-2 rounded-md border-2 transition-colors backdrop-blur-sm ${
-                                    currentView === 'home' 
-                                        ? 'bg-gray-900/80 text-white border-gray-900/80' 
-                                        : 'bg-white/30 text-gray-900 border-gray-900/50 hover:bg-white/40'
+                                className={`px-5 py-2 rounded-lg border-2 font-semibold uppercase tracking-wider transition-all duration-200 ${
+                                    currentView === 'home'
+                                        ? 'bg-brand-yellow text-black border-brand-yellow shadow-[0_0_20px_rgba(255,255,0,0.5)]'
+                                        : 'bg-black/20 text-brand-yellow border-brand-yellow/50 hover:bg-brand-yellow/20 hover:border-brand-yellow'
                                 }`}
                             >
                                 TRANSCENDENCE
                             </button>
                         </div>
-                        {/* MENU NAVIGATION BUTTONS */}
-                        <div className="flex items-center space-x-6">
+
+                        {/* Center: GAME + LEADERBOARD */}
+                        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-4">
                             <button
                                 onClick={() => setCurrentView('game')}
-                                className={`relative px-6 py-2 rounded-lg font-black uppercase tracking-wider transition-all duration-300 ${
+                                className={`relative px-5 py-2 rounded-lg border-2 font-semibold uppercase tracking-wider transition-all duration-200 ${
                                     currentView === 'game'
-                                        ? 'bg-yellow-400 text-black shadow-[0_0_20px_rgba(234,179,8,0.6)]'
-                                        : 'bg-yellow-500 text-black hover:bg-yellow-400 hover:shadow-[0_0_15px_rgba(234,179,8,0.5)]'
+                                        ? 'bg-brand-cyan/60 text-white border-brand-cyan shadow-[0_0_16px_rgba(0,255,255,0.4)]'
+                                        : 'bg-black/20 text-brand-cyan border-brand-cyan/40 hover:bg-brand-cyan/20 hover:border-brand-cyan/60'
                                 }`}
-                                style={{
-                                    textShadow: currentView === 'game' ? '2px 2px 0px rgba(248, 4, 4, 0.34)' : 'none',
-                                    transform: currentView === 'game' ? 'translateY(-2px)' : 'none'
-                                }}
                             >
-                                <span className={`${currentView === 'game' ? 'animate-pulse' : ''}`}>
-                                    🎮 GAME
-                                </span>
+                                🎮 GAME
                                 {currentView === 'game' && (
-                                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                                    </span>
+                                    <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5 rounded-full bg-brand-hotPink" />
                                 )}
                             </button>
                             <button
                                 onClick={() => setCurrentView('leaderboard')}
-                                className={`relative px-6 py-2 rounded-lg font-bold uppercase tracking-wide transition-all duration-300 ${
+                                className={`relative px-5 py-2 rounded-lg border-2 font-semibold uppercase tracking-wider transition-all duration-200 ${
                                     currentView === 'leaderboard'
-                                        ? 'bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-gray-900 shadow-[0_0_20px_rgba(251,191,36,0.6)] scale-105'
-                                        : 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:shadow-[0_0_15px_rgba(251,191,36,0.5)] hover:scale-105'
+                                        ? 'bg-brand-acidGreen/60 text-white border-brand-acidGreen shadow-[0_0_16px_rgba(0,255,128,0.4)]'
+                                        : 'bg-black/20 text-brand-acidGreen border-brand-acidGreen/40 hover:bg-brand-acidGreen/20 hover:border-brand-acidGreen/60'
                                 }`}
-                                style={{
-                                    textShadow: currentView === 'leaderboard' ? '1px 1px 2px rgba(0,0,0,0.2)' : 'none',
-                                    border: '2px solid rgba(255,255,255,0.3)'
-                                }}
                             >
-                                <span className="flex items-center gap-2">
-                                    🏆 LEADERBOARD
-                                </span>
+                                🏆 LEADERBOARD
                                 {currentView === 'leaderboard' && (
-                                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
-                                        1
-                                    </span>
+                                    <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5 rounded-full bg-brand-hotPink" />
                                 )}
-                            </button> 
+                            </button>
                         </div>
 
                         {/* USER AUTHENTICATION AREA */}
-                       <div className="flex items-center space-x-4 relative">
+                        <div className="flex items-center space-x-4 relative">
                             {user ? (
                                 <div className="relative">
                                     <button
@@ -280,7 +257,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                 <button
                                     ref={authButtonRef}
                                     onClick={() => setShowAuthPanel(!showAuthPanel)}
-                                    className="px-4 py-2 rounded-md border-2 border-blue-600 bg-blue-600/80 text-white hover:bg-blue-600 backdrop-blur-sm transition-colors"
+                                    className="px-5 py-2 rounded-lg border-2 border-brand-cyan bg-brand-cyan/80 text-white font-semibold uppercase tracking-wider hover:bg-brand-cyan transition-all duration-200"
                                 >
                                     {showAuthPanel ? 'Close' : 'Login / Register'}
                                 </button>
@@ -370,8 +347,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
             {/* MAIN CONTENT AREA */}
             <main className="flex-1 flex min-h-0 overflow-hidden">
                 {/* LEFT SIDE - Main Content */}
-                <div className="flex-1 p-4 border-r border-white/20 overflow-hidden">
-                    <div className="bg-white/50 backdrop-blur-sm rounded-lg shadow-sm border border-white/20 h-full overflow-hidden">
+                <div className="flex-1 p-4 border-r border-white/10 overflow-hidden">
+                    <div className="bg-slate-900/30 backdrop-blur-sm rounded-lg border border-white/10 h-full overflow-hidden">
                         <div className="h-full overflow-y-auto">
                             {children}
                         </div>
@@ -379,10 +356,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                 </div>
 
                 {/* RIGHT SIDE - Chat */}
-                <div className="w-80 bg-white/50 backdrop-blur-sm border-l border-white/20 flex flex-col overflow-hidden">
+                <div className="w-80 bg-slate-900/30 backdrop-blur-sm border-l border-white/10 flex flex-col overflow-hidden">
                     {/* Chat Header - Fixed */}
-                    <div className="p-4 border-b border-white/20 bg-white/30 backdrop-blur-sm flex-shrink-0">
-                        <h3 className="font-semibold text-gray-900">Chat</h3>
+                    <div className="p-4 border-b border-white/10 bg-black/20 backdrop-blur-sm flex-shrink-0">
+                        <h3 className="font-semibold text-white">Chat</h3>
                     </div>
                     
                     {/* Chat Content - Flexible */}
@@ -392,7 +369,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                 navigateToUserProfile={navigateToUserProfile}
                             />
                         ) : (
-                            <div className="h-full flex flex-col items-center justify-center text-gray-900 p-4">
+                            <div className="h-full flex flex-col items-center justify-center text-white/70 p-4">
                                 <p className="text-center mb-2">Login to join the chat</p>
                             </div>
                         )}
@@ -403,7 +380,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
             {/* BOTTOM STATUS BAR */}
             <footer className="bg-gray-900/80 backdrop-blur-sm text-white h-6 flex items-center px-4 flex-shrink-0 border-t border-white/10 z-30">
                 <div className="text-xs">
-                    Status: {user ? `Connected as ${user.username}` : 'Browsing as guest'} | 
+                    Status: {user ? `Connected as ${user.username}` : 'Browsing as guest'} |
                     Current Page: {currentView.charAt(0).toUpperCase() + currentView.slice(1)}
                     {showAuthPanel && ' | Auth panel open'}
                 </div>
