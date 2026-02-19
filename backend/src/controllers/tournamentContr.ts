@@ -1,4 +1,4 @@
-import { ApiError } from '../errors/errors.js';
+import { ApiError } from '../error/errors.js';
 import { tournamentService } from '../services/tournamentService.js'
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { Tournament, TournamentParticipant } from '../types/database.interfaces.js';

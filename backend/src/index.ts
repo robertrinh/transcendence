@@ -9,7 +9,7 @@ import swagger from '@fastify/swagger'
 import swaggerUI from '@fastify/swagger-ui'
 import authRoutes from './routes/auth.js';
 import multipart from '@fastify/multipart';
-import { dbCleanUpJob } from './errors/backupCleanup.js';
+import { dbCleanUpJob } from './error/backupCleanup.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

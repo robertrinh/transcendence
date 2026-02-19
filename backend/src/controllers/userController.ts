@@ -1,4 +1,4 @@
-import { ApiError } from '../errors/errors.js';
+import { ApiError } from '../error/errors.js';
 import { userService } from '../services/userService.js'
 import { FastifyRequest, FastifyReply } from 'fastify';
 import bcrypt from 'bcrypt'
