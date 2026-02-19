@@ -23,12 +23,11 @@ export const gamesService = {
         return db.prepare('SELECT * FROM games WHERE lobby_id = ?').get(lobby_id)
     },
 	addtoGameQueue: (player: number) => {
-		const execute = db.transaction(() => {
-			const result = db.prepare('INSERT INTO game_queue (player_id) VALUES (?)').run(player);
+		const run_game_queue = db.transaction(() => {
+			db.prepare('INSERT INTO game_queue (player_id) VALUES (?)').run(player);
 			db.prepare('UPDATE users SET status = ? WHERE id = ?').run('searching', player);
-			return result;
 		})
-		return execute();
+		run_game_queue();
 	},
 
     fetchGameQueue: () => {
@@ -51,7 +50,7 @@ export const gamesService = {
     createGame: (player: number, new_player: number, lobby_id?: string) => {
         if (player === new_player)
             throw new ApiError(400, "duplicate player");
-		const run = db.transaction(() => {
+		const create_game = db.transaction(() => {
             let game_created: Game;
             if (lobby_id === undefined) {
                 game_created = db.prepare('INSERT INTO games (player1_id, player2_id, status) VALUES(?, ?, ?) RETURNING *')
@@ -66,7 +65,7 @@ export const gamesService = {
             return game_created;
 		})
         try {
-			return run();
+			return create_game();
 		}
         catch (err: any) {
             dbError(err);
@@ -98,20 +97,19 @@ export const gamesService = {
 	cancelMatchmaking: (player_id: number) => {
 		const cancel = db.transaction(() => {
 			db.prepare('UPDATE users SET status = ? WHERE id = ?').run('idle', player_id)
-			return db.prepare('DELETE FROM game_queue WHERE player_id = ?').run(player_id)
+			db.prepare('DELETE FROM game_queue WHERE player_id = ?').run(player_id)
 		})
-		return cancel();
+		cancel();
 	},
 
 	hostLobby: (player_id: number) => {
 		const lobby_id = generateLobbyId();
-		const host = db.transaction(() => {
-			const queue = db.prepare('INSERT INTO game_queue (player_id, private, lobby_id) VALUES(?, ?, ?) RETURNING *').get(player_id, 1, lobby_id) as Queue;
+		const run_queue = db.transaction(() => {
 			db.prepare('UPDATE users SET status = ? WHERE id = ?').run('searching', player_id)
-			return queue;
+			return db.prepare('INSERT INTO game_queue (player_id, private, lobby_id) VALUES(?, ?, ?) RETURNING *').get(player_id, 1, lobby_id) as Queue;
 		})
 		try {
-			return host();
+			return run_queue();
 		}
 		catch (err: any) {
 			dbError(err);

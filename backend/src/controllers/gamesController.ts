@@ -51,8 +51,8 @@ export const gamesController = {
     },
 
     cancelMatchmaking: async (req: FastifyRequest, reply: FastifyReply) => {
-        const result = gamesService.cancelMatchmaking(req.user!.userId);
-        return {success: true, message: 'player removed from game queue'}
+		gamesService.cancelMatchmaking(req.user!.userId);
+		return {success: true, message: 'player removed from game queue'}
     },
 
     hostLobby: async (req: FastifyRequest, reply: FastifyReply) => {
