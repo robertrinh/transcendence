@@ -43,12 +43,12 @@ const Home: React.FC<HomeProps> = ({ user }) => {
 	return (
 		<div className="p-6 flex flex-col min-h-full items-center">
 			<h1 className="text-3xl font-bold text-white mb-4 drop-shadow-sm text-center">
-				Welcome to <span className="text-brand-yellow">Ft_transcendence</span>
+				Welcome to <span className="text-brand-mint">Ft_transcendence</span>
 			</h1>
 
 			{user ? (
 				<p className="text-white/80 mb-8 text-center">
-					O praise the user, <strong className="text-brand-hotPink">{user.username}</strong>! 
+					O praise the user, <strong className="text-brand-yellow">{user.username}</strong>! 
 				</p>
 			) : (
 				<p className="text-white/70 mb-8 text-center">

@@ -114,7 +114,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     return (
         <div className="h-screen flex flex-col overflow-hidden relative">
             {/* TOP NAVBAR */}
-            <header className="bg-slate-900/50 backdrop-blur-sm border-b border-white/10 h-16 flex-shrink-0 relative z-40">
+            <header className="bg-slate-800 border-b border-slate-600/70 h-16 flex-shrink-0 relative z-40">
                 <div className="max-w-7xl mx-auto px-4 h-full relative">
                     <div className="flex items-center justify-between h-full">
                          {/* Logo/Brand */}
@@ -123,8 +123,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                 onClick={() => setCurrentView('home')}
                                 className={`px-5 py-2 rounded-lg border-2 font-semibold uppercase tracking-wider transition-all duration-200 ${
                                     currentView === 'home'
-                                        ? 'bg-brand-yellow text-black border-brand-yellow shadow-[0_0_20px_rgba(255,255,0,0.5)]'
-                                        : 'bg-black/20 text-brand-yellow border-brand-yellow/50 hover:bg-brand-yellow/20 hover:border-brand-yellow'
+                                        ? 'bg-brand-mint text-black border-brand-mint shadow-[0_0_20px_rgba(0,255,204,0.4)]'
+                                        : 'bg-black/20 text-brand-mint border-brand-mint/50 hover:bg-brand-mint/20 hover:border-brand-mint'
                                 }`}
                             >
                                 TRANSCENDENCE
@@ -356,9 +356,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                 </div>
 
                 {/* RIGHT SIDE - Chat */}
-                <div className="w-80 bg-slate-900/30 backdrop-blur-sm border-l border-white/10 flex flex-col overflow-hidden">
+                <div className="w-80 bg-slate-800 border-l border-slate-600/70 flex flex-col overflow-hidden">
                     {/* Chat Header - Fixed */}
-                    <div className="p-4 border-b border-white/10 bg-black/20 backdrop-blur-sm flex-shrink-0">
+                    <div className="p-4 border-b border-slate-600/70 bg-slate-800 flex-shrink-0">
                         <h3 className="font-semibold text-white">Chat</h3>
                     </div>
                     
