@@ -56,7 +56,7 @@ test('POST /auth/register: successful registration', async () => {
 test('POST /auth/register: missing required fields', async () => {
 	const response = await api('/auth/register', {
 		method: 'POST',
-		body: JSON.stringify({ username: testuser.username })
+		body: JSON.stringify({ username: `missingfields_${Date.now()}` })
 	})
 
 	const data = await response.json()
@@ -81,7 +81,7 @@ test('POST /auth/register: username already exists', async () => {
 test('POST /auth/register: password too short', async () => {
 	const response = await api('/auth/register', {
 		method: 'POST',
-		body: JSON.stringify({username: testuser.username, password: 'short', email: testuser.email})
+		body: JSON.stringify({ username: `shortpw_${Date.now()}`, password: 'short', email: `shortpw_${Date.now()}@test.com` })
 	})
 		const data = await response.json()
 
