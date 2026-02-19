@@ -411,14 +411,14 @@ if (user.is_anonymous) {
                 </div>
             )}
 
-            {/* Tab Navigation */}
-            <div className="flex border-b border-white/20 bg-white/30 backdrop-blur-sm flex-shrink-0">
+            {/* Tab Navigation - Chat / Friends / Blocked */}
+            <div className="flex border-b border-slate-600/70 bg-slate-700/80 flex-shrink-0">
                 <button
                     onClick={() => setActiveTab('chat')}
                     className={`flex-1 py-2 px-3 text-xs font-medium transition-colors ${
                         activeTab === 'chat'
-                            ? 'bg-blue-500/80 text-white'
-                            : 'text-gray-700 hover:text-gray-900 hover:bg-white/30'
+                            ? 'bg-brand-orange/80 text-black'
+                            : 'text-slate-300 hover:text-white hover:bg-slate-600/80'
                     }`}
                 >
                     Chat
@@ -427,8 +427,8 @@ if (user.is_anonymous) {
                     onClick={() => setActiveTab('friends')}
                     className={`flex-1 py-2 px-3 text-xs font-medium transition-colors ${
                         activeTab === 'friends'
-                            ? 'bg-blue-500/80 text-white'
-                            : 'text-gray-700 hover:text-gray-900 hover:bg-white/30'
+                            ? 'bg-brand-orange/80 text-black'
+                            : 'text-slate-300 hover:text-white hover:bg-slate-600/80'
                     }`}
                 >
                     Friends ({friends.length})
@@ -437,8 +437,8 @@ if (user.is_anonymous) {
                     onClick={() => setActiveTab('blocked')}
                     className={`flex-1 py-2 px-3 text-xs font-medium transition-colors ${
                         activeTab === 'blocked'
-                            ? 'bg-blue-500/80 text-white'
-                            : 'text-gray-700 hover:text-gray-900 hover:bg-white/30'
+                            ? 'bg-brand-orange/80 text-black'
+                            : 'text-slate-300 hover:text-white hover:bg-slate-600/80'
                     }`}
                 >
                     Blocked ({blockedUsers.length})
@@ -449,30 +449,30 @@ if (user.is_anonymous) {
             {activeTab === 'chat' && (
                 <>
                     {/* Chat Mode Indicator */}
-                    <div className="bg-white/20 backdrop-blur-sm px-3 py-2 border-b border-white/20 flex-shrink-0">
+                    <div className="bg-slate-700/60 px-3 py-2 border-b border-slate-600/70 flex-shrink-0">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
                                 {chatMode === 'private' ? (
                                     <>
-                                        <span className="text-xs text-purple-700 font-medium">
+                                        <span className="text-xs text-brand-purple font-medium">
                                             Private with {privateChatWith}
                                         </span>
                                         <button
                                             onClick={switchToPublicChat}
-                                            className="text-xs text-blue-600 hover:text-blue-800 underline"
+                                            className="text-xs text-brand-orange hover:underline"
                                         >
                                             Switch to Public
                                         </button>
                                     </>
                                 ) : (
-                                    <span className="text-xs text-green-700 font-medium">
+                                    <span className="text-xs text-brand-acidGreen font-medium">
                                         Public Chat
                                     </span>
                                 )}
                             </div>
                             <div className="flex items-center space-x-2">
-                                <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                                <span className="text-xs text-gray-600">
+                                <div className={`w-2 h-2 rounded-full ${connected ? 'bg-brand-acidGreen' : 'bg-red-500'}`}></div>
+                                <span className="text-xs text-slate-400">
                                     {connected ? 'Connected' : 'Disconnected'}
                                 </span>
                             </div>
@@ -482,7 +482,7 @@ if (user.is_anonymous) {
                     {/* Messages Area */}
                         <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3">
                             {filteredMessages.length === 0 ? (
-                                <div className="text-center text-gray-500 py-8">
+                                <div className="text-center text-slate-400 py-8 text-sm">
                                     No messages yet. Start the conversation!
                                 </div>
                             ) : (
@@ -491,39 +491,34 @@ if (user.is_anonymous) {
                                         <div className="flex flex-col space-y-1">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center space-x-2">
-                                                    <span 
+                                                    <span
                                                         className={`font-medium text-xs cursor-pointer hover:underline ${
-                                                            message.isPrivate ? 'text-purple-700' : 'text-blue-700'
+                                                            message.isPrivate ? 'text-brand-purple' : 'text-brand-orange'
                                                         }`}
                                                         onClick={() => {
                                                             if (message.username !== user.username) {
-                                                            viewUserProfile(message.username);
-                                                        } else {
-                                                            showToast("This is your own profile");
-                                                        }
-                                                    }}
+                                                                viewUserProfile(message.username);
+                                                            } else {
+                                                                showToast("This is your own profile");
+                                                            }
+                                                        }}
                                                         title={`View ${message.username}'s profile`}
                                                     >
                                                         {message.username}
                                                         {message.isPrivate && (
-                                                            <span className="ml-1 text-purple-500">→ {message.toUser}</span>
+                                                            <span className="ml-1 text-brand-magenta">→ {message.toUser}</span>
                                                         )}
                                                     </span>
-                                                    <span className="text-xs text-gray-500">
-                                                        {message.timestamp.toLocaleTimeString([], { 
-                                                            hour: '2-digit', 
-                                                            minute: '2-digit' 
-                                                        })}
+                                                    <span className="text-xs text-slate-500">
+                                                        {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                     </span>
                                                 </div>
-                                                
-                                                {/* User Actions (show on hover) */}
                                                 {message.username !== user.username && (
-                                                    <div className="opacity-0 group-hover:opacity-100 flex items-center space-x-1">
+                                                    <div className="opacity-0 group-hover:opacity-100 flex items-center space-x-1 transition-opacity">
                                                         {!friends.some(f => f.username === message.username) && (
                                                             <button
                                                                 onClick={() => addFriend(message.username)}
-                                                                className="text-green-600 hover:text-green-800 text-xs bg-white/50 rounded px-1"
+                                                                className="text-brand-acidGreen hover:text-brand-mint text-xs bg-slate-600 rounded px-1"
                                                                 title="Add friend"
                                                             >
                                                                 +
@@ -532,7 +527,7 @@ if (user.is_anonymous) {
                                                         {friends.some(f => f.username === message.username) && (
                                                             <button
                                                                 onClick={() => startPrivateChat(message.username)}
-                                                                className="text-purple-600 hover:text-purple-800 text-xs bg-white/50 rounded px-1"
+                                                                className="text-brand-purple hover:text-brand-magenta text-xs bg-slate-600 rounded px-1"
                                                                 title="Private message"
                                                             >
                                                                 💬
@@ -540,7 +535,7 @@ if (user.is_anonymous) {
                                                         )}
                                                         <button
                                                             onClick={() => confirmAction('block', message.username)}
-                                                            className="text-red-600 hover:text-red-800 text-xs bg-white/50 rounded px-1"
+                                                            className="text-red-400 hover:text-red-300 text-xs bg-slate-600 rounded px-1"
                                                             title="Block user"
                                                         >
                                                             🚫
@@ -548,9 +543,9 @@ if (user.is_anonymous) {
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className={`break-words pl-2 border-l-2 ${
-                                                message.isPrivate ? 'border-purple-300 text-purple-900 bg-purple-50/50' : 'border-blue-300 text-gray-900 bg-white/30'
-                                            } rounded-r px-2 py-1`}>
+                                            <div className={`break-words pl-2 border-l-2 rounded-r px-2 py-1 ${
+                                                message.isPrivate ? 'border-brand-purple/70 text-slate-200 bg-slate-600/80' : 'border-brand-orange/60 text-slate-200 bg-slate-600/80'
+                                            }`}>
                                                 {message.message}
                                             </div>
                                         </div>
@@ -561,30 +556,30 @@ if (user.is_anonymous) {
                         </div>
 
                     {/* Message Input */}
-                    <div className="border-t border-white/20 p-3 flex-shrink-0 bg-white/20 backdrop-blur-sm">
+                    <div className="border-t border-slate-600/70 p-3 flex-shrink-0 bg-slate-700/60">
                         <form onSubmit={sendMessage} className="flex space-x-2">
                             <input
                                 type="text"
                                 value={newMessage}
                                 onChange={(e) => setNewMessage(e.target.value)}
                                 placeholder={
-                                    connected 
-                                        ? (chatMode === 'private' 
+                                    connected
+                                        ? (chatMode === 'private'
                                             ? `Private message to ${privateChatWith}...`
                                             : "Type message...")
                                         : "Connecting..."
                                 }
-                                className="flex-1 text-sm border border-white/30 bg-white/50 backdrop-blur-sm rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white/70"
+                                className="flex-1 text-sm text-slate-100 placeholder-slate-500 border border-slate-500 bg-slate-600 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-orange focus:border-brand-orange"
                                 maxLength={200}
                                 disabled={!connected}
                             />
                             <button
                                 type="submit"
                                 disabled={!newMessage.trim() || !connected}
-                                className={`px-3 py-1 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 backdrop-blur-sm ${
+                                className={`px-3 py-1 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 ${
                                     chatMode === 'private'
-                                        ? 'bg-purple-500/80 text-white hover:bg-purple-600'
-                                        : 'bg-blue-500/80 text-white hover:bg-blue-600'
+                                        ? 'bg-brand-purple/80 text-white hover:bg-brand-purple'
+                                        : 'bg-brand-orange/80 text-black hover:bg-brand-orange'
                                 }`}
                             >
                                 Send
@@ -599,27 +594,27 @@ if (user.is_anonymous) {
                 <div className="flex-1 min-h-0 overflow-y-auto p-3">
                     <div className="space-y-2">
                         {friends.length === 0 ? (
-                            <div className="text-center text-gray-700 text-sm py-4">
+                            <div className="text-center text-slate-400 text-sm py-4">
                                 No friends yet. Add friends from chat messages!
                             </div>
                         ) : (
                             friends.map((friend) => (
-                                <div key={friend.id} className="flex items-center justify-between p-2 bg-white/30 backdrop-blur-sm border border-white/20 rounded">
+                                <div key={friend.id} className="flex items-center justify-between p-2 bg-slate-600/60 border border-slate-500/50 rounded">
                                     <div className="flex items-center space-x-2">
-                                        <div className={`w-2 h-2 rounded-full ${friend.isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                                        <span className="text-sm font-medium text-gray-900">{friend.username}</span>
+                                        <div className={`w-2 h-2 rounded-full ${friend.isOnline ? 'bg-brand-acidGreen' : 'bg-slate-500'}`}></div>
+                                        <span className="text-sm font-medium text-slate-200">{friend.username}</span>
                                     </div>
                                     <div className="flex items-center space-x-1">
                                         <button
                                             onClick={() => startPrivateChat(friend.username)}
-                                            className="text-purple-600 hover:text-purple-800 text-sm bg-white/50 rounded px-2 py-1"
+                                            className="text-brand-purple hover:text-brand-magenta text-sm bg-slate-600 rounded px-2 py-1"
                                             title="Private chat"
                                         >
                                             💬
                                         </button>
                                         <button
                                             onClick={() => confirmAction('remove', friend.username)}
-                                            className="text-red-600 hover:text-red-800 text-sm bg-white/50 rounded px-2 py-1"
+                                            className="text-red-400 hover:text-red-300 text-sm bg-slate-600 rounded px-2 py-1"
                                             title="Remove friend"
                                         >
                                             🗑️
@@ -631,8 +626,8 @@ if (user.is_anonymous) {
                     </div>
 
                     {/* Add Friend Section */}
-                    <div className="mt-4 pt-3 border-t border-white/20">
-                        <div className="text-xs text-gray-700 mb-2">Quick add from recent users:</div>
+                    <div className="mt-4 pt-3 border-t border-slate-600/70">
+                        <div className="text-xs text-slate-400 mb-2">Quick add from recent users:</div>
                         <div className="space-y-1">
                             {getUniqueUsernames()
                                 .filter(username => !friends.some(f => f.username === username))
@@ -642,7 +637,7 @@ if (user.is_anonymous) {
                                     <button
                                         key={username}
                                         onClick={() => addFriend(username)}
-                                        className="block w-full text-left text-sm text-blue-700 hover:text-blue-900 hover:bg-white/30 px-2 py-1 rounded bg-white/20"
+                                        className="block w-full text-left text-sm text-brand-orange hover:text-brand-mint hover:bg-slate-600/80 px-2 py-1 rounded bg-slate-600/60"
                                     >
                                         + Add {username}
                                     </button>
@@ -657,16 +652,16 @@ if (user.is_anonymous) {
                 <div className="flex-1 min-h-0 overflow-y-auto p-3">
                     <div className="space-y-2">
                         {blockedUsers.length === 0 ? (
-                            <div className="text-center text-gray-700 text-sm py-4">
+                            <div className="text-center text-slate-400 text-sm py-4">
                                 No blocked users.
                             </div>
                         ) : (
                             blockedUsers.map((username) => (
-                                <div key={username} className="flex items-center justify-between p-2 bg-red-100/50 backdrop-blur-sm border border-red-200/50 rounded">
-                                    <span className="text-sm font-medium text-red-800">{username}</span>
+                                <div key={username} className="flex items-center justify-between p-2 bg-slate-600/60 border border-red-900/50 rounded">
+                                    <span className="text-sm font-medium text-red-300">{username}</span>
                                     <button
                                         onClick={() => unblockUser(username)}
-                                        className="text-green-600 hover:text-green-800 text-sm bg-white/50 rounded px-2 py-1"
+                                        className="text-brand-acidGreen hover:text-brand-mint text-sm bg-slate-600 rounded px-2 py-1"
                                         title="Unblock user"
                                     >
                                         Unblock
@@ -679,12 +674,12 @@ if (user.is_anonymous) {
             )}
 
             {/* Status Bar */}
-            <div className="px-3 py-1 border-t border-white/20 bg-white/30 backdrop-blur-sm flex-shrink-0">
+            <div className="px-3 py-1 border-t border-slate-600/70 bg-slate-700/60 flex-shrink-0">
                 <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-700">
+                    <span className="text-xs text-slate-400">
                         {filteredMessages.length} messages
                     </span>
-                    <span className="text-xs text-gray-700">
+                    <span className="text-xs text-slate-400">
                         {onlineUsers.length} online
                     </span>
                 </div>
