@@ -1,5 +1,5 @@
 import { db } from '../databaseInit.js'
-import { dbError } from '../Errors/dbErrors.js'
+import { dbError } from '../errors/dbErrors.js'
 
 export const userService = {
 

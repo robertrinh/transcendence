@@ -1,6 +1,6 @@
 import { db } from '../databaseInit.js'
-import { dbError } from '../Errors/dbErrors.js'
-import { ApiError } from '../Errors/errors.js';
+import { dbError } from '../errors/dbErrors.js'
+import { ApiError } from '../errors/errors.js';
 import { Player, Queue, Game } from '../types/database.interfaces.js'
 
 const TIMEOUT_MATCHMAKING = 30000 //in millisec
