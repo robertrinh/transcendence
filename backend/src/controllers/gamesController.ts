@@ -1,4 +1,4 @@
-import { ApiError } from '../Errors/errors.js';
+import { ApiError } from '../error/errors.js';
 import { gamesService } from '../services/gamesService.js'
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { userService } from '../services/userService.js';
@@ -51,7 +51,7 @@ export const gamesController = {
     },
 
 	cancelMatchmaking: async (req: FastifyRequest, reply: FastifyReply) => {
-		gamesService.cancelMatchmaking(req.user!.userId);
+		const result = gamesService.cancelMatchmaking(req.user!.userId);
 		return {success: true, message: 'player removed from game queue'}
 	},
 
