@@ -45,7 +45,7 @@ export const gamesService = {
 			throw new ApiError(400, "duplicate player");
 		
 		const create_game = db.transaction(() => {
-			db.prepare('UPDATE users SET status = ? WHERE id = ? OR id = ?').run('matched', player, new_player);
+			db.prepare('UPDATE users SET status = ? WHERE id = ? OR id = ?').run('playing', player, new_player);
 			db.prepare('DELETE FROM game_queue WHERE player_id = ?').run(player);
 			return db.prepare('INSERT INTO games (player1_id, player2_id, status) VALUES(?, ?, ?) RETURNING *').get(player, new_player, 'ready') as Game;
 		})
@@ -59,12 +59,8 @@ export const gamesService = {
 
 	matchmakingStatus: (player_id: number) => {
 		const player = db.prepare('SELECT status FROM users WHERE id = ?').get(player_id) as Player;
-		if (player.status === 'matched') {
-			const returnGame = db.transaction(() => {
-				db.prepare('UPDATE users SET status = ? WHERE id = ?').run('playing', player_id);
-				return db.prepare('SELECT * FROM games WHERE player1_id = ? OR player2_id = ? ORDER BY created_at DESC LIMIT 1').get(player_id, player_id); //return gamedata
-			})
-			return returnGame();
+		if (player.status === 'playing') {
+			return db.prepare('SELECT * FROM games WHERE player1_id = ? OR player2_id = ? ORDER BY created_at DESC LIMIT 1').get(player_id, player_id); //return gamedata
 		}
 		if (player.status === 'searching') {
 			const queue = db.prepare('SELECT joined_at FROM game_queue WHERE player_id = ?').get(player_id) as Queue;

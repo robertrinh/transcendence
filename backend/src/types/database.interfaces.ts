@@ -28,7 +28,7 @@ export interface Game {
 	winner_id: number | null;
 	tournament_id: number | null;
 	round: number | null;
-	status: 'pending' | 'ready' | 'ongoing' | 'finished';
+	status: 'pending' | 'ready' | 'ongoing' | 'finished' | 'cancelled';
 	created_at: string;
 	finished_at?: string;
 }
@@ -40,7 +40,7 @@ export interface DatabaseRunResult {
 
 export interface Player {
 	id: number;
-	status: 'searching' | 'matched' | 'playing';
+	status: 'idle' | 'searching' | 'playing';
 }
 
 export interface Queue {
