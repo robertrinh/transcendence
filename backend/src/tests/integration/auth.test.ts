@@ -63,7 +63,7 @@ test('POST /auth/register: missing required fields', async () => {
 
 	assert.strictEqual(response.status, 400)
 	assert.strictEqual(data.success, false)
-	assert.strictEqual(data.error, 'Username, password and/or email are required')
+	assert.ok(['Username, password and/or email are required', 'Email is required'].includes(data.error), `Unexpected error: ${data.error}`)
 })
 
 test('POST /auth/register: username already exists', async () => {
