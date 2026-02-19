@@ -8,8 +8,8 @@ import dotenv from 'dotenv/config'
  * JWT_EXPIRES_IN: How long until the token expires. After expiration,
  * the user must log in again.
  */
-const JWT_SECRET = process.env.JWT_SECRET as string || 'bv9AjSnQH+HhXbBTVPbzWWQV+51hlhL5vylH5YEj4Tk'
-const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || '7d') as SignOptions['expiresIn']
+const JWT_SECRET = process.env.JWT_SECRET as string
+const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN) as SignOptions['expiresIn']
 
 /**
  * The data we store inside the JWT token.

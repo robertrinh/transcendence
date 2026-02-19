@@ -1,25 +1,13 @@
 import React, { useState } from 'react';
 import TwoFactorVerify from './TwoFactorVerify';
-
-interface User {
-	id: string;
-	username: string;
-	email?: string;
-}
+import { User } from '../util/profileUtils';
+import { getApiUrl } from './lib';
 
 interface LoginProps {
 	onLoginSuccess: (userData: User, token: string) => void;
 	onSwitchToRegister?: () => void;
 	isInPanel?: boolean;  // ← NEW: Add panel mode support
 }
-
-// Same API URL logic as register
-const getApiUrl = () => {
-	if (typeof window !== 'undefined') {
-		return 'http://backend:3000';
-	}
-	return 'http://localhost:3000';
-};
 
 const API_URL = getApiUrl();
 
@@ -74,16 +62,16 @@ const Login: React.FC<LoginProps> = ({
 				setPendingToken(data.token);
 				setShowTwoFactor(true);
 
-				// if (data.requires2FA) {
-				// 	setPendingUser(data.user);
-				// 	setPendingToken(data.token);
-				// 	setShowTwoFactor(true);
-				// } else {
-				// 	onLoginSuccess(data.user, data.token);
-				// 	// Clear form
-				// 	setUsername('');
-				// 	setPassword('');
-				// }
+				if (data.requires2FA) {
+					setPendingUser(data.user);
+					setPendingToken(data.token);
+					setShowTwoFactor(true);
+				} else {
+					onLoginSuccess(data.user, data.token);
+					// Clear form
+					setUsername('');
+					setPassword('');
+				}
 			} else {
 				setError(data.error || 'Login failed');
 			}

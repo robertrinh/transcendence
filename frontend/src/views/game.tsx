@@ -1,9 +1,7 @@
-import {useState, useEffect} from 'react'
+import {useState, useEffect, useRef} from 'react'
+import { fetchWithAuth } from '../config/api'
 import GameUI from '../components/game/gameUI.js'
-import websocket from '../static/websocket.js'
-
-type Screen = 'main' | 'online' | 'local' | 'host-lobby' | 'join-lobby' | 'tournament' | 'create-tournament' |'searching' | 'game' | 'timeout' | 'error'
-type GameMode = 'none' | 'singleplayer' | 'multiplayer' | 'online'
+import { Screen, GameMode } from '../components/game/types.js'
 
 export default function Game() {
   const [gameMode, setGameMode] = useState<GameMode>("none")
@@ -11,17 +9,64 @@ export default function Game() {
   const [gameData, setGameData] = useState<any>(null)
   const [lobbyId, setLobbyId] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [wsReadyState, setWsReadyState] = useState<Number>(WebSocket.CONNECTING)
+  const websocket = useRef<WebSocket|null>(null)
 
+	useEffect(() => {
+		const serverHostname = import.meta.env.VITE_SERVER_HOSTNAME
+		const gameServerPort = import.meta.env.VITE_GAME_SERVER_PORT
+		const nginxPort = import.meta.env.VITE_NGINX_PORT
+		// A little bit illegal because it's similar to this: 
+		// https://nodejs.org/en/learn/getting-started/nodejs-the-difference-between-development-and-production#why-is-node_env-considered-an-antipattern
+		const useWSS = Number(import.meta.env.VITE_USE_WSS)
+		let url = `ws://${serverHostname}:${gameServerPort}`
+		if (useWSS === 1) {
+			url = `wss://${serverHostname}:${nginxPort}/ws/`
+		}
+		websocket.current = new WebSocket(url)
+		websocket.current.onopen = () => {
+			setWsReadyState(WebSocket.OPEN)
+			console.log(`[connection opened]`)
+		}
+
+		websocket.current.onclose = () => {
+			setWsReadyState(WebSocket.CLOSED)
+			console.log(`[connection closed]`)
+		}
+
+		websocket.current.onerror = () => {
+			setWsReadyState(WebSocket.CLOSED)
+			console.log(`[error on connection]`)
+		}
+		return () => {
+			// cleanup, should also reset player state in db
+			websocket.current!.close()
+		}
+	}, [])
+
+  useEffect(() => {
+    switch (wsReadyState) {
+      case WebSocket.CONNECTING: {
+        setScreen('websocket-connecting')
+        break
+      }
+      case WebSocket.OPEN: {
+        setScreen('main')
+        break
+      }
+      default: {
+        setScreen('websocket-closed')
+        break
+      }
+    }
+  }, [wsReadyState])
 
   useEffect(() => {
     if (screen !== 'searching')
         return;
-    const interval = setInterval(async () => {
+        const interval = setInterval(async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('/api/games/matchmaking', {
-          headers: {'Authorization': `Bearer ${token}`}
-        })
+        const response = await fetchWithAuth('/api/games/matchmaking')
         if (!response.ok) {
           const errorData = await response.json().catch(() => {})
           console.error('error: MATCHMAKING POLL: ', errorData)
@@ -60,11 +105,11 @@ export default function Game() {
           player1_id: gameData.player1_id,
           player2_id: gameData.player2_id
         })
-        websocket.send(game);
+        websocket.current!.send(game);
       }
       // we are joining a private lobby
       else {
-        websocket.send(JSON.stringify({
+        websocket.current!.send(JSON.stringify({
           type: 'START_GAME',
           game_id: gameData.id,
           player1_id: gameData.player1_id,
@@ -74,7 +119,7 @@ export default function Game() {
       }
       console.log('game data sent to gameserver')
     }
-  }, [gameMode])
+  }, [gameMode, lobbyId, gameData])
 
   function updateGameMode(gameMode: GameMode) {
     console.log("Selected mode: ", gameMode)
@@ -84,11 +129,7 @@ export default function Game() {
   const handleRandomPlayer = async () => {
 	  setScreen('searching')
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/games/matchmaking', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`}
-      })
+      const response = await fetchWithAuth('/api/games/matchmaking', { method: 'POST' })
       if (!response.ok) {
         const errordata = await response.json().catch(() => {})
         console.log('errordata: ', errordata)
@@ -107,11 +148,7 @@ export default function Game() {
 
   async function handleHostReq() {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/games/host', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`}
-      })
+      const response = await fetchWithAuth('/api/games/host', { method: 'POST' })
       if (!response.ok) {
         const errordata = await response.json().catch(() => {})
         console.log('errordata: ', errordata)
@@ -135,13 +172,9 @@ export default function Game() {
   async function joinLobbyReq (lobby_id: string){
     setLobbyId(lobby_id)
       try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/games/joinlobby', {
+      const response = await fetchWithAuth('/api/games/joinlobby', {
         method: 'POST',
-        headers: {
-			'Content-Type': 'application/json',
-			'Authorization': `Bearer ${token}`
-		},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lobby_id }),
       })
       if (!response.ok) {
@@ -168,11 +201,7 @@ export default function Game() {
   async function resetPlayerStatus() {
     console.log('resetting the player_status to none')
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/games/matchmaking/cancel', {
-        method: 'PUT',
-        headers: {'Authorization': `Bearer ${token}`}
-      })
+      const response = await fetchWithAuth('/api/games/matchmaking/cancel', { method: 'PUT' })
       if (!response.ok)
         throw new Error('could not reset user status on backend..')
 	  setGameMode('none')
@@ -192,7 +221,8 @@ return (
 			screen={screen}
 			gameMode={gameMode}
 			lobbyId={lobbyId}
-      error={error}
+			error={error}
+			websocket={websocket}
 			setScreen={setScreen}
 			setGameMode={setGameMode}
 			handleRandomPlayer={handleRandomPlayer}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { fetchWithAuth } from '../../config/api';
 
 interface User {
     id: string;
@@ -129,7 +130,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
 
     const joinChat = async (connId: string) => {
         try {
-            const response = await fetch('/api/chat/join', {
+            const response = await fetchWithAuth('/api/chat/join', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -153,7 +154,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ user }) => {
 
         setLoading(true);
         try {
-            const response = await fetch('/api/chat/send', {
+            const response = await fetchWithAuth('/api/chat/send', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

@@ -61,7 +61,8 @@ export default async function authRoutes (
 ) {
 	fastify.post('/auth/login', {
 		schema: {
-			tags: ['auth']
+			tags: ['auth'],
+			summary: 'Login as a user'
 		}}, async (request, reply) => {
 		const { username, password } = request.body as { username: string, password: string}
 		if (!username || !password) {
@@ -106,7 +107,8 @@ export default async function authRoutes (
 
 	fastify.post('/auth/register', {
 		schema: {
-			tags: ['auth']
+			tags: ['auth'],
+			summary: 'Register a new user or guest'
 		}}, async (request, reply) => {
 		const { username, isGuest, password, email } = request.body as { 
 			username?: string,
@@ -145,12 +147,17 @@ export default async function authRoutes (
 
 	fastify.post('/auth/logout', {
 		schema: {
-			tags: ['auth']
+			tags: ['auth'],
+			summary: 'Logout as a user'
 		}}, async (request, reply) => {
 			return { success: true, message: 'Logged out successfully' }
 		})
 		
-	fastify.get('/auth/validate', async (request, reply) => {
+	fastify.get('/auth/validate', {
+		schema: {
+			tags: ['auth'],
+			summary: 'Validate JWT token'
+		}}, async (request, reply) => {
 		const authHeader = request.headers.authorization
 		if (!authHeader?.startsWith('Bearer ')) {
 			return reply.code(401).send({ success: false, error: 'No token provided' })
@@ -161,9 +168,11 @@ export default async function authRoutes (
 		if (!payload) {
 			return reply.code(401).send({ success: false, error: 'Invalid or expired token' })
 		}
-		
+		//* reject tokens for deleted users (e.g. account deleted in another tab)
+		const userExists = db.prepare('SELECT id FROM users WHERE id = ?').get(payload.userId)
+		if (!userExists) {
+			return reply.code(401).send({ success: false, error: 'Account no longer exists' })
+		}
 		return reply.code(200).send({ success: true, user: payload })
 	})
 }
-
-

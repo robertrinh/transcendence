@@ -8,7 +8,13 @@ export default async function twofaRoutes(
 	fastify: FastifyInstance
 ) {
 	//* Generate QR code
-	fastify.post('/auth/2fa/setup', {preHandler: [authenticate]}, async (request, reply) => {
+	fastify.post('/auth/2fa/setup', {
+		schema: {
+			tags: ['auth', '2fa'],
+			summary: 'Starting point for setting up two-factor authentication'
+		},
+		preHandler: [authenticate],
+	}, async (request, reply) => {
 		const { userId, username } = request.user! as { userId: number, username: string };
 
 		//* check if 2FA is already enabled
@@ -29,7 +35,12 @@ export default async function twofaRoutes(
 		return reply.code(200).send({ success: true, qrCode, message: 'QR code generated, scan it with your authenticator app' })
 	})
 
-	fastify.post('/auth/2fa/enable', {preHandler: [authenticate]}, async (request, reply) => {
+	fastify.post('/auth/2fa/enable', {
+		schema: {
+			tags: ['auth', '2fa'],
+			summary: 'Endpoint for enabling two-factor authentication'
+		},
+		preHandler: [authenticate]}, async (request, reply) => {
 		const { userId } = request.user! as { userId: number };
 
 		//* Fetch user's 2FA status and secret from database
@@ -67,7 +78,12 @@ export default async function twofaRoutes(
 		return reply.code(200).send({ success: true, message: '2FA enabled successfully' });
 	})
 
-	fastify.post('/auth/2fa/disable', {preHandler: [authenticate]}, async (request, reply) => {
+	fastify.post('/auth/2fa/disable', {
+		schema: {
+			tags: ['auth', '2fa'],
+			summary: 'Endpoint for disabling two-factor authentication'
+		},
+		preHandler: [authenticate]}, async (request, reply) => {
 		const { userId } = request.user! as { userId: number };
 		const { code } = request.body as { code: string };
 
@@ -93,12 +109,17 @@ export default async function twofaRoutes(
 		return reply.code(200).send({ success: true, message: '2FA disabled successfully' });
 	})
 
-	fastify.post('/auth/2fa/verify', {preHandler: [authenticate]}, async (request, reply) => {
+	fastify.post('/auth/2fa/verify', {
+		schema: {
+			tags: ['auth', '2fa'],
+			summary: 'For verifying that two-factor authentication is enabled'
+		},
+		preHandler: [authenticate]}, async (request, reply) => {
 		const { userId } = request.user! as { userId: number };
 		const { code } = request.body as { code: string };
 
 		//* fetch user's 2FA data
-		const user = db.prepare('SELECT two_factor_enabled, two_factor_secret FROM users WHERE id = ?').get(userId) as { two_factor_enabled: number, two_factor_secret: string } | undefined
+		const user = db.prepare('SELECT two_factor_enabled, two_factor_secret FROM users WHERE id = ?').get(userId) as { two_factor_enabled: number, two_factor_secret: string } | undefined;
 		if (!user || !user.two_factor_enabled) {
 			return reply.code(400).send({ success: false, error: '2FA not enabled, protect yourself!' });
 		}
@@ -112,6 +133,6 @@ export default async function twofaRoutes(
 		}
 
 		return reply.code(200).send({ success: true, message: 'Login complete!' });
-	})
+	});
 
 }

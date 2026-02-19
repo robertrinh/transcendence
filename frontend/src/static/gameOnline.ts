@@ -1,7 +1,6 @@
 import { Ball } from './ball'
 import { playerOne, playerTwo, ball, clientTick, drawPlayerScores,
     intervals } from './lib'
-import websocket from './websocket'
 
 interface MoveTS {
     type: string,
@@ -10,7 +9,7 @@ interface MoveTS {
 
 export async function gameOnlineLobby(canvas: HTMLCanvasElement, 
         ctx: CanvasRenderingContext2D, drawCanvas: HTMLCanvasElement,
-        drawCtx: CanvasRenderingContext2D) {
+        drawCtx: CanvasRenderingContext2D, websocket: WebSocket) {
   const serverTick = 1000 / 66
 
     let p1Score = 0
@@ -234,15 +233,8 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
                 break
             case "WHOAREYOU":
                 try {
-                    const token = localStorage.getItem('token');
-                    if (token === null) {
-                        throw Error("Failed to process message 'WHOAREYOU'; missing JWT token")
-                    }
-                    const response = await fetch(
-                        "/api/users/profile/me", {
-                            headers: {'Authorization': `Bearer ${token}`}
-                        }
-                    )
+                    const { fetchWithAuth } = await import('../config/api');
+                    const response = await fetchWithAuth("/api/users/profile/me");
                     if (!response.ok) {
                         throw Error("Failed to process message 'WHOAREYOU'; backend error")
                     }

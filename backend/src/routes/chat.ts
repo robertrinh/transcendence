@@ -2,19 +2,24 @@ import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { getMessages } from '../controllers/chatcontrollers.js';
 import { verifyToken } from '../auth/utils.js';  // NEW: Import token verification
 import { db } from '../databaseInit.js'
+import { userService } from '../services/userService.js';
 
 // Store active SSE connections and messages
 const sseConnections = new Map<string, any>();
 const chatMessages: any[] = [];
 
-// CHANGED: SSE endpoint - get token from query parameter
+//  SSE endpoint - get token from query parameter
 export default async function chatRoutes (
     	fastify: FastifyInstance,
     	options: FastifyPluginOptions
     ) {
-    fastify.get('/stream', async (request, reply) => {
+    fastify.get('/stream', {
+        schema: {
+            tags: ['chat'],
+            summary: 'Server-Sent Events (SSE) endpoint'
+        }}, async (request, reply) => {
     try {
-        // CHANGED: Get token from query parameter (EventSource limitation)
+        //  Get token from query parameter (EventSource limitation)
         const token = (request.query as any).token;
         
         if (!token) {
@@ -27,6 +32,11 @@ export default async function chatRoutes (
         if (!payload) {
             console.error('Invalid or expired token');
             return reply.status(401).send({ error: 'Invalid or expired token' });
+        }
+
+        if (userService.isUserAnonymous(payload.userId)) {
+            // console.log(`🚫 Anonymous user ${payload.username} attempted to connect to chat`);
+            return reply.status(403).send({ error: 'Anonymous users cannot access chat' });
         }
 
         console.log(`✅ New SSE connection from user: ${payload.username} (ID: ${payload.userId})`);
@@ -105,10 +115,15 @@ export default async function chatRoutes (
     }
 });
 
-// CHANGED: Join chat endpoint with JWT verification
-fastify.post('/join', async (request, reply) => {
+//  Join chat endpoint with JWT verification
+fastify.post('/join', {
+        schema: {
+            tags: ['chat'],
+            summary: 'Join chat endpoint with JWT verification'
+        }},
+        async (request, reply) => {
     try {
-        // CHANGED: Get token from Authorization header
+        //  Get token from Authorization header
         const authHeader = request.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return reply.status(401).send({ error: 'No token provided' });
@@ -119,6 +134,17 @@ fastify.post('/join', async (request, reply) => {
 
         if (!payload) {
             return reply.status(401).send({ error: 'Invalid or expired token' });
+        }
+
+        const userExistsJoin = db.prepare('SELECT id FROM users WHERE id = ?').get(payload.userId);
+        if (!userExistsJoin) {
+            return reply.status(401).send({ error: 'Account no longer exists' });
+        }
+
+        if (userService.isUserAnonymous(payload.userId)) {
+            return reply.status(403).send({ 
+                error: 'Anonymous users cannot access chat' 
+            });
         }
 
         const { connectionId } = request.body as any;
@@ -149,10 +175,14 @@ fastify.post('/join', async (request, reply) => {
     }
 });
 
-// CHANGED: Send message endpoint with JWT verification
-fastify.post('/send', async (request, reply) => {
+//  Send message endpoint with JWT verification
+fastify.post('/send', {
+        schema: {
+            tags: ['chat'],
+            summary: 'Send message endpoint with JWT verification'
+        }}, async (request, reply) => {
     try {
-        // CHANGED: Get token from Authorization header
+        //  Get token from Authorization header
         const authHeader = request.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return reply.status(401).send({ error: 'No token provided' });
@@ -163,6 +193,17 @@ fastify.post('/send', async (request, reply) => {
 
         if (!payload) {
             return reply.status(401).send({ error: 'Invalid or expired token' });
+        }
+
+        const userExistsSend = db.prepare('SELECT id FROM users WHERE id = ?').get(payload.userId);
+        if (!userExistsSend) {
+            return reply.status(401).send({ error: 'Account no longer exists' });
+        }
+
+        if (userService.isUserAnonymous(payload.userId)) {
+            return reply.status(403).send({ 
+                error: 'Anonymous users cannot send messages' 
+            });
         }
 
         const { connectionId, message } = request.body as any;
@@ -188,10 +229,7 @@ fastify.post('/send', async (request, reply) => {
 
         console.log(`💬 New message from ${payload.username}: "${message.trim()}"`);
 
-        // Save to memory
-        chatMessages.push(messageData);
-
-        // Save to database
+        //* save to database first; if user was deleted, do not broadcast
         try {
             const insertMessage = db.prepare(`
                 INSERT INTO chat_messages (user_id, username, message, timestamp) 
@@ -199,11 +237,16 @@ fastify.post('/send', async (request, reply) => {
             `);
             insertMessage.run(payload.userId, payload.username, message.trim(), new Date().toISOString());
             console.log(`✅ Message saved to database`);
-        } catch (dbError) {
+        } catch (dbError: any) {
             console.error('Error saving message to database:', dbError);
+            if (dbError?.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
+                return reply.status(401).send({ error: 'Account no longer exists' });
+            }
+            return reply.status(500).send({ error: 'Failed to save message' });
         }
 
-        // Broadcast to all connections
+        //* save to memory and broadcast only after successful DB write
+        chatMessages.push(messageData);
         console.log(`📡 Broadcasting message to ${sseConnections.size} connections`);
         broadcastSSE(messageData);
 
@@ -241,13 +284,18 @@ function broadcastSSE(message: any, excludeConnectionId?: string) {
 }
 
 // Get messages (HTTP endpoint for initial load)
-fastify.get('/messages', getMessages);
-
-// Register database routes
-// await fastify.register(databaseRoutes, { prefix: '/api/db' });
+fastify.get('/messages', {
+    schema: {
+        tags: ['chat'],
+        summary: 'Get chat messages'
+    }}, getMessages);
 
 // Chat status endpoint
-fastify.get('/status', async (request, reply) => {
+fastify.get('/status', {
+    schema: {
+        tags: ['chat'],
+        summary: 'Get the active users of the chat'
+    }}, async (request, reply) => {
     const activeUsers = Array.from(sseConnections.values())
         .filter(conn => conn.username)
         .map(conn => ({

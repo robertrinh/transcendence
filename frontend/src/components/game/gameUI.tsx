@@ -1,19 +1,20 @@
 import { useEffect } from 'react'
+import { fetchWithAuth } from '../../config/api'
 import GameCanvas from './gameCanvas.js'
 import { HostLobby, JoinLobby, LocalMenu, MainMenu, OnlineMenu } from './gameMenus.js';
 import {MainMenuTournament, MenuCreateTournament} from './tournamentMenus.js'
 import SearchingScreen from './searchingScreen.js';
 import  { TimeoutScreen, ErrorScreen } from './timeoutScreen.js';
-import websocket from '../../static/websocket.js';
-
-type Screen = 'main' | 'online' | 'local' | 'host-lobby' | 'join-lobby' | 'tournament' | 'create-tournament' |'searching' | 'game' | 'timeout' | 'error'
-type GameMode = 'none' | 'singleplayer' | 'multiplayer' | 'online'
+import { WebSocketConnectingScreen, WebSocketClosedScreen } 
+from './webSocketWaitScreen.js';
+import { Screen, GameMode } from './types.js'
 
 type gameProps = {
 	lobbyId: string;
 	gameMode: GameMode;
 	screen: Screen;
 	error: string | null;
+	websocket: React.RefObject<null | WebSocket>
 
 	setScreen(screen: Screen): void
 	setGameMode(gameMode: GameMode): void
@@ -43,7 +44,9 @@ function resizeGameUI(gameUI: HTMLElement) {
         gameUI.style.height = String(gameUI.offsetWidth * widthRatio) + "px"
 }
 
-export default function GameUI({screen, gameMode, lobbyId, error, setScreen, setGameMode, handleRandomPlayer, handleHostReq, joinLobbyReq, resetPlayerStatus}:gameProps) {
+export default function GameUI({
+	screen, gameMode, lobbyId, error, websocket, setScreen, setGameMode,
+	handleRandomPlayer, handleHostReq, joinLobbyReq, resetPlayerStatus}:gameProps) {
 	useEffect(() => {
 		const gameUI = document.getElementById("game-ui")
 		if (gameUI === null) {
@@ -59,11 +62,16 @@ export default function GameUI({screen, gameMode, lobbyId, error, setScreen, set
 			})
 		}
 	}, [])
+	const validateThen = async (next: () => void) => {
+		const res = await fetchWithAuth('/api/auth/validate')
+		if (res.ok) next()
+	}
+
 	switch (screen) {
 		case 'main':
 			return 	<MainMenu
-						onPlayLocal={() => setScreen('local')}
-						onPlayOnline={() => setScreen('online')}
+						onPlayLocal={() => validateThen(() => setScreen('local'))}
+						onPlayOnline={() => validateThen(() => setScreen('online'))}
 					/>
 		case 'local': 
 			return 	<LocalMenu
@@ -88,7 +96,7 @@ export default function GameUI({screen, gameMode, lobbyId, error, setScreen, set
 							navigator.clipboard.writeText(lobbyElement.value)
 						}}
 						onJoinOwn={() => {
-							websocket.send(
+							websocket.current!.send(
 								JSON.stringify({
 									"type": "HOST_LOBBY",
 									"lobby_id": lobbyId
@@ -125,7 +133,7 @@ export default function GameUI({screen, gameMode, lobbyId, error, setScreen, set
 						onCancel={() => {setGameMode('none'); setScreen('online'); resetPlayerStatus()}}
 					/>
 		case 'game':
-			return <GameCanvas mode={gameMode}/>
+			return <GameCanvas mode={gameMode} websocket={websocket}/>
 		case 'timeout':
 			return <TimeoutScreen
 						onExit={() => {setGameMode('none'); setScreen('main'); resetPlayerStatus()}}
@@ -136,5 +144,9 @@ export default function GameUI({screen, gameMode, lobbyId, error, setScreen, set
 						error={error}
 						onExit={() => {setGameMode('none'); setScreen('main'); resetPlayerStatus()}}
 					/>
+		case 'websocket-connecting':
+			return <WebSocketConnectingScreen/>
+		case 'websocket-closed':
+			return <WebSocketClosedScreen/>
 	}
   }

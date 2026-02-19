@@ -92,11 +92,13 @@ async def process_message(
             game_instance.db_game_id = message_content['game_id']
             game_instance.db_p2_id = message_content['player2_id']
         else:
-            add_game_instance(
-                message_content['game_id'],
-                message_content['player1_id'],
-                message_content['player2_id']
-            )
+            game_instance = find_game_instance_by_db_game_id(message_content['game_id'])
+            if game_instance is None:
+                add_game_instance(
+                    message_content['game_id'],
+                    message_content['player1_id'],
+                    message_content['player2_id']
+                )
         response = {
             'type': 'WHOAREYOU'
         }
@@ -154,7 +156,7 @@ async def main(ip: str, port: int):
     loop.add_signal_handler(signal.SIGINT, stop.set_result, signal.SIGINT)
     asyncio.create_task(reap_lobbies())
     async with serve(handler, ip, port) as server:
-        print(f"Lobby server is listening on: {ip}:{port}")
+        print("Game server is running")
         await stop
         signal_print = None
         match stop.result():

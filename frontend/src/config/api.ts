@@ -1,16 +1,40 @@
 // API configuration
 const getApiBaseUrl = (): string => {
+    const backendPort = import.meta.env.VITE_BACKEND_PORT
+    const serverHostname = import.meta.env.VITE_SERVER_HOSTNAME
     // In Docker environment, containers communicate via service names
     // In browser, this will be resolved by Docker networking
     if (process.env.NODE_ENV === 'production') {
-        return 'http://backend:3000';
+        return `http://backend:${backendPort}`;
     }
     
     // For development, try backend container first, then localhost
-    return 'http://localhost:3000';
+    return `http://${serverHostname}:${backendPort}`;
 };
 
 const API_BASE = '/api';
+
+//* call when any authenticated request gets 401/404 (e.g. account deleted elsewhere). Clears token and notifies app to show login
+export const notifyAuthFailure = () => {
+    localStorage.removeItem('token');
+    window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+};
+
+/**
+ * Authenticated fetch: adds Bearer token and kicks user back to login on 401.
+ * Use for all requests that require auth (nav, chat, settings, game, etc.) so that
+ * when e.g. the account was deleted in another tab, the next action here returns 401 and we redirect.
+ */
+export const fetchWithAuth = async (path: string, options: RequestInit = {}): Promise<Response> => {
+    const token = localStorage.getItem('token');
+    const headers = new Headers(options.headers);
+    if (token) 
+		headers.set('Authorization', `Bearer ${token}`);
+    const response = await fetch(path, { ...options, headers });
+    if (response.status === 401) 
+		notifyAuthFailure();
+    return response;
+};
 
 // NEW: Handshake function to verify token and get user info
 export const verifyToken = async () => {
@@ -98,8 +122,7 @@ export const API_ENDPOINTS = {
         join: `${API_BASE_URL}/api/chat/join`,
         leave: `${API_BASE_URL}/api/chat/leave`,
         users: `${API_BASE_URL}/api/chat/users`,
-    },
-    health: `${API_BASE_URL}/api/health`,
+    }
 };
 
 // Utility function to make API calls with fallback

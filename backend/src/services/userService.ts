@@ -11,10 +11,12 @@ export const userService = {
                 u.username, 
                 u.nickname,
                 u.display_name,
+                u.is_anonymous,
                 a.path as avatar_url,
                 u.created_at
             FROM users u 
             LEFT JOIN avatars a ON u.avatar_id = a.id
+            WHERE u.is_anonymous = 0
             ORDER BY u.created_at DESC
         `).all()
     },
@@ -25,10 +27,13 @@ export const userService = {
                 u.id, 
                 u.status,
                 u.username, 
+                u.password,
                 u.nickname,
                 u.display_name,
                 u.email,
                 u.created_at,
+                u.is_anonymous,
+                u.anonymized_at,
                 a.path as avatar_url,
                 (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND winner_id = u.id) as wins,
                 (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND winner_id != u.id AND winner_id IS NOT NULL) as losses,
@@ -41,13 +46,16 @@ export const userService = {
 
     fetchOwnProfile: (id:number) => {
         return db.prepare(`
-            SELECT 
+           SELECT 
                 u.id, 
                 u.username, 
                 u.nickname,
                 u.display_name,
                 u.email,
                 u.created_at,
+                u.is_anonymous,
+                u.anonymized_at,
+                u.two_factor_enabled,
                 a.path as avatar_url,
                 (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND winner_id = u.id) as wins,
                 (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND winner_id != u.id AND winner_id IS NOT NULL) as losses,
@@ -57,22 +65,99 @@ export const userService = {
             WHERE u.id = ?
         `).get(id)
     },
-    // for profile view
+
     fetchPublicProfile: (username: string) => {
-        return db.prepare(`
+        const user = db.prepare(`
             SELECT 
-            u.id, 
-            u.username, 
-            u.nickname,
-            u.display_name,
-            a.path as avatar_url,
-            (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND winner_id = u.id) as wins,
-            (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND winner_id != u.id AND winner_id IS NOT NULL) as losses,
-            (SELECT COUNT(*) FROM games WHERE player1_id = u.id OR player2_id = u.id) as total_games
-        FROM users u 
-        LEFT JOIN avatars a ON u.avatar_id = a.id 
-        WHERE u.username = ?
-        `).get(username)
+                u.id, 
+                u.username, 
+                u.nickname,
+                u.display_name,
+                u.is_anonymous,
+                u.anonymized_at,
+                a.path as avatar_url,
+                (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND winner_id = u.id) as wins,
+                (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND winner_id != u.id AND winner_id IS NOT NULL) as losses,
+                (SELECT COUNT(*) FROM games WHERE player1_id = u.id OR player2_id = u.id) as total_games
+            FROM users u 
+            LEFT JOIN avatars a ON u.avatar_id = a.id 
+            WHERE u.username = ?
+        `).get(username) as any;
+
+        if (!user) return null;
+
+        const winRate = user.total_games > 0
+            ? `${((user.wins / user.total_games) * 100).toFixed(1)}%`
+            : '0%';
+
+        // If anonymous, return limited info
+        if (user.is_anonymous) {
+            return {
+                id: user.id,
+                username: user.username,
+                is_anonymous: true,
+                anonymized_at: user.anonymized_at,
+                wins: user.wins || 0,
+                losses: user.losses || 0,
+                total_games: user.total_games || 0,
+                winRate
+            };
+        }
+
+        // Return full profile
+        return {
+            id: user.id,
+            username: user.username,
+            nickname: user.nickname,
+            display_name: user.display_name,
+            avatar_url: user.avatar_url,
+            is_anonymous: false,
+            wins: user.wins || 0,
+            losses: user.losses || 0,
+            total_games: user.total_games || 0,
+            winRate
+        };
+    },
+
+    anonymizeProfile: (id: number) => {
+        try {
+            // Start transaction
+            const transaction = db.transaction(() => {
+                // Set user as anonymous
+                db.prepare(`
+                    UPDATE users 
+                    SET is_anonymous = 1,
+                        anonymized_at = datetime('now'),
+                        email = NULL,
+                        nickname = NULL,
+                        display_name = NULL,
+                        two_factor_secret = NULL,
+                        two_factor_enabled = 0
+                    WHERE id = ?
+                `).run(id);
+            });
+
+            transaction();
+
+            // Return updated user
+            return db.prepare(`
+                SELECT 
+                    id, 
+                    username, 
+                    is_anonymous,
+                    anonymized_at
+                FROM users 
+                WHERE id = ?
+            `).get(id);
+        } catch (err: any) {
+            dbError(err);
+            throw err;
+        }
+    },
+
+    isUserAnonymous: (id: number): boolean => {
+        const result = db.prepare('SELECT is_anonymous FROM users WHERE id = ?').get(id) as any;
+        return result ? Boolean(result.is_anonymous) : false;
     },
 
     addUser: async (username: string, hashedPassword: string) => {
@@ -94,8 +179,22 @@ export const userService = {
         db.prepare('UPDATE users SET avatar_id = ? WHERE id = ?').run(avatarResult.lastInsertRowid, id)
     },
 
-    deleteUser: (id: number) => {
-        return db.prepare('DELETE FROM users WHERE id = ?').run(id)
+   deleteUser: (id: number) => {
+        try {
+            // Delete related data first (cascading)
+            db.prepare('DELETE FROM chat_messages WHERE user_id = ?').run(id);
+            db.prepare('DELETE FROM user_sessions WHERE user_id = ?').run(id);
+            db.prepare('DELETE FROM tournament_participants WHERE user_id = ?').run(id);
+            db.prepare('DELETE FROM games WHERE player1_id = ? OR player2_id = ? OR winner_id = ?').run(id, id, id);
+            
+            // Delete the user
+            const result = db.prepare('DELETE FROM users WHERE id = ?').run(id);
+            
+            return result;
+        } catch (err: any) {
+            dbError(err);
+            throw err;
+        }
     }
 }
 
