@@ -47,14 +47,15 @@ export default async function databaseRoutes (
                 'DELETE FROM games',
                 'DELETE FROM chat_users',
                 'DELETE FROM chat_messages',
-                'DELETE FROM user_sessions',
-                'DELETE FROM users WHERE username != "admin"'
+                'DELETE FROM user_sessions'
             ];
 
             const clearData = db.transaction(() => {
                 for (const query of clearQueries) {
                     db.prepare(query).run();
                 }
+                db.prepare('DELETE FROM users WHERE username != ? AND username != ?').run('admin', 'tester'); // Keep admin and tester user
+                db.prepare('UPDATE users SET status = ? WHERE username = ? OR username = ?').run('idle', 'admin', 'tester'); // Set admin and tester to offline
             });
 
             clearData();
