@@ -41,7 +41,7 @@ export interface DatabaseRunResult {
 
 export interface Player {
 	id: number;
-	status: 'searching' | 'matched' | 'playing';
+	status: 'searching' | 'playing';
 }
 
 export interface Queue {
