@@ -52,6 +52,7 @@ class GameInstance:
     lobby_id: str  # for private lobbies
     is_private = False
     players: [ServerConnection]
+    connections: list[ServerConnection]
     game_running = False
     is_done = False
 
@@ -88,7 +89,7 @@ class GameInstance:
         )
         self.set_game_start()
         self.players = list()
-        self.lobby_id = lobby_id
+        self.connections = list()
         self.db_game_id = db_game_id
         self.db_p1_id = db_p1_id
         self.db_p2_id = db_p2_id
@@ -155,17 +156,17 @@ class GameInstance:
         sec_pause = 5
         while not self.lobby_full() and sec_passed < lobby_timeout_sec:
             message = {'type': 'LOBBY_WAIT'}
-            broadcast(self.players, json.dumps(message))
+            broadcast(self.connections, json.dumps(message))
             sec_passed += sec_pause
             await asyncio.sleep(sec_pause)
         if not self.lobby_full():
             message = {'type': 'ERROR', 'message': 'Lobby timed out'}
-            broadcast(self.players, json.dumps(message))
             raise Exception(f"Lobby {self.lobby_id} timed out")
+            broadcast(self.connections, json.dumps(message))
         self.game_running = True
         self.log("all players connected, starting...")
         while self.game_running:
-            broadcast(self.players, json.dumps(game_loop(self)))
+            broadcast(self.connections, json.dumps(game_loop(self)))
             await asyncio.sleep(TICK/1000)
 
 
@@ -292,7 +293,7 @@ def handle_score(game: GameInstance):
     if not scored:
         return
     message = {'type': 'SCORE', 'scored_by': scored_by}
-    broadcast(game.players, json.dumps(message))
+    broadcast(game.connections, json.dumps(message))
     game.ball.set_start(ARENA_HEIGHT, ARENA_WIDTH, random_ball_vec())
     # game is finished, we need to upload the results to the database
     if game.p1_score == ROUND_MAX or game.p2_score == ROUND_MAX:
