@@ -35,7 +35,50 @@ export const authenticate = async (request: FastifyRequest, reply: FastifyReply)
 		})
 	}
 	
+	//* reject pending 2FA tokens, must complete 2FA first
+	if (payload.twoFactorPending) {
+		return reply.code(403).send({
+			success: false,
+			error: '2FA verification required'
+		})
+	}
+	
 	//* reject tokens for deleted users (e.g. account deleted in another tab)
+	const userExists = db.prepare('SELECT id FROM users WHERE id = ?').get(payload.userId);
+	if (!userExists) {
+		return reply.code(401).send({
+			success: false,
+			error: 'Account no longer exists'
+		})
+	}
+	request.user = payload;
+}
+
+//* middleware for 2FA verification endpoint: ONLY accepts pending tokens
+export const authenticatePendingOnly = async (request: FastifyRequest, reply: FastifyReply) => {
+	const authHeader = request.headers.authorization;
+	if (typeof authHeader !== 'string' || !authHeader.startsWith('Bearer ')) {
+		return reply.code(401).send({
+			success: false,
+			error: 'No token provided'
+		})
+	}
+	const token = authHeader.split(' ')[1];
+	const payload = verifyToken(token);
+	if (!payload) {
+		return reply.code(401).send({
+			success: false,
+			error: 'Invalid or expired token'
+		})
+	}
+	
+	if (!payload.twoFactorPending) {
+		return reply.code(403).send({
+			success: false,
+			error: 'This endpoint requires a pending 2FA token'
+		})
+	}
+	
 	const userExists = db.prepare('SELECT id FROM users WHERE id = ?').get(payload.userId);
 	if (!userExists) {
 		return reply.code(401).send({
