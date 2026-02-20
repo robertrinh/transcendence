@@ -4,10 +4,9 @@ import GameCanvas from './gameCanvas.js'
 import { HostLobby, JoinLobby, LocalMenu, MainMenu, OnlineMenu } from './gameMenus.js';
 import {MainMenuTournament, MenuCreateTournament} from './tournamentMenus.js'
 import SearchingScreen from './searchingScreen.js';
-import  { TimeoutScreen, ErrorScreen } from './timeoutScreen.js';
-import { WebSocketConnectingScreen, WebSocketClosedScreen } 
-from './webSocketWaitScreen.js';
+import  { TimeoutScreen, InfoScreen } from './timeoutScreen.js';
 import { Screen, GameMode } from './types.js'
+import { infoBoxType } from './infoBox.js';
 
 type gameProps = {
 	lobbyId: string;
@@ -103,7 +102,7 @@ export default function GameUI({
 								})
 							)
 							setGameMode('online')
-							setScreen('game')
+							setScreen('searching-private')
 						}}
 					/>
 		case 'join-lobby':
@@ -130,6 +129,12 @@ export default function GameUI({
 					/>
 		case 'searching':
 			return 	<SearchingScreen
+						message='Searching for match...'
+						onCancel={() => {setGameMode('none'); setScreen('online'); resetPlayerStatus()}}
+					/>
+		case 'searching-private':
+			return 	<SearchingScreen
+						message='Waiting for your opponent to join...'
 						onCancel={() => {setGameMode('none'); setScreen('online'); resetPlayerStatus()}}
 					/>
 		case 'game':
@@ -139,14 +144,23 @@ export default function GameUI({
 						onExit={() => {setGameMode('none'); setScreen('main'); resetPlayerStatus()}}
 						onRetry={async () => { await resetPlayerStatus(); handleRandomPlayer()}}
 					/>
-		case 'error':
-			return <ErrorScreen
-						error={error}
+		case 'info-bad':
+			return <InfoScreen
+						screenType={infoBoxType.Bad}
+						message={error!}
 						onExit={() => {setGameMode('none'); setScreen('main'); resetPlayerStatus()}}
 					/>
-		case 'websocket-connecting':
-			return <WebSocketConnectingScreen/>
-		case 'websocket-closed':
-			return <WebSocketClosedScreen/>
+		case 'info-neutral':
+			return <InfoScreen
+						screenType={infoBoxType.Neutral}
+						message={error!}
+						onExit={() => {setGameMode('none'); setScreen('main'); resetPlayerStatus()}}
+					/>
+		case 'info-good':
+			return <InfoScreen
+						screenType={infoBoxType.Good}
+						message={error!}
+						onExit={() => {setGameMode('none'); setScreen('main'); resetPlayerStatus()}}
+					/>
 	}
   }

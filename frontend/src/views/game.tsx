@@ -48,7 +48,7 @@ export default function Game() {
   useEffect(() => {
     switch (wsReadyState) {
       case WebSocket.CONNECTING: {
-        setScreen('websocket-connecting')
+        setScreen('info-neutral')
         break
       }
       case WebSocket.OPEN: {
@@ -56,7 +56,7 @@ export default function Game() {
         break
       }
       default: {
-        setScreen('websocket-closed')
+        setScreen('info-bad')
         break
       }
     }
@@ -73,7 +73,7 @@ export default function Game() {
           console.error('error: MATCHMAKING POLL: ', errorData)
           if (errorData?.message) {
             setError(errorData.message)
-            setScreen('error')
+            setScreen('info-bad')
             throw new Error('failed to poll matchmaking status')
           }
         }
@@ -136,7 +136,7 @@ export default function Game() {
         console.log('errordata: ', errordata)
         if (errordata?.message) {
           setError(errordata.message)
-          setScreen('error')
+          setScreen('info-bad')
           throw new Error('failed to join queue')
         }
       }
@@ -155,7 +155,7 @@ export default function Game() {
         console.log('errordata: ', errordata)
         if (errordata?.message) {
           setError(errordata.message)
-          setScreen('error')
+          setScreen('info-bad')
           throw new Error('failed to create lobbyId')
         }
       }
@@ -171,6 +171,7 @@ export default function Game() {
   }
 
   async function joinLobbyReq (lobby_id: string){
+    setScreen('searching-private')
     setLobbyId(lobby_id)
       try {
       const response = await fetchWithAuth('/api/games/joinlobby', {
