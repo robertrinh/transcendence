@@ -86,17 +86,19 @@ export default async function authRoutes (
 		
 		//* Check if 2fa is enabled
 		const is2faEnabled = db.prepare('SELECT two_factor_enabled FROM users WHERE id = ?').get(user.id) as { two_factor_enabled: number } | undefined
-		const token = generateToken(user.id, user.username)
 
 		if (is2faEnabled?.two_factor_enabled === 1) {
+			const pendingToken = generateToken(user.id, user.username, true)
 			return reply.code(200).send({
 				success: true,
 				requires2FA: true,
-				token: token,
+				token: pendingToken,
 				user: { id: user.id, username: user.username },
 				message: '2FA verification required'
 			})
 		}
+		
+		const token = generateToken(user.id, user.username)
 		return reply.code(200).send({ 
 			success: true,
 			token: token,
@@ -168,6 +170,12 @@ export default async function authRoutes (
 		if (!payload) {
 			return reply.code(401).send({ success: false, error: 'Invalid or expired token' })
 		}
+
+		//* reject pending 2FA tokens, must complete 2FA first
+		if (payload.twoFactorPending) {
+			return reply.code(403).send({ success: false, error: '2FA verification required' })
+		}
+
 		//* reject tokens for deleted users (e.g. account deleted in another tab)
 		const userExists = db.prepare('SELECT id FROM users WHERE id = ?').get(payload.userId)
 		if (!userExists) {
