@@ -46,6 +46,7 @@ function create_backend_env () {
 	# Server Configuration 
 	BACKEND_PORT=$backend_port
 	FRONTEND_PORT=$frontend_port
+	NGINX_PORT=$nginx_port
 	HOST=$hostname
 	EOF
 }
