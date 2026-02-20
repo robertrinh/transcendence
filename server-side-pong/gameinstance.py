@@ -11,6 +11,7 @@ from player_paddle import PlayerPaddle
 from datetime import datetime
 from base64 import b64encode
 from os import getenv
+from time import time_ns
 
 HTTP_PASSWD = getenv('HTTP_PASSWD')
 BACKEND_PORT = getenv('BACKEND_PORT')
@@ -38,6 +39,10 @@ BALL_SPEED_PER_TICK = 0.25
 PADDLE_SPEED_PER_TICK = 0.5
 BALL_SPEED = BALL_SPEED_PER_TICK * TICK
 PADDLE_SPEED = PADDLE_SPEED_PER_TICK * TICK
+
+# networking
+HEARTBEAT_GRACE_MS = 100
+HEARTBEAT_FREQUENCY_MS = 3000
 
 
 class Point:
@@ -153,8 +158,23 @@ class GameInstance:
         self.game_running = True
         self.log("all players connected, starting...")
         while self.game_running:
-            broadcast(self.connections, json.dumps(game_loop(self)))
+            broadcast(self.connections, json.dumps(await game_loop(self)))
             await asyncio.sleep(TICK/1000)
+
+    async def on_client_disconnect(self, player):
+        # the player that is left gets a default win
+        was_p1 = False
+        player_left: Player = self.players[0]
+        if player is player_left:
+            was_p1 = True
+            player_left = self.players[1]
+        if was_p1:
+            self.p2_score = ROUND_MAX
+        else:
+            self.p1_score = ROUND_MAX
+        await player_left.connection.send(json.dumps(
+            {'type': 'OPPONENT_DISCONNECT'}))
+        handle_score(self)
 
 
 def line_line_intersect(
@@ -277,11 +297,10 @@ def handle_score(game: GameInstance):
         scored = True
         scored_by = "p1"
         game.p1_score += 1
-    if not scored:
-        return
-    message = {'type': 'SCORE', 'scored_by': scored_by}
-    broadcast(game.connections, json.dumps(message))
-    game.ball.set_start(ARENA_HEIGHT, ARENA_WIDTH, random_ball_vec())
+    if scored:
+        message = {'type': 'SCORE', 'scored_by': scored_by}
+        broadcast(game.connections, json.dumps(message))
+        game.ball.set_start(ARENA_HEIGHT, ARENA_WIDTH, random_ball_vec())
     # game is finished, we need to upload the results to the database
     if game.p1_score == ROUND_MAX or game.p2_score == ROUND_MAX:
         winner_id = 0
@@ -368,13 +387,26 @@ def random_ball_vec() -> Vector2:
     return Vector2(x, y)
 
 
-def update(game: GameInstance):
+async def check_heartbeat(game: GameInstance):
+    now = time_ns() // 1_000_000
+    i = 0
+    while i < 2:
+        player: Player = game.players[i]
+        if now - player.last_hearbeat > HEARTBEAT_FREQUENCY_MS + HEARTBEAT_GRACE_MS:
+            game.log(f"\"{player.username}\" timed out...")
+            await game.on_client_disconnect(player)
+            return
+        i += 1
+
+
+async def update(game: GameInstance):
+    await check_heartbeat(game)
     move_ball(game.ball, game.p1_paddle, game.p2_paddle)
     process_input(game)
     handle_score(game)
 
 
-def game_loop(game: GameInstance):
+async def game_loop(game: GameInstance):
     game_state = {
         'type': 'STATE',
         'ball': {
@@ -392,7 +424,7 @@ def game_loop(game: GameInstance):
             'last_ts': game.p2_last_ts
         }
     }
-    update(game)
+    await update(game)
     return game_state
 
 

@@ -1,7 +1,6 @@
 import { Ball } from './ball'
 import { playerOne, playerTwo, ball, clientTick, drawPlayerScores,
-    intervals } from './lib'
-
+    intervals, heartbeatFrequencyMS } from './lib'
 interface MoveTS {
     type: string,
     timestamp: number
@@ -10,7 +9,8 @@ interface MoveTS {
 export async function gameOnlineLobby(canvas: HTMLCanvasElement, 
         ctx: CanvasRenderingContext2D, drawCanvas: HTMLCanvasElement,
         drawCtx: CanvasRenderingContext2D, websocket: WebSocket) {
-  const serverTick = 1000 / 66
+    const serverTick = 1000 / 66
+    let lastHearbeatSent = 0
 
     let p1Score = 0
     let p2Score = 0
@@ -115,6 +115,13 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
             interpEnemy()
             then = now - (deltaTimeMS % clientTick)
             moveBall(ball)
+        }
+        const dateNow = Date.now()
+        if (lastHearbeatSent === 0 || dateNow - lastHearbeatSent > heartbeatFrequencyMS) {
+            websocket.send(JSON.stringify(
+                {'type': 'HEARTBEAT', 'timestamp': dateNow}
+            ))
+            lastHearbeatSent = dateNow
         }
 	}
 
@@ -229,6 +236,9 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
                         p2Score++
                         break
                 }
+                break
+            case "OPPONENT_DISCONNECT":
+                alert("Your opponent disconnected, giving you a default win")
                 break
             default:
                 console.log(`Unrecognized message type: ${JSONObject.type}`)

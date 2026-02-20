@@ -8,6 +8,8 @@ class Player:
     exp: int
 
     connection: ServerConnection
+    last_hearbeat: int
+    ping: int
 
     def __init__(
             self, user_id: int, username: str, iat: int, exp: int,
@@ -17,3 +19,5 @@ class Player:
         self.iat = iat
         self.exp = exp
         self.connection = connection
+        self.last_hearbeat = 0
+        self.ping = 0

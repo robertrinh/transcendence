@@ -9,6 +9,7 @@ from websockets.asyncio.server import serve
 from gameinstance import GameInstance
 from player import Player
 from os import getenv
+from time import time_ns
 import jwt
 
 JWT_SECRET = getenv('JWT_SECRET')
@@ -101,6 +102,19 @@ async def process_message(
                 lobby.p1_input.append(['UP', message_content['timestamp']])
             else:
                 lobby.p2_input.append(['UP', message_content['timestamp']])
+        case 'HEARTBEAT':
+            # https://stackoverflow.com/a/56394660
+            now = time_ns() // 1_000_000
+            player: Player
+            if player.connection == lobby.players[0].connection:
+                player = lobby.players[0]
+            else:
+                player = lobby.players[1]
+            player.last_hearbeat = now
+            player.ping = now - int(message_content['timestamp'])
+            if player.ping < 0:
+                player.ping = 0
+            print(f"player \"{player.username}\" sent HEARTBEAT, ping {player.ping}ms")
         case _:
             raise RuntimeError(f"Unknown message type: {message_type}")
 
