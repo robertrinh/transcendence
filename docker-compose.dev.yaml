@@ -46,6 +46,8 @@ services:
       - 8081:8081
     environment:
       - PYTHONUNBUFFERED=1
+    env_file:
+      - ./server-side-pong/.env
     restart: always
     networks:
       - transcendence
