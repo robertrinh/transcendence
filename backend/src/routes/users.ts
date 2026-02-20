@@ -10,6 +10,7 @@ export default async function usersRoutes (
     options: FastifyPluginOptions
 ) {
 
+    //willl we use it?? for leaderboard maybe? otherwise delete!
     fastify.get('/', {
         schema: {
             tags: ['users'],
