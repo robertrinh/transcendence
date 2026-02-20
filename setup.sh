@@ -57,9 +57,6 @@ function create_frontend_env () {
 	VITE_BACKEND_PORT=$backend_port
 	VITE_FRONTEND_PORT=$frontend_port
 	VITE_NGINX_PORT=$nginx_port
-
-	# Use 1 for production and 0 for development
-	VITE_USE_WSS=1
 	EOF
 }
 
