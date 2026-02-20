@@ -29,13 +29,6 @@ export default async function usersRoutes (
         preHandler: [authenticate]
     }, userController.anonymizeProfile);
     
-    fastify.get('/:id', {
-        schema: {
-            tags: ['users'],
-            summary: 'Get a user by ID',
-            params: IDSchema
-        }}, userController.getUserByID);
-    
     fastify.get('/profile/me', {
         schema: {
             security: [{ bearerAuth: [] }],

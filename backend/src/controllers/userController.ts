@@ -24,14 +24,6 @@ export const userController = {
         return {success: true, users }
     },
 
-    getUserByID: async (req: FastifyRequest, reply: FastifyReply) => {
-        const { id } = req.params as { id: number }
-        const user = userService.fetchUser(id);
-        if (!user)
-            throw new ApiError(404, 'User not found', 'USER_NOT_FOUND');
-        return { success: true, user }
-    },
-
     createUser: async (req: FastifyRequest, reply: FastifyReply) => {
         const { username, password } = req.body as { username: string, password: string}
         const hashedPassword = await bcrypt.hash(password, 10)
