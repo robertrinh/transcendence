@@ -1,6 +1,6 @@
 import { db } from '../databaseInit.js'
-import { ApiError } from '../Errors/errors.js'
-import { dbError } from '../Errors/dbErrors.js'
+import { ApiError } from '../error/errors.js'
+import { dbError } from '../error/dbErrors.js'
 import { Tournament,  TournamentParticipant, Game } from '../types/database.interfaces.js';
 
 

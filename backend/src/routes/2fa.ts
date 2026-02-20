@@ -2,7 +2,7 @@ import { FastifyInstance } from "fastify";
 import { authenticator } from "otplib";
 import QRCode from "qrcode";
 import { db } from '../databaseInit.js'
-import { authenticate } from "../auth/middleware.js";
+import { authenticate, requireNonGuest } from "../auth/middleware.js";
 
 export default async function twofaRoutes(
 	fastify: FastifyInstance
@@ -13,7 +13,7 @@ export default async function twofaRoutes(
 			tags: ['auth', '2fa'],
 			summary: 'Starting point for setting up two-factor authentication'
 		},
-		preHandler: [authenticate],
+		preHandler: [authenticate, requireNonGuest],
 	}, async (request, reply) => {
 		const { userId, username } = request.user! as { userId: number, username: string };
 
@@ -40,7 +40,7 @@ export default async function twofaRoutes(
 			tags: ['auth', '2fa'],
 			summary: 'Endpoint for enabling two-factor authentication'
 		},
-		preHandler: [authenticate]}, async (request, reply) => {
+		preHandler: [authenticate, requireNonGuest]}, async (request, reply) => {
 		const { userId } = request.user! as { userId: number };
 
 		//* Fetch user's 2FA status and secret from database
@@ -83,7 +83,7 @@ export default async function twofaRoutes(
 			tags: ['auth', '2fa'],
 			summary: 'Endpoint for disabling two-factor authentication'
 		},
-		preHandler: [authenticate]}, async (request, reply) => {
+		preHandler: [authenticate, requireNonGuest]}, async (request, reply) => {
 		const { userId } = request.user! as { userId: number };
 		const { code } = request.body as { code: string };
 
@@ -114,7 +114,7 @@ export default async function twofaRoutes(
 			tags: ['auth', '2fa'],
 			summary: 'For verifying that two-factor authentication is enabled'
 		},
-		preHandler: [authenticate]}, async (request, reply) => {
+		preHandler: [authenticate, requireNonGuest]}, async (request, reply) => {
 		const { userId } = request.user! as { userId: number };
 		const { code } = request.body as { code: string };
 

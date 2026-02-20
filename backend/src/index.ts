@@ -9,6 +9,7 @@ import swagger from '@fastify/swagger'
 import swaggerUI from '@fastify/swagger-ui'
 import authRoutes from './routes/auth.js';
 import multipart from '@fastify/multipart';
+import { dbCleanUpJob } from './error/backupCleanup.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -119,6 +120,7 @@ const start = async () => {
             `\t - 📡 SSE Chat endpoint: ${prodURL}/api/chat/stream?token=YOUR_JWT_TOKEN\n` + 
             `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
         )
+        dbCleanUpJob();
     } catch (err) {
         server.log.error(err);
         process.exit(1);
