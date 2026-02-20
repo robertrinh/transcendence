@@ -132,14 +132,13 @@ class GameInstance:
         is_p1 = self.db_p1_id == db_user_id or self.db_p1_id == -1
         if connection not in self.players:
             self.players.append(connection)
+    def log(self, message: str):
+        print(f"lobby {self.db_game_id}: {message}")
+
         game_player_id = 1 if is_p1 else 2
         await connection.send(json.dumps(
             {'type': 'ID', 'player_id': game_player_id}
         ))
-        print(
-            f"lobby {self.lobby_id}: connection {connection} added with"
-            f" database id: {db_user_id}"
-        )
 
     def has_player_conn(self, connection: ServerConnection):
         return connection in self.players
@@ -164,7 +163,7 @@ class GameInstance:
             broadcast(self.players, json.dumps(message))
             raise Exception(f"Lobby {self.lobby_id} timed out")
         self.game_running = True
-        print(f"lobby {self.lobby_id}: all players connected, starting...")
+        self.log("all players connected, starting...")
         while self.game_running:
             broadcast(self.players, json.dumps(game_loop(self)))
             await asyncio.sleep(TICK/1000)
@@ -302,7 +301,7 @@ def handle_score(game: GameInstance):
             winner_id = game.db_p1_id
         else:
             winner_id = game.db_p2_id
-        print(f"lobby {game.lobby_id}: game finished, uploading results...")
+        game.log("game finished, uploading results...")
         try:
             timestamp = '{:%Y-%m-%d %H:%M:%S}'.format(datetime.now())
             auth_header = "Basic " + b64encode(
@@ -317,11 +316,9 @@ def handle_score(game: GameInstance):
                     "finished_at": timestamp
                 }
             )
-            print(
-                f"lobby {game.lobby_id}: upload response status code "
-                f"{response.status_code}")
+            game.log(f"upload response code {response.status_code}")
         except requests.ConnectionError as e:
-            print(f"lobby {game.lobby_id}: {repr(e)}")
+            game.log(f"{repr(e)}")
         game.kill()
 
 
