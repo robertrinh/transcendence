@@ -1,5 +1,4 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import { getMessages } from '../controllers/chatcontrollers.js';
 import { verifyToken } from '../auth/utils.js';  // NEW: Import token verification
 import { db } from '../databaseInit.js'
 import { userService } from '../services/userService.js';
@@ -259,13 +258,6 @@ function broadcastSSE(message: any, excludeConnectionId?: string) {
     
     console.log(`✅ Message broadcasted to ${broadcastCount} connections`);
 }
-
-// Get messages (HTTP endpoint for initial load)
-fastify.get('/messages', {
-    schema: {
-        tags: ['chat'],
-        summary: 'Get chat messages'
-    }, preHandler: [authenticate]}, getMessages);
 
 // Chat status endpoint
 fastify.get('/status', {
