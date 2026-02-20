@@ -258,24 +258,4 @@ function broadcastSSE(message: any, excludeConnectionId?: string) {
     
     console.log(`✅ Message broadcasted to ${broadcastCount} connections`);
 }
-
-// Chat status endpoint
-fastify.get('/status', {
-    schema: {
-        tags: ['chat'],
-        summary: 'Get the active users of the chat'
-    }}, async (request, reply) => {
-    const activeUsers = Array.from(sseConnections.values())
-        .filter(conn => conn.username)
-        .map(conn => ({
-            username: conn.username,
-            connectedAt: conn.connectedAt
-        }));
-    
-    return {
-        activeConnections: sseConnections.size,
-        activeUsers,
-        timestamp: new Date().toISOString()
-    };
-});
 }
