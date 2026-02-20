@@ -4,6 +4,7 @@ import random as rand
 import requests
 import sys
 from websockets import ServerConnection, broadcast
+from player import Player
 from ball import Ball
 from lib import Vector2, Rect
 from player_paddle import PlayerPaddle
@@ -49,9 +50,7 @@ class Point:
 
 
 class GameInstance:
-    lobby_id: str  # for private lobbies
-    is_private = False
-    players: [ServerConnection]
+    players: list[Player]
     connections: list[ServerConnection]
     game_running = False
     is_done = False
@@ -73,9 +72,7 @@ class GameInstance:
     db_p1_id: int
     db_p2_id: int
 
-    def __init__(
-            self, db_game_id: int, db_p1_id: int, db_p2_id: int, lobby_id=None
-    ):
+    def __init__(self, db_game_id: int, db_p1_id: int, db_p2_id: int):
         self.ball = Ball(
             BALL_SPEED, BALL_SPEED * 2, BALL_RADIUS)
         self.ball.set_start(ARENA_HEIGHT, ARENA_WIDTH, random_ball_vec())
@@ -108,9 +105,6 @@ class GameInstance:
         self.p2_paddle.shape.y = 0
         self.p2_score = 0
 
-    def set_is_private(self):
-        self.is_private = True
-
     def kill(self):
         self.set_game_start()
         self.players.clear()
@@ -121,23 +115,16 @@ class GameInstance:
         self.game_running = False
         self.is_done = True
 
-    async def add_player(self, connection: ServerConnection, db_user_id=None):
-        if self.is_private:
-            if db_user_id is None:
-                self.players.append(connection)
-                return
-            # this means the player is already in the instance but we just
-            # received their db_id
-            if self.db_p1_id == -1:
-                self.db_p1_id = db_user_id
-        is_p1 = self.db_p1_id == db_user_id or self.db_p1_id == -1
-        if connection not in self.players:
-            self.players.append(connection)
     def log(self, message: str):
         print(f"lobby {self.db_game_id}: {message}")
 
+    async def add_player(self, player: Player):
+        is_p1 = self.db_p1_id is player.user_id
         game_player_id = 1 if is_p1 else 2
-        await connection.send(json.dumps(
+        self.players.append(player)
+        self.connections.append(player.connection)
+        self.log(f"player \"{player.username}\" added")
+        await player.connection.send(json.dumps(
             {'type': 'ID', 'player_id': game_player_id}
         ))
 
@@ -161,8 +148,8 @@ class GameInstance:
             await asyncio.sleep(sec_pause)
         if not self.lobby_full():
             message = {'type': 'ERROR', 'message': 'Lobby timed out'}
-            raise Exception(f"Lobby {self.lobby_id} timed out")
             broadcast(self.connections, json.dumps(message))
+            raise Exception(f"lobby {self.db_game_id} timed out")
         self.game_running = True
         self.log("all players connected, starting...")
         while self.game_running:

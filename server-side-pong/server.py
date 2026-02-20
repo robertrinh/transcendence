@@ -4,9 +4,10 @@ import random as rand
 import sys
 import signal
 from time import time
-from websockets import ServerConnection, Request
+from websockets import ServerConnection, Request, ConnectionClosed
 from websockets.asyncio.server import serve
 from gameinstance import GameInstance
+from player import Player
 from os import getenv
 import jwt
 
@@ -18,17 +19,17 @@ if JWT_SECRET is None:
 IP = "0.0.0.0"
 PORT = 8081  # change to envvar
 
-CONNECTED = set()
+CONNECTED: list[Player] = []
 LOBBIES: [GameInstance] = []
 
 
 def add_game_instance(
-        db_game_id: int, db_p1_id: int, db_p2_id: int,
-        lobby_id=None) -> GameInstance:
+        db_game_id: int, db_p1_id: int, db_p2_id: int) -> GameInstance:
     """
     The gameserver receives all the game information from the backend server.
     """
-    LOBBIES.append(GameInstance(db_game_id, db_p1_id, db_p2_id, lobby_id))
+    print(f"creating lobby with id: {db_game_id}")
+    LOBBIES.append(GameInstance(db_game_id, db_p1_id, db_p2_id))
     return LOBBIES[-1]
 
 
@@ -69,50 +70,20 @@ async def reap_lobbies():
 
 
 async def process_message(
-        message_type: str, message_content, websocket: ServerConnection):
-    if message_type == 'HOST_LOBBY':
-        # we don't know have a game id at this point yet
-        game_instance = add_game_instance(
-            -1,
-            -1,
-            -1,
-            message_content['lobby_id']
-        )
-        game_instance.set_is_private()
-        await game_instance.add_player(websocket)
-        response = {
-            'type': 'WHOAREYOU'
-        }
-        await websocket.send(json.dumps(response))
-        return
+        message_type: str, message_content, player: Player):
     if message_type == 'START_GAME':
-        if 'lobby_id' in message_content.keys():
-            game_instance = find_game_instance_by_lobby_id(
-                message_content['lobby_id'])
-            game_instance.db_game_id = message_content['game_id']
-            game_instance.db_p2_id = message_content['player2_id']
-        else:
-            game_instance = find_game_instance_by_db_game_id(message_content['game_id'])
-            if game_instance is None:
-                add_game_instance(
-                    message_content['game_id'],
-                    message_content['player1_id'],
-                    message_content['player2_id']
-                )
-        response = {
-            'type': 'WHOAREYOU'
-        }
-        await websocket.send(json.dumps(response))
-        return
-    if message_type == 'ID':
-        # connect the player to the game instance
-        player_id = message_content['id']
-        lobby = find_game_instance_by_player_id(player_id)
-        if lobby is None:
-            lobby = find_game_instance_by_connection(websocket)
-        await lobby.add_player(websocket, player_id)
-        if not lobby.lobby_full():
-            asyncio.create_task(lobby.start_lobby())
+        game_instance = find_game_instance(
+            db_game_id=message_content['game_id']
+        )
+        if game_instance is None:
+            game_instance = add_game_instance(
+                message_content['game_id'],
+                message_content['player1_id'],
+                message_content['player2_id']
+            )
+        await game_instance.add_player(player)
+        if not game_instance.lobby_full():
+            asyncio.create_task(game_instance.start_lobby())
         return
     # The message contains a game state update at this point so always look for
     # the related lobby first
@@ -121,12 +92,12 @@ async def process_message(
         return
     match message_type:
         case 'MOVE_DOWN':
-            if websocket == lobby.players[0]:
+            if player.connection == lobby.players[0].connection:
                 lobby.p1_input.append(['DOWN', message_content['timestamp']])
             else:
                 lobby.p2_input.append(['DOWN', message_content['timestamp']])
         case 'MOVE_UP':
-            if websocket == lobby.players[0]:
+            if player.connection == lobby.players[0].connection:
                 lobby.p1_input.append(['UP', message_content['timestamp']])
             else:
                 lobby.p2_input.append(['UP', message_content['timestamp']])
@@ -135,27 +106,65 @@ async def process_message(
 
 
 async def handler(websocket: ServerConnection):
-    CONNECTED.add(websocket)
     print(f"connection added: {websocket}")
     async for message in websocket:
         try:
             message_content = json.loads(message)
             validate_message(message_content)
             message_type = message_content['type']
-            await process_message(message_type, message_content, websocket)
+            player = find_player(websocket)
+            await process_message(message_type, message_content, player)
+        except ConnectionClosed as e:
+            print(f"connection closed: {websocket}: {e}")
+            break
         except Exception as e:
             print(e, file=sys.stderr)
             continue
+
+
+async def add_player(player: Player):
+    i = 0
+    while i < len(CONNECTED):
+        conn_player: Player = CONNECTED[i]
+        # remove any old connections from the same player, new connections have
+        # priority
+        if conn_player.user_id is player.user_id:
+            await conn_player.connection.close(
+                reason="You have initiated a new request, you are probably "
+                "logged in on separate browser tabs"
+            )
+        i += 1
+    CONNECTED.append(player)
 
 
 async def process_request(connection: ServerConnection, request: Request):
     try:
         jwt_encoded = request.headers['Bearer']
         jwt_decoded = jwt.decode(jwt_encoded, JWT_SECRET, algorithms="HS256")
-        print(jwt_decoded)
+        # validate jwt
+        required_fields = ["userId", "username", "iat", "exp"]
+        for field in required_fields:
+            if field not in jwt_decoded.keys():
+                raise RuntimeError
+        user_id = jwt_decoded["userId"]
+        username = jwt_decoded["username"]
+        iat = jwt_decoded["iat"]
+        exp = jwt_decoded["exp"]
+        await add_player(Player(user_id, username, iat, exp, connection))
     except Exception as e:
-        print(e, file=sys.stderr)
-        await connection.close()
+        print(
+            "An error occured when processing the request of connection: "
+            f"{connection}: {e}", file=sys.stderr
+        )
+        if e is KeyError:
+            print(
+                f"Missing Bearer header from connection: {connection}",
+                file=sys.stderr
+            )
+        try:
+            await connection.close()
+        except Exception:
+            pass
 
 
 async def main(ip: str, port: int):
@@ -165,7 +174,9 @@ async def main(ip: str, port: int):
     loop.add_signal_handler(signal.SIGTERM, stop.set_result, signal.SIGTERM)
     loop.add_signal_handler(signal.SIGINT, stop.set_result, signal.SIGINT)
     asyncio.create_task(reap_lobbies())
-    async with serve(handler, ip, port, process_request=process_request) as server:
+    async with serve(
+        handler, ip, port, process_request=process_request
+    ) as server:
         print("Game server is running")
         await stop
         signal_print = None
