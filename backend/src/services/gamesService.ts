@@ -96,10 +96,6 @@ export const gamesService = {
 		catch (err:any) {
 			dbError(err);
 		}
-	},
-
-	removeGame: (id: number) => {
-		return db.prepare('DELETE FROM games WHERE id = ?').run(id)
 	}
 }
 
