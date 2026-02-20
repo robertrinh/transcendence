@@ -32,33 +32,26 @@ def add_game_instance(
     return LOBBIES[-1]
 
 
-def find_game_instance_by_db_game_id(db_game_id: int) -> GameInstance | None:
-    for lobby in LOBBIES:
-        if lobby.db_game_id == db_game_id:
-            return lobby
+def find_game_instance(
+        db_game_id=None | int, player=None | Player
+        ) -> GameInstance | None:
+    lobby: GameInstance
+    if db_game_id is not None:
+        for lobby in LOBBIES:
+            if lobby.db_game_id == db_game_id:
+                return lobby
+    if player is not None:
+        for lobby in LOBBIES:
+            if player in lobby.players:
+                return lobby
     return None
 
 
-def find_game_instance_by_lobby_id(lobby_id: str) -> GameInstance | None:
-    for lobby in LOBBIES:
-        if lobby.lobby_id == lobby_id:
-            return lobby
-    return None
-
-
-def find_game_instance_by_connection(
-        websocket: ServerConnection) -> GameInstance | None:
-    for lobby in LOBBIES:
-        if lobby.has_player_conn(websocket):
-            return lobby
-    return None
-
-
-def find_game_instance_by_player_id(player_id: int) -> GameInstance | None:
-    for lobby in LOBBIES:
-        if lobby.has_player_id(player_id):
-            return lobby
-    return None
+def find_player(connection: ServerConnection):
+    player: Player
+    for player in CONNECTED:
+        if player.connection is connection:
+            return player
 
 
 def validate_message(message_content: dict):
@@ -123,7 +116,7 @@ async def process_message(
         return
     # The message contains a game state update at this point so always look for
     # the related lobby first
-    lobby = find_game_instance_by_connection(websocket)
+    lobby = find_game_instance(player=player)
     if lobby is None:
         return
     match message_type:
