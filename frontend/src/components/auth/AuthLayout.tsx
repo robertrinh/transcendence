@@ -48,7 +48,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
 			{/* Ping pong icon with drop shadow from game of life*/}
 			<div className="fixed top-6 left-6 z-50">
 				<img 
-					src="/public/ping-pong-icon.png" 
+					src="/ping-pong-icon.png" 
 					alt="Pong Logo" 
 					className="h-16 w-auto object-contain transition-[filter] duration-700"
 					style={{ 
@@ -81,7 +81,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
 				<div className="flex items-center justify-center gap-2 text-white/80 text-xs">
 					<span>Made at</span>
 					<img 
-						src="/public/logo_codam_white.png" 
+						src="/logo_codam_white.png" 
 						alt="Codam Logo" 
 						className="h-4 w-auto object-contain invert-0 opacity-70"
 					/>

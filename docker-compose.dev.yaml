@@ -32,22 +32,6 @@ services:
       - CHOKIDAR_USEPOLLING=true  # file watching
     depends_on:
       - backend
-      - gameserver
-    restart: always
-    networks:
-      - transcendence
-  
-  gameserver:
-    container_name: gameserver
-    build:
-      context: ./server-side-pong
-      dockerfile: Dockerfile.dev
-    ports:
-      - 8081:8081
-    environment:
-      - PYTHONUNBUFFERED=1
-    env_file:
-      - ./server-side-pong/.env
     restart: always
     networks:
       - transcendence

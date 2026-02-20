@@ -1,20 +1,21 @@
 import Button from "./button";
+import { infoBoxType, InfoBox } from "./infoBox";
 
 interface SearchingScreenProps {
 	onCancel: () => void
+	message: string
 }
 
-export default function SearchingScreen ({onCancel}: SearchingScreenProps) {
+export default function SearchingScreen ({onCancel, message}: SearchingScreenProps) {
 	return (
-		<div>
-			Searching for match...
-			{/* insert timer, count up */}
+		<InfoBox type={infoBoxType.Neutral}>
+			<p>{message}</p>
 			<Button 
 				id='btn-cancel'
 				className={"bg-indigo-500 text-white py-2 px-8 uppercase rounded-xl"}
 				buttonName='cancel'
 				onClick={onCancel}
-			/>	
-		</div>
+			/>
+		</InfoBox>
 	)
 }

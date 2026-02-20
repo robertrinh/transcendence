@@ -7,11 +7,12 @@ export type Screen =
     | 'tournament'
     | 'create-tournament'
     | 'searching'
+    | 'searching-private'
     | 'game'
     | 'timeout'
-    | 'error'
-    | 'websocket-connecting'
-    | 'websocket-closed'
+    | 'info-bad'
+    | 'info-neutral'
+    | 'info-good'
 
 export type GameMode = 
     | 'none'

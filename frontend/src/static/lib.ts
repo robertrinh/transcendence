@@ -30,6 +30,7 @@ export const ballRadius = 15
 export const ballSize = ballRadius * 2
 // physics, the speeds need to be equal to the server
 const targetFPS = 60
+export const heartbeatFrequencyMS = 3000
 export const clientTick = 1000 / targetFPS
 const ballSpeedPerTick = 0.25
 const paddleSpeedPerTick = 0.5
