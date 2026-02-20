@@ -54,28 +54,6 @@ class ChatService {
         return newMessage;
     }
 
-    getMessages(roomId?: string, limit: number = 50): ChatMessage[] {
-        let query = `
-            SELECT id, user_id, username, message, timestamp, room_id 
-            FROM chat_messages 
-            WHERE (? IS NULL OR room_id = ? OR (room_id IS NULL AND ? IS NULL))
-            ORDER BY timestamp DESC 
-            LIMIT ?
-        `;
-        
-        const stmt = db.prepare(query);
-        const rows = stmt.all(roomId || null, roomId || null, roomId || null, limit) as DbChatMessage[];
-        
-        return rows.map((row) => ({
-            id: row.id.toString(),
-            userId: row.user_id.toString(),
-            username: row.username,
-            message: row.message,
-            timestamp: new Date(row.timestamp),
-            roomId: row.room_id || undefined
-        })).reverse();
-    }
-
     addUser(userId: string, username: string): User {
         const stmt = db.prepare(`
             INSERT OR REPLACE INTO chat_users (user_id, username, is_online, last_seen)
@@ -139,22 +117,6 @@ export const sendMessage = async (request: FastifyRequest, reply: FastifyReply) 
     } catch (error) {
         console.error('Error sending message:', error);
         return reply.status(500).send({ error: 'Failed to send message' });
-    }
-};
-
-export const getMessages = async (request: FastifyRequest, reply: FastifyReply) => {
-    try {
-        const query = request.query as any;
-        const roomId = query.roomId;
-        const limit = parseInt(query.limit) || 50;
-
-        const messages = chatService.getMessages(roomId, limit);
-        console.log(`Retrieved ${messages.length} messages`);
-        
-        return reply.send(messages);
-    } catch (error) {
-        console.error('Error getting messages:', error);
-        return reply.status(500).send({ error: 'Failed to get messages' });
     }
 };
 

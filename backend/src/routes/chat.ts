@@ -1,8 +1,8 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import { getMessages } from '../controllers/chatcontrollers.js';
 import { verifyToken } from '../auth/utils.js';  // NEW: Import token verification
 import { db } from '../databaseInit.js'
 import { userService } from '../services/userService.js';
+import { authenticate } from '../auth/middleware.js';
 
 // Store active SSE connections and messages
 const sseConnections = new Map<string, any>();
@@ -120,22 +120,10 @@ fastify.post('/join', {
         schema: {
             tags: ['chat'],
             summary: 'Join chat endpoint with JWT verification'
-        }},
+        }, preHandler: [authenticate]},
         async (request, reply) => {
     try {
-        //  Get token from Authorization header
-        const authHeader = request.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return reply.status(401).send({ error: 'No token provided' });
-        }
-
-        const token = authHeader.split(' ')[1];
-        const payload = verifyToken(token);
-
-        if (!payload) {
-            return reply.status(401).send({ error: 'Invalid or expired token' });
-        }
-
+        const payload = request.user!;
         const userExistsJoin = db.prepare('SELECT id FROM users WHERE id = ?').get(payload.userId);
         if (!userExistsJoin) {
             return reply.status(401).send({ error: 'Account no longer exists' });
@@ -180,21 +168,9 @@ fastify.post('/send', {
         schema: {
             tags: ['chat'],
             summary: 'Send message endpoint with JWT verification'
-        }}, async (request, reply) => {
+        }, preHandler: [authenticate]}, async (request, reply) => {
     try {
-        //  Get token from Authorization header
-        const authHeader = request.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return reply.status(401).send({ error: 'No token provided' });
-        }
-
-        const token = authHeader.split(' ')[1];
-        const payload = verifyToken(token);
-
-        if (!payload) {
-            return reply.status(401).send({ error: 'Invalid or expired token' });
-        }
-
+        const payload = request.user!;
         const userExistsSend = db.prepare('SELECT id FROM users WHERE id = ?').get(payload.userId);
         if (!userExistsSend) {
             return reply.status(401).send({ error: 'Account no longer exists' });
@@ -282,31 +258,4 @@ function broadcastSSE(message: any, excludeConnectionId?: string) {
     
     console.log(`✅ Message broadcasted to ${broadcastCount} connections`);
 }
-
-// Get messages (HTTP endpoint for initial load)
-fastify.get('/messages', {
-    schema: {
-        tags: ['chat'],
-        summary: 'Get chat messages'
-    }}, getMessages);
-
-// Chat status endpoint
-fastify.get('/status', {
-    schema: {
-        tags: ['chat'],
-        summary: 'Get the active users of the chat'
-    }}, async (request, reply) => {
-    const activeUsers = Array.from(sseConnections.values())
-        .filter(conn => conn.username)
-        .map(conn => ({
-            username: conn.username,
-            connectedAt: conn.connectedAt
-        }));
-    
-    return {
-        activeConnections: sseConnections.size,
-        activeUsers,
-        timestamp: new Date().toISOString()
-    };
-});
 }

@@ -10,6 +10,7 @@ export default async function usersRoutes (
     options: FastifyPluginOptions
 ) {
 
+    //willl we use it?? for leaderboard maybe? otherwise delete!
     fastify.get('/', {
         schema: {
             tags: ['users'],
@@ -28,13 +29,6 @@ export default async function usersRoutes (
         },
         preHandler: [authenticate, requireNonGuest]
     }, userController.anonymizeProfile);
-    
-    fastify.get('/:id', {
-        schema: {
-            tags: ['users'],
-            summary: 'Get a user by ID',
-            params: IDSchema
-        }}, userController.getUserByID);
     
     fastify.get('/profile/me', {
         schema: {

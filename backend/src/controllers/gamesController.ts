@@ -88,20 +88,5 @@ export const gamesController = {
 			success: true,
 			message: 'Game finished'
 		}
-	},
-	
-	deleteGame: async (req: FastifyRequest, reply: FastifyReply) => {
-		const { id } = req.params as { id: number }
-		const result = gamesService.removeGame(id);
-		if (result.changes == 0)
-			throw new ApiError(404, 'Game not found');
-		return { 
-			success: true, 
-			message: 'Game deleted' 
-		}
 	}
-
-	//What happens if a player exits mid game? 
-	//What are errors that can happen?
-	//need to add some clean up funcs if something is left opened or so
 }
