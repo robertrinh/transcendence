@@ -53,7 +53,7 @@ const Login: React.FC<LoginProps> = ({
 
 			console.log('Response status:', response.status);
 			const data = await response.json();
-			console.log('Response data:', data);
+			console.log('Response data:', data); // remove this for production!!!!
 
 			if (response.ok) {
 				//! DELETE LATER: Force 2FA popup for testing
