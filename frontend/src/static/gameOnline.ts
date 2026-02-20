@@ -218,7 +218,6 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
                     playerTwo.paddle.color = p1Color
                 }
                 console.log(`You are player ${playerID}`)
-                websocket.send(JSON.stringify({type: 'READY'}))
                 break
             case "SCORE":
                 scoreReceived = true
@@ -229,25 +228,6 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
                     case "p2":
                         p2Score++
                         break
-                }
-                break
-            case "WHOAREYOU":
-                try {
-                    const { fetchWithAuth } = await import('../config/api');
-                    const response = await fetchWithAuth("/api/users/profile/me");
-                    if (!response.ok) {
-                        throw Error("Failed to process message 'WHOAREYOU'; backend error")
-                    }
-                    const parsed = await response.json()
-                    websocket.send(JSON.stringify(
-                        {
-                            'type': 'ID',
-                            'id': parsed.profile.id
-                        }
-                    ))
-                }
-                catch (error) {
-                    console.log(error)
                 }
                 break
             default:

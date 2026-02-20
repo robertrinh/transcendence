@@ -21,6 +21,7 @@ export interface TournamentParticipant {
 
 export interface Game {
 	id: number;
+	lobby_id: string | null;
 	player1_id: number | null;
 	player2_id: number | null;
 	score_player1: number | null;

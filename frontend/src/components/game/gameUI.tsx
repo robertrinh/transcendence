@@ -95,12 +95,6 @@ export default function GameUI({
 							navigator.clipboard.writeText(lobbyElement.value)
 						}}
 						onJoinOwn={() => {
-							websocket.current!.send(
-								JSON.stringify({
-									"type": "HOST_LOBBY",
-									"lobby_id": lobbyId
-								})
-							)
 							setGameMode('online')
 							setScreen('searching-private')
 						}}

@@ -60,24 +60,25 @@ export const gamesController = {
 		const player = userService.fetchUser(player_id) as Player;
 		if (player.status === 'playing' || player.status === 'searching')
 			throw new ApiError(400, "player already playing");
-		const queue = gamesService.hostLobby(player_id);
-		return {success: true, data: queue, message: 'Player created private game'}
+		const game = gamesService.hostLobby(player_id);
+		return {success: true, data: game, message: 'Player created private game'}
 	},
 
 	joinLobby: async (req: FastifyRequest, reply: FastifyReply) => {
 		const player_id = req.user!.userId;
 		const { lobby_id } = req.body as { lobby_id: string }
-
 		const player = userService.fetchUser(player_id) as Player;
-		if (player.status === 'playing' || player.status === 'searching')
-			throw new ApiError(400, "player already playing");
-
-		const game_queue = gamesService.fetchlobby(lobby_id);
-		if (game_queue === undefined)
-			throw new ApiError(404, 'lobby not found')
-
-		const game = gamesService.createGame(game_queue.player_id, player_id);
-		return {success: true, data: game, message: 'Game created, connect to gameserver'}
+		if (player.status === 'playing')
+			throw new ApiError(400, 'You are already playing a game');
+		const privateGame = gamesService.fetchPrivateGame(lobby_id)
+		if (!privateGame) {
+			throw new ApiError(400, "Private game not found")
+		}
+		const gameJoinResult = gamesService.joinLobby(player_id, lobby_id)
+		if (!gameJoinResult) {
+			return {success: false, message: 'Waiting for opponent'}
+		}
+		return {success: true, data: gameJoinResult, message: 'Game found, connect to gameserver'}
 	},
 
 	finishGame: async (req: FastifyRequest, reply: FastifyReply) => {
