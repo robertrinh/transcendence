@@ -1,13 +1,16 @@
 import {useState, useEffect, useRef} from 'react'
 import { fetchWithAuth } from '../config/api'
 import GameUI from '../components/game/gameUI.js'
-import { Screen, GameMode } from '../components/game/types.js'
+import useGameStore from '../components/util/gameStore.js'
+import { GameMode } from '../components/game/types.js'
 
 const intervalMilliseconds = 3000
 
 export default function Game() {
-  const [gameMode, setGameMode] = useState<GameMode>("none")
-  const [screen, setScreen] = useState<Screen>("main") 
+  const gameMode = useGameStore(set => set.gameMode)
+  const screen = useGameStore(set => set.screen)
+  const setScreen = useGameStore(set => set.setScreen)
+  const setGameMode = useGameStore(set => set.setGameMode)
   const [gameData, setGameData] = useState<any>(null)
   const [lobbyId, setLobbyId] = useState("")
   const [error, setError] = useState<string | null>(null)

@@ -7,6 +7,7 @@ import SearchingScreen from './searchingScreen.js';
 import  { TimeoutScreen, InfoScreen } from './timeoutScreen.js';
 import { Screen, GameMode } from './types.js'
 import { infoBoxType } from './infoBox.js';
+import  useGameStore  from '../util/gameStore.js';
 
 type gameProps = {
 	lobbyId: string;
@@ -44,8 +45,14 @@ function resizeGameUI(gameUI: HTMLElement) {
 }
 
 export default function GameUI({
-	screen, gameMode, lobbyId, error, websocket, setScreen, setGameMode,
+	lobbyId, error, websocket,
 	handleRandomPlayer, handleHostReq, joinLobbyReq, resetPlayerStatus}:gameProps) {
+
+    const screen = useGameStore(set => set.screen)
+    const gameMode = useGameStore(set => set.gameMode)
+    const setScreen = useGameStore(set => set.setScreen)
+    const setGameMode = useGameStore(set => set.setGameMode)
+
 	useEffect(() => {
 		const gameUI = document.getElementById("game-ui")
 		if (gameUI === null) {
