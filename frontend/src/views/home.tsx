@@ -66,7 +66,7 @@ const Home: React.FC<HomeProps> = ({ user }) => {
 					enabledClass="bg-black/20 text-brand-cyan border-brand-cyan/50 hover:bg-brand-cyan hover:border-brand-cyan hover:text-black"
 				/>
 				<MenuItem
-					label="Leaderboards"
+					label="Leaderboard"
 					oneLiner="View rankings and stats"
 					onClick={() => navigate('/leaderboard')}
 					enabled={true}

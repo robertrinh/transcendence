@@ -216,7 +216,7 @@ export default function Game() {
 
 return (
     <main className='w-80% m-auto my-4' id='main'>
-      <h1 className="text-4xl font-bold text-center mb-8">Pong Game</h1>
+      <h1 className="text-4xl text-brand-cyan font-bold text-center mb-8">Pong Game</h1>
 		<GameUI
 			screen={screen}
 			gameMode={gameMode}
