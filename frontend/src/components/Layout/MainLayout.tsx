@@ -359,7 +359,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                 <div className="w-80 bg-slate-800 border-l border-slate-600/70 flex flex-col overflow-hidden">
                     {/* Chat Header - Fixed */}
                     <div className="p-4 border-b border-slate-600/70 bg-slate-800 flex-shrink-0">
-                        <h3 className="font-semibold text-white">Chat</h3>
+                        <h3 className="font-semibold text-white">Chat Lobby</h3>
                     </div>
                     
                     {/* Chat Content - Flexible */}

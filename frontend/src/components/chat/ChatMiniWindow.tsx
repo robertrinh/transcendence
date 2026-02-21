@@ -421,7 +421,7 @@ if (user.is_anonymous) {
                             : 'text-slate-300 hover:text-white hover:bg-slate-600/80'
                     }`}
                 >
-                    Chat
+                    Lobby
                 </button>
                 <button
                     onClick={() => setActiveTab('friends')}
