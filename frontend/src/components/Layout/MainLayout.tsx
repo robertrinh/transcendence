@@ -117,7 +117,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                     <button
                                         ref={userButtonRef}
                                         onClick={() => setShowUserMenu(!showUserMenu)}
-                                        className="w-20 h-15 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold overflow-hidden border-2 border-white/50 hover:border-white transition-all shadow-md hover:shadow-lg cursor-pointer"
+                                        className="w-20 h-15 rounded-full bg-gradient-to-br from-brand-magenta to-brand-hotPink flex items-center justify-center text-white font-semibold overflow-hidden border-2 border-brand-hotPink/60 hover:border-brand-hotPink hover:shadow-[0_0_16px_rgba(255,20,147,0.4)] transition-all shadow-md hover:shadow-lg cursor-pointer"
                                     >
                                         {user.avatar_url ? (
                                             <img 

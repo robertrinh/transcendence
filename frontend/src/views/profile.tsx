@@ -54,7 +54,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
             <div className="bg-slate-800 rounded-lg border border-slate-600/70 p-6 mb-6">
                 <div className="flex items-center gap-6">
                     <div className="flex-shrink-0">
-                        <div className="w-24 h-24 bg-brand-cyan/80 rounded-full flex items-center justify-center overflow-hidden border-2 border-slate-600">
+                        <div className="w-24 h-24 bg-gradient-to-br from-brand-magenta to-brand-hotPink rounded-full flex items-center justify-center overflow-hidden border-2 border-brand-hotPink/60">
                             {avatarUrl ? (
                                 <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                             ) : (
