@@ -29,6 +29,7 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
     const [show2FASetup, setShow2FASetup] = useState(false);
     const [show2FADisable, setShow2FADisable] = useState(false);
     const [disableCode, setDisableCode] = useState('');
+    const [disable2FAError, setDisable2FAError] = useState('');
     const [showAnonymousConfirm, setShowAnonymousConfirm] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showPrivacyModal, setShowPrivacyModal] = useState(false);
@@ -203,9 +204,10 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
 
     const handleDisable2FA = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+        setDisable2FAError('');
+
         if (disableCode.length !== 6) {
-            showMessage('error', 'Please enter a valid 6-digit code');
+            setDisable2FAError('Please enter a valid 6-digit code');
             return;
         }
 
@@ -218,19 +220,20 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
             });
 
             const data = await response.json();
-            
+
             if (response.ok) {
                 showMessage('success', '2FA disabled successfully');
                 setShow2FADisable(false);
                 setDisableCode('');
+                setDisable2FAError('');
                 if (onUserUpdate) {
                     onUserUpdate({ ...user!, two_factor_enabled: false });
                 }
             } else {
-                showMessage('error', data.error || 'Failed to disable 2FA');
+                setDisable2FAError(data.error || 'Invalid 2FA code');
             }
         } catch (error) {
-            showMessage('error', 'Network error. Please try again.');
+            setDisable2FAError('Network error. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -528,11 +531,16 @@ const handleAnonymizeProfile = async () => {
                                 <input
                                     type="text"
                                     value={disableCode}
-                                    onChange={(e) => setDisableCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-500 focus:ring-2 focus:ring-brand-red focus:border-brand-red"
+                                    onChange={(e) => { setDisableCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setDisable2FAError(''); }}
+                                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-brand-orange"
                                     placeholder="000000"
                                     maxLength={6}
                                 />
+                                {disable2FAError && (
+                                    <div className="mt-2 p-3 bg-brand-red/10 border border-brand-red/40 rounded-lg">
+                                        <p className="text-brand-red text-sm">{disable2FAError}</p>
+                                    </div>
+                                )}
                             </div>
                             <div className="flex gap-3">
                                 <button
@@ -547,6 +555,7 @@ const handleAnonymizeProfile = async () => {
                                     onClick={() => {
                                         setShow2FADisable(false);
                                         setDisableCode('');
+                                        setDisable2FAError('');
                                     }}
                                     className="flex-1 bg-slate-600 text-slate-200 py-2 px-4 rounded-lg hover:bg-slate-500 border border-slate-500"
                                 >
@@ -891,7 +900,7 @@ const handleAnonymizeProfile = async () => {
                                                 </div>
                                             </div>
                                             <button
-                                                onClick={() => setShow2FADisable(true)}
+                                                onClick={() => { setShow2FADisable(true); setDisable2FAError(''); }}
                                                 className="bg-brand-red hover:opacity-90 text-white px-4 py-2 rounded-lg transition-colors font-medium"
                                             >
                                                 Disable
