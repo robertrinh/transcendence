@@ -18,6 +18,7 @@ export default {
                 purple: '#9D00FF',
                 hotPink: '#FF1493',
                 mint: '#00FFCC',
+                red: '#FF0040',
             },
         },
         fontFamily: {
