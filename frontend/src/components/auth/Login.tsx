@@ -153,7 +153,7 @@ const Login: React.FC<LoginProps> = ({
 								placeholder="Enter your username"
 								value={username}
 								onChange={(e) => setUsername(e.target.value)}
-								className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+								className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-mint focus:border-brand-mint transition-all"
 								required
 							/>
 						</div>
@@ -166,14 +166,14 @@ const Login: React.FC<LoginProps> = ({
 								placeholder="Enter your password"
 								value={password}
 								onChange={(e) => setPassword(e.target.value)}
-								className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+								className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-mint focus:border-brand-mint transition-all"
 								required
 							/>
 						</div>
 						<button
 							type="submit"
 							disabled={loading}
-							className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white p-3 rounded-lg hover:from-blue-500 hover:to-blue-400 disabled:opacity-50 transition-all font-medium shadow-lg shadow-blue-500/25"
+							className="w-full bg-brand-mint text-black p-3 rounded-lg hover:opacity-90 disabled:opacity-50 transition-all font-medium shadow-lg shadow-brand-mint/25"
 						>
 							{loading ? 'Logging in...' : 'Login'}
 						</button>
@@ -190,7 +190,7 @@ const Login: React.FC<LoginProps> = ({
 							Don't have an account?{' '}
 							<button
 								onClick={onSwitchToRegister}
-								className="text-blue-400 hover:text-blue-300 hover:underline transition-colors"
+								className="text-brand-mint hover:opacity-90 hover:underline transition-colors"
 							>
 								Register here
 							</button>
@@ -245,7 +245,7 @@ const Login: React.FC<LoginProps> = ({
 								type="text"
 								value={username}
 								onChange={(e) => setUsername(e.target.value)}
-								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-mint focus:border-brand-mint"
 								required
 							/>
 						</div>
@@ -258,7 +258,7 @@ const Login: React.FC<LoginProps> = ({
 								type="password"
 								value={password}
 								onChange={(e) => setPassword(e.target.value)}
-								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-mint focus:border-brand-mint"
 								required
 							/>
 						</div>
@@ -266,7 +266,7 @@ const Login: React.FC<LoginProps> = ({
 						<button
 							type="submit"
 							disabled={loading}
-							className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 disabled:opacity-50"
+							className="w-full bg-brand-mint text-black py-2 px-4 rounded-md hover:opacity-90 disabled:opacity-50 font-medium"
 						>
 							{loading ? 'Logging in...' : 'Login'}
 						</button>
@@ -277,7 +277,7 @@ const Login: React.FC<LoginProps> = ({
 							Don't have an account?{' '}
 							<button
 								onClick={onSwitchToRegister}
-								className="text-blue-500 hover:underline"
+								className="text-brand-mint hover:opacity-90 hover:underline font-medium"
 							>
 								Register here
 							</button>
@@ -288,7 +288,7 @@ const Login: React.FC<LoginProps> = ({
 							type="button"
 							onClick={handleContinueAsGuest}
 							disabled={guestLoading}
-							className="w-full bg-slate-500 text-white py-2 px-4 rounded-md hover:bg-slate-600 disabled:opacity-50 transition-colors"
+							className="w-full bg-transparent border border-brand-purple/60 text-brand-purple py-2 px-4 rounded-md hover:bg-brand-purple/20 disabled:opacity-50 transition-colors font-medium"
 						>
 							{guestLoading ? 'Signing in...' : 'Continue as Guest'}
 						</button>
