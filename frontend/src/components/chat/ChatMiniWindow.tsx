@@ -402,23 +402,25 @@ if (user.is_anonymous) {
             )}
             {/* Confirmation Popup */}
             {confirmation.action && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white p-4 rounded shadow-md text-center">
-                        <p className="text-sm text-gray-800">
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+                    <div className="bg-slate-800 border border-slate-600 rounded-lg shadow-xl max-w-sm w-full p-4 text-center">
+                        <p className="text-sm text-slate-200 font-sans">
                             Are you sure you want to{' '}
                             {confirmation.action === 'remove' ? 'remove' : 'block'}{' '}
-                            <strong>{confirmation.username}</strong>?
+                            <span className="font-medium text-brand-orange">{confirmation.username}</span>?
                         </p>
-                        <div className="mt-4 flex justify-center space-x-2">
+                        <div className="mt-4 flex justify-center gap-2">
                             <button
+                                type="button"
                                 onClick={handleConfirm}
-                                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                                className="px-4 py-2 bg-brand-red text-white rounded hover:opacity-90 transition-opacity text-sm font-medium"
                             >
                                 Yes
                             </button>
                             <button
+                                type="button"
                                 onClick={handleCancel}
-                                className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+                                className="px-4 py-2 bg-slate-600 text-slate-200 rounded hover:bg-slate-500 border border-slate-500 text-sm font-medium transition-colors"
                             >
                                 Cancel
                             </button>
@@ -431,7 +433,7 @@ if (user.is_anonymous) {
             <div className="flex border-b border-slate-600/70 bg-slate-700/80 flex-shrink-0">
                 <button
                     onClick={() => setActiveTab('chat')}
-                    className={`flex-1 py-2 px-3 text-xs font-medium transition-colors ${
+                    className={`flex-1 py-2 px-3 text-xs font-medium transition-colors rounded-lg ${
                         activeTab === 'chat'
                             ? 'bg-brand-orange/80 text-black'
                             : 'text-slate-300 hover:text-white hover:bg-slate-600/80'
@@ -441,7 +443,7 @@ if (user.is_anonymous) {
                 </button>
                 <button
                     onClick={() => setActiveTab('friends')}
-                    className={`flex-1 py-2 px-3 text-xs font-medium transition-colors ${
+                    className={`flex-1 py-2 px-3 text-xs font-medium transition-colors rounded-lg ${
                         activeTab === 'friends'
                             ? 'bg-brand-orange/80 text-black'
                             : 'text-slate-300 hover:text-white hover:bg-slate-600/80'
@@ -451,7 +453,7 @@ if (user.is_anonymous) {
                 </button>
                 <button
                     onClick={() => setActiveTab('blocked')}
-                    className={`flex-1 py-2 px-3 text-xs font-medium transition-colors ${
+                    className={`flex-1 py-2 px-3 text-xs font-medium transition-colors rounded-lg ${
                         activeTab === 'blocked'
                             ? 'bg-brand-orange/80 text-black'
                             : 'text-slate-300 hover:text-white hover:bg-slate-600/80'
@@ -531,21 +533,13 @@ if (user.is_anonymous) {
                                                     );
                                                 }}
                                                 className={`font-medium hover:underline shrink-0 ${
-                                                            message.isPrivate ? 'text-brand-purple' : 'text-brand-orange'
-                                                        }`}
-                                                        onClick={() => {
-                                                            if (message.username !== user.username) {
-                                                                viewUserProfile(message.username);
-                                                            } else {
-                                                                showToast("This is your own profile");
-                                                            }
-                                                        }}
-                                                        title={`View ${message.username}'s profile`}
-                                                    >
-                                                        {message.username}
+                                                    message.isPrivate ? 'text-brand-purple' : 'text-brand-orange'
+                                                }`}
+                                            >
+                                                {message.username}
                                                 {message.isPrivate && message.toUser && (
                                                     <span className="text-brand-orange"> → {message.toUser}</span>
-                                                        )}
+                                                )}
                                             </button>
                                             <span className={message.isPrivate ? 'text-brand-orange/90' : 'text-white'}>: {message.message}</span>
                                             {message.username !== user.username && showPopover && (
@@ -553,21 +547,21 @@ if (user.is_anonymous) {
                                                     ref={popoverRef}
                                                     className="absolute left-0 top-full mt-0.5 z-50 bg-slate-700 border border-slate-600 rounded shadow-lg py-1 min-w-[140px]"
                                                 >
-                                                            <button
+                                                    <button
                                                         type="button"
                                                         onClick={() => { viewUserProfile(message.username); setActionPopover(null); }}
                                                         className="w-full text-left px-3 py-1.5 text-slate-200 hover:bg-slate-600 text-xs"
-                                                            >
+                                                    >
                                                         View profile
-                                                            </button>
+                                                    </button>
                                                     {!friends.some(f => f.username === message.username) ? (
-                                                            <button
+                                                        <button
                                                             type="button"
                                                             onClick={() => { addFriend(message.username); setActionPopover(null); }}
                                                             className="w-full text-left px-3 py-1.5 text-brand-acidGreen hover:bg-slate-600 text-xs"
-                                                            >
+                                                        >
                                                             Add friend
-                                                            </button>
+                                                        </button>
                                                     ) : (
                                                         <button
                                                             type="button"
@@ -583,10 +577,10 @@ if (user.is_anonymous) {
                                                         className="w-full text-left px-3 py-1.5 text-brand-red hover:bg-slate-600 text-xs"
                                                     >
                                                         Block
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     );
                                 })
                             )}
@@ -629,33 +623,63 @@ if (user.is_anonymous) {
 
             {/* Friends Tab */}
             {activeTab === 'friends' && (
-                <div className="flex-1 min-h-0 overflow-y-auto p-3">
-                    <div className="space-y-2">
+                <div className="flex-1 min-h-0 overflow-y-auto p-3 bg-slate-800/50 font-mono text-xs flex flex-col gap-4">
+                    <div className="space-y-0.5">
                         {friends.length === 0 ? (
-                            <div className="text-center text-slate-400 text-sm py-4">
-                                No friends yet. Add friends from chat messages!
+                            <div className="text-center text-slate-400 py-6 font-sans text-sm space-y-1">
+                                <div>No friends yet.</div>
+                                <div>Add friends from chat (click a username).</div>
                             </div>
                         ) : (
                             friends.map((friend) => (
-                                <div key={friend.id} className="flex items-center justify-between p-2 bg-slate-600/60 border border-slate-500/50 rounded">
-                                    <div className="flex items-center space-x-2">
-                                        <div className={`w-2 h-2 rounded-full ${friend.isOnline ? 'bg-brand-acidGreen' : 'bg-slate-500'}`}></div>
-                                        <span className="text-sm font-medium text-slate-200">{friend.username}</span>
-                                    </div>
-                                    <div className="flex items-center space-x-1">
+                                <div
+                                    key={friend.id}
+                                    className="py-1.5 group border-b border-slate-600/40 last:border-0 flex flex-col gap-0.5"
+                                >
+                                    <div className="flex items-center gap-x-2">
+                                        <span
+                                            className={`inline-block w-1.5 h-1.5 rounded-full shrink-0 ${
+                                                friend.isOnline ? 'bg-brand-acidGreen' : 'bg-slate-500'
+                                            }`}
+                                            title={friend.isOnline ? 'Online' : 'Offline'}
+                                        />
                                         <button
-                                            onClick={() => startPrivateChat(friend.username)}
-                                            className="text-brand-purple hover:text-brand-magenta text-sm bg-slate-600 rounded px-2 py-1"
-                                            title="Private chat"
+                                            type="button"
+                                            onClick={() => viewUserProfile(friend.username)}
+                                            className="font-medium text-brand-orange hover:text-brand-mint hover:underline"
                                         >
-                                            💬
+                                            {friend.username}
                                         </button>
+                                        <span className="text-slate-500">
+                                            {friend.isOnline ? 'online' : 'offline'}
+                                        </span>
+                                    </div>
+                                    <div className="pl-3.5 opacity-80 group-hover:opacity-100 flex items-center gap-1 flex-shrink-0">
                                         <button
+                                            type="button"
+                                            onClick={() => startPrivateChat(friend.username)}
+                                            className="text-brand-purple hover:text-brand-magenta hover:underline"
+                                            title="Whisper"
+                                        >
+                                            Whisper
+                                        </button>
+                                        <span className="text-slate-600">|</span>
+                                        <button
+                                            type="button"
                                             onClick={() => confirmAction('remove', friend.username)}
-                                            className="text-red-400 hover:text-red-300 text-sm bg-slate-600 rounded px-2 py-1"
+                                            className="text-brand-red hover:underline"
                                             title="Remove friend"
                                         >
-                                            🗑️
+                                            Remove
+                                        </button>
+                                        <span className="text-slate-600">|</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => confirmAction('block', friend.username)}
+                                            className="text-brand-red hover:underline"
+                                            title="Block"
+                                        >
+                                            Block
                                         </button>
                                     </div>
                                 </div>
@@ -663,23 +687,29 @@ if (user.is_anonymous) {
                         )}
                     </div>
 
-                    {/* Add Friend Section */}
-                    <div className="mt-4 pt-3 border-t border-slate-600/70">
-                        <div className="text-xs text-slate-400 mb-2">Quick add from recent users:</div>
-                        <div className="space-y-1">
+                    {/* Quick add from recent chatters */}
+                    <div className="pt-2 border-t border-slate-600/70">
+                        <div className="text-slate-400 mb-1.5 font-sans text-xs">Recent chatters</div>
+                        <div className="space-y-0.5">
                             {getUniqueUsernames()
                                 .filter(username => !friends.some(f => f.username === username))
                                 .filter(username => !blockedUsers.includes(username))
-                                .slice(0, 3)
+                                .slice(0, 5)
                                 .map(username => (
                                     <button
                                         key={username}
+                                        type="button"
                                         onClick={() => addFriend(username)}
-                                        className="block w-full text-left text-sm text-brand-orange hover:text-brand-mint hover:bg-slate-600/80 px-2 py-1 rounded bg-slate-600/60"
+                                        className="block w-full text-left text-brand-orange hover:text-brand-mint hover:underline py-0.5"
                                     >
-                                        + Add {username}
+                                        + {username}
                                     </button>
                                 ))}
+                            {getUniqueUsernames().filter(
+                                u => !friends.some(f => f.username === u) && !blockedUsers.includes(u)
+                            ).length === 0 && (
+                                <span className="text-slate-500">No one seems to be here!</span>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -687,20 +717,24 @@ if (user.is_anonymous) {
 
             {/* Blocked Tab */}
             {activeTab === 'blocked' && (
-                <div className="flex-1 min-h-0 overflow-y-auto p-3">
-                    <div className="space-y-2">
+                <div className="flex-1 min-h-0 overflow-y-auto p-3 bg-slate-800/50 font-mono text-xs">
+                    <div className="space-y-0.5">
                         {blockedUsers.length === 0 ? (
-                            <div className="text-center text-slate-400 text-sm py-4">
+                            <div className="text-center text-slate-400 py-6 font-sans text-sm">
                                 No blocked users.
                             </div>
                         ) : (
                             blockedUsers.map((username) => (
-                                <div key={username} className="flex items-center justify-between p-2 bg-slate-600/60 border border-red-900/50 rounded">
-                                    <span className="text-sm font-medium text-red-300">{username}</span>
+                                <div
+                                    key={username}
+                                    className="flex items-center justify-between py-1 border-b border-slate-600/40 last:border-0 group"
+                                >
+                                    <span className="text-brand-red/90 font-medium">{username}</span>
                                     <button
+                                        type="button"
                                         onClick={() => unblockUser(username)}
-                                        className="text-brand-acidGreen hover:text-brand-mint text-sm bg-slate-600 rounded px-2 py-1"
-                                        title="Unblock user"
+                                        className="text-brand-acidGreen hover:text-brand-mint hover:underline opacity-80 group-hover:opacity-100"
+                                        title="Unblock"
                                     >
                                         Unblock
                                     </button>
