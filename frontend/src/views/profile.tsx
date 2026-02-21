@@ -65,7 +65,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
                         </div>
                     </div>
                     <div className="flex-1">
-                        <h2 className="text-3xl font-bold text-brand-yellow">
+                        <h2 className="text-3xl font-bold text-white">
                             {displayUser.display_name || displayUser.username}
                         </h2>
                         {displayUser.nickname && (
