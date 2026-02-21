@@ -1,11 +1,11 @@
 import { Ball } from './ball'
+import useGameStore from '../components/util/gameStore'
 import { playerOne, playerTwo, ball, clientTick, drawPlayerScores,
     intervals, heartbeatFrequencyMS } from './lib'
 interface MoveTS {
     type: string,
     timestamp: number
 }
-
 export async function gameOnlineLobby(canvas: HTMLCanvasElement, 
         ctx: CanvasRenderingContext2D, drawCanvas: HTMLCanvasElement,
         drawCtx: CanvasRenderingContext2D, websocket: WebSocket) {
@@ -239,6 +239,8 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
                 break
             case "OPPONENT_DISCONNECT":
                 alert("Your opponent disconnected, giving you a default win")
+				useGameStore.getState().setGameMode('none')
+				useGameStore.getState().setScreen('main')
                 break
             default:
                 console.log(`Unrecognized message type: ${JSONObject.type}`)
