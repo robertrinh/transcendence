@@ -3,44 +3,41 @@ import React from 'react';
 interface PrivacyPolicyProps {
     isModal?: boolean;
     onClose?: () => void;
-    /** When true, renders for embedding in Settings (light theme, no full-page wrapper) */
-    embedded?: boolean;
-    /** When true, use light theme (e.g. for modal in Settings) */
-    lightMode?: boolean;
+    /** when true and isModal, use slate bg (Settings modal style). When false/undefined, use glassy login-style. */
+    slateInModal?: boolean;
 }
 
 /**
  * PrivacyPolicy component
  * @param isModal - Whether the policy is displayed in a modal
  * @param onClose - Function to close the modal
- * @param embedded - Whether the policy is embedded in a component
- * @param lightMode - Whether to use light theme
- * @returns PrivacyPolicy component
+ * @param slateInModal - When true, modal uses slate bg (Settings); otherwise glassy (login-style)
  */
-const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ isModal = false, onClose, embedded = false, lightMode = false }) => {
-    const isLight = embedded || lightMode;
-    const wrap = isLight
-        ? 'bg-white border border-gray-200 rounded-lg shadow p-6 max-h-[60vh] overflow-y-auto text-gray-900 text-sm'
-        : 'bg-black/95 border border-white/10 rounded-2xl shadow-2xl p-8 text-white/90 max-h-[80vh] overflow-y-auto flex-1 min-h-0';
-    const h1 = isLight ? 'text-lg font-semibold text-gray-900' : 'text-3xl font-bold text-white';
-    const h2 = isLight ? 'text-base font-semibold mb-3 text-gray-900' : 'text-2xl font-semibold mb-4 text-white';
-    const h3 = isLight ? 'text-sm font-semibold mb-2 text-gray-900' : 'text-xl font-medium mb-2 text-white/90';
-    const p = isLight ? 'text-sm text-gray-700 leading-relaxed' : 'text-white/80';
-    const pMuted = isLight ? 'text-sm text-gray-600 mb-6' : 'text-white/70 mb-8';
-    const hr = isLight ? 'border-gray-200 mb-6' : 'border-white/10 mb-8';
-    const ul = isLight ? 'list-disc list-inside text-sm text-gray-700 space-y-1 ml-4' : 'list-disc list-inside text-white/80 space-y-2 ml-4';
-    const ol = isLight ? 'list-decimal list-inside text-sm text-gray-700 ml-4 space-y-1' : 'list-decimal list-inside text-white/80 text-sm ml-4 space-y-1';
-    const tableWrap = isLight ? 'w-full text-sm text-gray-700 border-collapse border border-gray-200' : 'w-full text-white/80 border-collapse border border-white/20';
-    const th = isLight ? 'text-left py-2 px-3 border-b border-gray-200 font-semibold text-gray-900 text-sm' : 'text-left py-3 px-4 border-b border-white/20 font-semibold';
-    const td = isLight ? 'py-2 px-3 border-b border-gray-100 text-sm text-gray-700' : 'py-3 px-4 border-b border-white/10';
-    const tdLast = isLight ? 'py-2 px-3 text-sm text-gray-700' : 'py-3 px-4';
-    const thead = isLight ? 'bg-gray-100' : 'bg-white/10';
-    const quote = isLight ? 'bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-4' : 'bg-emerald-500/20 border border-emerald-500/30 rounded-lg p-4 mb-4';
-    const quoteP = isLight ? 'text-sm text-emerald-800 font-medium' : 'text-emerald-300 font-medium';
-    const code = isLight ? 'text-sm text-gray-800 bg-gray-100 px-1 rounded' : 'text-white/90';
-    const link = isLight ? 'text-sm text-blue-600 hover:text-blue-500 hover:underline transition-colors' : 'text-blue-400 hover:text-blue-300 hover:underline transition-colors';
-    const italic = isLight ? 'text-sm text-gray-600 italic text-center' : 'text-white/70 italic text-center';
-    const closeBtn = isLight ? 'text-gray-500 hover:text-gray-700' : 'text-white/60 hover:text-white';
+const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ isModal = false, onClose, slateInModal = false }) => {
+    const wrap = isModal && slateInModal
+        ? 'bg-slate-800 border border-slate-600 rounded-2xl shadow-2xl p-8 text-white/90 max-h-[80vh] overflow-y-auto flex-1 min-h-0'
+        : isModal
+            ? 'w-full max-w-md bg-black/85 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl text-white/90 max-h-[80vh] overflow-y-auto flex-1 min-h-0'
+            : 'bg-black/95 border border-white/10 rounded-2xl shadow-2xl p-8 text-white/90 max-h-[80vh] overflow-y-auto flex-1 min-h-0';
+    const h1 = 'text-3xl font-bold text-white';
+    const h2 = 'text-2xl font-semibold mb-4 text-white';
+    const h3 = 'text-xl font-medium mb-2 text-white/90';
+    const p = 'text-white/80';
+    const pMuted = 'text-white/70 mb-8';
+    const hr = 'border-white/10 mb-8';
+    const ul = 'list-disc list-inside text-white/80 space-y-2 ml-4';
+    const ol = 'list-decimal list-inside text-white/80 text-sm ml-4 space-y-1';
+    const tableWrap = 'w-full text-white/80 border-collapse border border-white/20';
+    const th = 'text-left py-3 px-4 border-b border-white/20 font-semibold';
+    const td = 'py-3 px-4 border-b border-white/10';
+    const tdLast = 'py-3 px-4';
+    const thead = 'bg-white/10';
+    const quote = 'bg-emerald-500/20 border border-emerald-500/30 rounded-lg p-4 mb-4';
+    const quoteP = 'text-emerald-300 font-medium';
+    const code = 'text-white/90';
+    const link = 'text-blue-400 hover:text-blue-300 hover:underline transition-colors';
+    const italic = 'text-white/70 italic text-center';
+    const closeBtn = 'text-white/60 hover:text-white';
 
     const content = (
         <div className={wrap}>
@@ -242,7 +239,7 @@ const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ isModal = false, onClose,
                 <div className="mt-8 text-center">
                     <button
                         onClick={onClose}
-                        className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-6 py-3 rounded-lg hover:from-blue-500 hover:to-blue-400 transition-all font-medium shadow-lg shadow-blue-500/25"
+                        className={`px-6 py-3 rounded-lg transition-all font-medium ${slateInModal ? 'bg-slate-600 text-white hover:bg-slate-500' : 'bg-white/10 text-white hover:bg-white/20 border border-white/20'}`}
                     >
                         Close
                     </button>
@@ -251,21 +248,17 @@ const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ isModal = false, onClose,
         </div>
     );
 
-    if (embedded) {
-        return <>{content}</>;
-    }
-
     if (isModal) {
         return (
             <div 
-                className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+                className="fixed inset-0 bg-black/75 flex items-center justify-center z-[100] p-4"
                 onClick={(e) => {
                     if (e.target === e.currentTarget && onClose) {
                         onClose();
                     }
                 }}
             >
-                <div className="w-[95vw] min-w-[40rem] max-w-6xl h-[70vh] min-h-[360px] flex flex-col overflow-hidden rounded-2xl">
+                <div className="w-[95vw] min-w-[40rem] max-w-6xl h-[70vh] min-h-[360px] flex flex-col overflow-hidden rounded-2xl ml-40">
                     {content}
                 </div>
             </div>

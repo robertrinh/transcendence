@@ -339,7 +339,7 @@ const handleAnonymizeProfile = async () => {
 
             {/* Privacy Policy Modal */}
             {showPrivacyModal && (
-                <PrivacyPolicy isModal lightMode onClose={() => setShowPrivacyModal(false)} />
+                <PrivacyPolicy isModal slateInModal onClose={() => setShowPrivacyModal(false)} />
             )}
 
             {/* Delete Account Modal */}
