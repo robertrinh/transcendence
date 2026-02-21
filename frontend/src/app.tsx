@@ -29,11 +29,9 @@ function UserProfileRoute() {
 //* uses old logic from MainLayout component to avoid dependencies
 function AppLayout({
 	user: user,
-	onLogin: onLogin,
 	onLogout: onLogout,
 }: {
 	user: User | null;
-	onLogin: (userData: User, token: string) => void;
 	onLogout: () => void;
 }) {
 	const navigate = useNavigate();
@@ -80,7 +78,6 @@ function AppLayout({
 			user={user}
 			currentView={getCurrentView()}
 			setCurrentView={handleSetCurrentView}
-			onLogin={onLogin}
 			onLogout={onLogout}
 			navigateToUserProfile={navigateToUserProfile}
 		>
@@ -218,7 +215,6 @@ export function App() {
 							element={
 								<AppLayout
 									user={user}
-									onLogin={handleLogin}
 									onLogout={handleLogout}
 								/>
 							}
