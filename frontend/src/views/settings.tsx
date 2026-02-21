@@ -325,10 +325,10 @@ const handleAnonymizeProfile = async () => {
         <div className="p-6">
             {/* Message Banner */}
             {message && (
-                <div className={`mb-6 p-4 rounded-lg ${
+                <div className={`mb-6 p-4 rounded-lg border ${
                     message.type === 'success' 
-                        ? 'bg-green-50 border border-green-200 text-green-800' 
-                        : 'bg-red-50 border border-red-200 text-red-800'
+                        ? 'bg-brand-acidGreen/10 border-brand-acidGreen/40 text-brand-acidGreen' 
+                        : 'bg-brand-red/10 border-brand-red/40 text-brand-red'
                 }`}>
                     {message.text}
                 </div>
@@ -341,38 +341,32 @@ const handleAnonymizeProfile = async () => {
 
             {/* Delete Account Modal */}
             {showDeleteConfirm && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+                    <div className="bg-slate-800 border border-slate-600 p-8 rounded-lg shadow-xl max-w-md w-full">
                         <div className="text-center mb-6">
-                            <div className="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-                                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="w-16 h-16 bg-brand-red/20 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                <svg className="w-8 h-8 text-brand-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
                             </div>
-                            <p className="text-2xl font-bold text-red-600 mb-2">!FINAL WARNING!</p>
-                            <h2 className="text-2xl font-bold text-red-600 mb-2">Delete Account</h2>
-                            <p className="text-gray-600 text-sm">This action is permanent and cannot be undone</p>
+                            <p className="text-2xl font-bold text-brand-red mb-2">!FINAL WARNING!</p>
+                            <h2 className="text-2xl font-bold text-brand-red mb-2">Delete Account</h2>
+                            <p className="text-slate-400 text-sm">This action is permanent and cannot be undone</p>
                         </div>
                         
-                        <div className="bg-red-50 rounded-lg p-4 mb-6">
-                            <h3 className="font-semibold text-red-900 mb-3">This will permanently:</h3>
-                            <ul className="space-y-2 text-sm text-red-800">
+                        <div className="bg-brand-red/10 border border-brand-red/40 rounded-lg p-4 mb-6">
+                            <h3 className="font-semibold text-brand-red mb-3">This will permanently:</h3>
+                            <ul className="space-y-2 text-sm text-slate-300">
                                 <li className="flex items-start gap-2">
-                                    <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
+                                    <span className="flex-shrink-0 text-brand-red font-medium">–</span>
                                     <span>Delete your account and all data</span>
                                 </li>
                                 <li className="flex items-start gap-2">
-                                    <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
+                                    <span className="flex-shrink-0 text-brand-red font-medium">–</span>
                                     <span>Remove all game history</span>
                                 </li>
                                 <li className="flex items-start gap-2">
-                                    <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
+                                    <span className="flex-shrink-0 text-brand-red font-medium">–</span>
                                     <span>Clear all profile information</span>
                                 </li>
                             </ul>
@@ -380,7 +374,7 @@ const handleAnonymizeProfile = async () => {
 
                         <form onSubmit={handleDeleteAccount} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-slate-400 mb-2">
                                     If you are still absolutely sure, enter your password to confirm
                                 </label>
                                 <input
@@ -390,16 +384,16 @@ const handleAnonymizeProfile = async () => {
                                         setDeletePassword(e.target.value);
                                         setDeleteError('');
                                     }}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-500 focus:ring-2 focus:ring-brand-red focus:border-brand-red"
                                     placeholder="Your password"
                                     required
                                     disabled={!!deleteSuccess}
                                 />
                                 {deleteError && (
-                                    <p className="mt-2 text-sm text-red-600" role="alert">{deleteError}</p>
+                                    <p className="mt-2 text-sm text-brand-red" role="alert">{deleteError}</p>
                                 )}
                                 {deleteSuccess && (
-                                    <p className="mt-2 text-sm text-green-600" role="status">{deleteSuccess}</p>
+                                    <p className="mt-2 text-sm text-brand-acidGreen" role="status">{deleteSuccess}</p>
                                 )}
                             </div>
 
@@ -407,7 +401,7 @@ const handleAnonymizeProfile = async () => {
                                 <button
                                     type="submit"
                                     disabled={loading || !deletePassword || !!deleteSuccess}
-                                    className="flex-1 bg-red-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    className="flex-1 bg-brand-red text-white py-3 px-4 rounded-lg font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                 >
                                     {loading ? 'Deleting...' : 'Delete Account'}
                                 </button>
@@ -420,7 +414,7 @@ const handleAnonymizeProfile = async () => {
                                         setDeleteSuccess('');
                                     }}
                                     disabled={loading}
-                                    className="flex-1 bg-gray-200 text-gray-800 py-3 px-4 rounded-lg font-medium hover:bg-gray-300 transition-colors disabled:opacity-50"
+                                    className="flex-1 bg-slate-600 text-slate-200 py-3 px-4 rounded-lg font-medium hover:bg-slate-500 transition-colors disabled:opacity-50 border border-slate-500"
                                 >
                                     Cancel
                                 </button>
@@ -432,37 +426,37 @@ const handleAnonymizeProfile = async () => {
 
             {/* Anonymous Confirmation Modal */}
             {showAnonymousConfirm && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+                    <div className="bg-slate-800 border border-slate-600 p-8 rounded-lg shadow-xl max-w-md w-full">
                         <div className="text-center mb-6">
-                            <div className="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-                                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="w-16 h-16 bg-brand-red/20 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                <svg className="w-8 h-8 text-brand-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                 </svg>
                             </div>
-                            <h2 className="text-2xl font-bold text-red-600 mb-2">
+                            <h2 className="text-2xl font-bold text-brand-red mb-2">
                                 Anonymize Profile
                             </h2>
-                            <p className="text-gray-600 text-sm">This action is permanent and cannot be undone</p>
+                            <p className="text-slate-400 text-sm">This action is permanent and cannot be undone</p>
                         </div>
                         
-                        <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                            <h3 className="font-semibold text-gray-900 mb-3">This will:</h3>
-                            <ul className="space-y-2 text-sm text-gray-700">
+                        <div className="bg-slate-700/60 rounded-lg p-4 mb-6 border border-slate-600/50">
+                            <h3 className="font-semibold text-white mb-3">This will:</h3>
+                            <ul className="space-y-2 text-sm text-slate-300">
                                 <li className="flex items-start gap-2">
-                                    <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-5 h-5 text-brand-red flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                     <span>Hide your personal information</span>
                                 </li>
                                 <li className="flex items-start gap-2">
-                                    <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-5 h-5 text-brand-red flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                     <span>Permanently restrict chat access</span>
                                 </li>
                                 <li className="flex items-start gap-2">
-                                    <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-5 h-5 text-brand-acidGreen flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                     </svg>
                                     <span>Keep your game statistics</span>
@@ -470,8 +464,8 @@ const handleAnonymizeProfile = async () => {
                             </ul>
                         </div>
 
-                        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
-                            <p className="text-red-800 text-sm font-semibold text-center">
+                        <div className="bg-brand-red/10 border border-brand-red/40 rounded-lg p-3 mb-6">
+                            <p className="text-brand-red text-sm font-semibold text-center">
                                 ⚠️ This cannot be reversed!
                             </p>
                         </div>
@@ -480,14 +474,14 @@ const handleAnonymizeProfile = async () => {
                             <button
                                 onClick={handleAnonymizeProfile}
                                 disabled={loading}
-                                className="flex-1 bg-red-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="flex-1 bg-brand-red text-white py-3 px-4 rounded-lg font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 {loading ? 'Processing...' : 'Yes, Anonymize'}
                             </button>
                             <button
                                 onClick={() => setShowAnonymousConfirm(false)}
                                 disabled={loading}
-                                className="flex-1 bg-gray-200 text-gray-800 py-3 px-4 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                                className="flex-1 bg-slate-600 text-slate-200 py-3 px-4 rounded-lg font-medium hover:bg-slate-500 transition-colors border border-slate-500"
                             >
                                 Cancel
                             </button>
@@ -497,13 +491,13 @@ const handleAnonymizeProfile = async () => {
             )}
 
             {show2FASetup && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+                    <div className="bg-slate-800 border border-slate-600 p-6 rounded-lg shadow-xl max-w-md w-full">
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold">Enable Two-Factor Authentication</h2>
+                            <h2 className="text-xl font-bold text-white">Enable Two-Factor Authentication</h2>
                             <button
                                 onClick={() => setShow2FASetup(false)}
-                                className="text-gray-500 hover:text-gray-700 text-2xl leading-none"
+                                className="text-slate-400 hover:text-white text-2xl leading-none"
                             >
                                 ×
                             </button>
@@ -523,19 +517,19 @@ const handleAnonymizeProfile = async () => {
 
             {/* 2FA Disable Modal */}
             {show2FADisable && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
-                        <h2 className="text-xl font-bold mb-4">Disable Two-Factor Authentication</h2>
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+                    <div className="bg-slate-800 border border-slate-600 p-6 rounded-lg shadow-xl max-w-md w-full">
+                        <h2 className="text-xl font-bold mb-4 text-white">Disable Two-Factor Authentication</h2>
                         <form onSubmit={handleDisable2FA}>
                             <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-slate-400 mb-2">
                                     Enter your 6-digit code
                                 </label>
                                 <input
                                     type="text"
                                     value={disableCode}
                                     onChange={(e) => setDisableCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-500 focus:ring-2 focus:ring-brand-red focus:border-brand-red"
                                     placeholder="000000"
                                     maxLength={6}
                                 />
@@ -544,7 +538,7 @@ const handleAnonymizeProfile = async () => {
                                 <button
                                     type="submit"
                                     disabled={loading || disableCode.length !== 6}
-                                    className="flex-1 bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 disabled:opacity-50"
+                                    className="flex-1 bg-brand-red text-white py-2 px-4 rounded-lg hover:opacity-90 disabled:opacity-50 font-medium"
                                 >
                                     {loading ? 'Disabling...' : 'Disable 2FA'}
                                 </button>
@@ -554,7 +548,7 @@ const handleAnonymizeProfile = async () => {
                                         setShow2FADisable(false);
                                         setDisableCode('');
                                     }}
-                                    className="flex-1 bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600"
+                                    className="flex-1 bg-slate-600 text-slate-200 py-2 px-4 rounded-lg hover:bg-slate-500 border border-slate-500"
                                 >
                                     Cancel
                                 </button>
@@ -568,13 +562,13 @@ const handleAnonymizeProfile = async () => {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 {/* Sidebar */}
                 <div className="lg:col-span-1">
-                    <nav className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+                    <nav className="bg-slate-800 rounded-lg border border-slate-600/70 overflow-hidden">
                         <button
                             onClick={() => setActiveTab('profile')}
                             className={`w-full px-4 py-3 text-left transition-colors border-l-4 ${
                                 activeTab === 'profile'
-                                    ? 'bg-blue-50 border-blue-500 text-blue-700'
-                                    : 'border-transparent text-gray-700 hover:bg-gray-50'
+                                    ? 'bg-slate-700 border-brand-orange text-brand-orange'
+                                    : 'border-transparent text-slate-300 hover:bg-slate-700/80'
                             }`}
                         >
                             <div className="flex items-center gap-3">
@@ -589,8 +583,8 @@ const handleAnonymizeProfile = async () => {
                             onClick={() => setActiveTab('security')}
                             className={`w-full px-4 py-3 text-left transition-colors border-l-4 ${
                                 activeTab === 'security'
-                                    ? 'bg-blue-50 border-blue-500 text-blue-700'
-                                    : 'border-transparent text-gray-700 hover:bg-gray-50'
+                                    ? 'bg-slate-700 border-brand-orange text-brand-orange'
+                                    : 'border-transparent text-slate-300 hover:bg-slate-700/80'
                             }`}
                         >
                             <div className="flex items-center gap-3">
@@ -605,8 +599,8 @@ const handleAnonymizeProfile = async () => {
                             onClick={() => setActiveTab('privacy')}
                             className={`w-full px-4 py-3 text-left transition-colors border-l-4 ${
                                 activeTab === 'privacy'
-                                    ? 'bg-blue-50 border-blue-500 text-blue-700'
-                                    : 'border-transparent text-gray-700 hover:bg-gray-50'
+                                    ? 'bg-slate-700 border-brand-orange text-brand-orange'
+                                    : 'border-transparent text-slate-300 hover:bg-slate-700/80'
                             }`}
                         >
                             <div className="flex items-center gap-3">
@@ -625,13 +619,13 @@ const handleAnonymizeProfile = async () => {
                     {activeTab === 'profile' && (
                         <div className="space-y-6">
                             {/* Avatar Upload */}
-                            <div className="bg-white rounded-lg shadow border border-gray-200">
-                                <div className="p-4 border-b border-gray-200">
-                                    <h3 className="text-lg font-semibold text-gray-900">Avatar</h3>
+                            <div className="bg-slate-800 rounded-lg border border-slate-600/70">
+                                <div className="p-4 border-b border-slate-600/70">
+                                    <h3 className="text-lg font-semibold text-white">Avatar</h3>
                                 </div>
                                 <div className="p-4">
                                     <div className="flex items-center gap-6">
-                                        <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+                                        <div className="w-20 h-20 bg-brand-orange/80 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 border-2 border-slate-600">
                                             {previewUrl ? (
                                                 <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
                                             ) : avatarUrl ? (
@@ -652,7 +646,7 @@ const handleAnonymizeProfile = async () => {
                                             />
                                             <label
                                                 htmlFor="avatar-upload"
-                                                className="inline-block bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded cursor-pointer transition-colors"
+                                                className="inline-block bg-brand-orange hover:opacity-90 text-white px-4 py-2 rounded-lg cursor-pointer transition-colors font-medium"
                                             >
                                                 Choose File
                                             </label>
@@ -660,12 +654,12 @@ const handleAnonymizeProfile = async () => {
                                                 <button
                                                     onClick={handleAvatarUpload}
                                                     disabled={loading}
-                                                    className="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+                                                    className="ml-2 bg-brand-orange hover:opacity-90 text-white px-4 py-2 rounded-lg disabled:opacity-50 font-medium"
                                                 >
                                                     {loading ? 'Uploading...' : 'Upload'}
                                                 </button>
                                             )}
-                                            <p className="text-sm text-gray-500 mt-2">
+                                            <p className="text-sm text-slate-400 mt-2">
                                                 JPG Max 5MB.
                                             </p>
                                         </div>
@@ -674,14 +668,14 @@ const handleAnonymizeProfile = async () => {
                             </div>
 
                             {/* Profile Information */}
-                            <div className="bg-white rounded-lg shadow border border-gray-200">
-                                <div className="p-4 border-b border-gray-200">
-                                    <h3 className="text-lg font-semibold text-gray-900">Profile Information</h3>
+                            <div className="bg-slate-800 rounded-lg border border-slate-600/70">
+                                <div className="p-4 border-b border-slate-600/70">
+                                    <h3 className="text-lg font-semibold text-white">Profile Information</h3>
                                 </div>
                                 <div className="p-4 space-y-4">
                                     {/* Display Name */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <label className="block text-sm font-medium text-slate-400 mb-1">
                                             Display Name
                                         </label>
                                         {editingField === 'display_name' ? (
@@ -690,29 +684,29 @@ const handleAnonymizeProfile = async () => {
                                                     type="text"
                                                     value={profileForm.display_name}
                                                     onChange={(e) => setProfileForm({...profileForm, display_name: e.target.value})}
-                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                    className="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-500 focus:ring-2 focus:ring-brand-orange focus:border-brand-orange"
                                                 />
                                                 <button
                                                     type="submit"
                                                     disabled={loading}
-                                                    className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50"
+                                                    className="bg-brand-orange text-white px-4 py-2 rounded-lg hover:opacity-90 disabled:opacity-50 font-medium"
                                                 >
                                                     Save
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={() => setEditingField(null)}
-                                                    className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
+                                                    className="bg-slate-600 text-slate-200 px-4 py-2 rounded-lg hover:bg-slate-500"
                                                 >
                                                     Cancel
                                                 </button>
                                             </form>
                                         ) : (
                                             <div className="flex justify-between items-center">
-                                                <span className="text-gray-900">{user.display_name || 'Not set'}</span>
+                                                <span className="text-slate-200">{user.display_name || 'Not set'}</span>
                                                 <button
                                                     onClick={() => setEditingField('display_name')}
-                                                    className="text-blue-500 hover:text-blue-600 text-sm"
+                                                    className="text-brand-orange hover:opacity-90 text-sm font-medium"
                                                 >
                                                     Edit
                                                 </button>
@@ -722,7 +716,7 @@ const handleAnonymizeProfile = async () => {
 
                                     {/* Nickname */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <label className="block text-sm font-medium text-slate-400 mb-1">
                                             Nickname
                                         </label>
                                         {editingField === 'nickname' ? (
@@ -731,29 +725,29 @@ const handleAnonymizeProfile = async () => {
                                                     type="text"
                                                     value={profileForm.nickname}
                                                     onChange={(e) => setProfileForm({...profileForm, nickname: e.target.value})}
-                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                    className="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-500 focus:ring-2 focus:ring-brand-orange focus:border-brand-orange"
                                                 />
                                                 <button
                                                     type="submit"
                                                     disabled={loading}
-                                                    className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50"
+                                                    className="bg-brand-orange text-white px-4 py-2 rounded-lg hover:opacity-90 disabled:opacity-50 font-medium"
                                                 >
                                                     Save
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={() => setEditingField(null)}
-                                                    className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
+                                                    className="bg-slate-600 text-slate-200 px-4 py-2 rounded-lg hover:bg-slate-500"
                                                 >
                                                     Cancel
                                                 </button>
                                             </form>
                                         ) : (
                                             <div className="flex justify-between items-center">
-                                                <span className="text-gray-900">{user.nickname || 'Not set'}</span>
+                                                <span className="text-slate-200">{user.nickname || 'Not set'}</span>
                                                 <button
                                                     onClick={() => setEditingField('nickname')}
-                                                    className="text-blue-500 hover:text-blue-600 text-sm"
+                                                    className="text-brand-orange hover:opacity-90 text-sm font-medium"
                                                 >
                                                     Edit
                                                 </button>
@@ -763,7 +757,7 @@ const handleAnonymizeProfile = async () => {
 
                                     {/* Email */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <label className="block text-sm font-medium text-slate-400 mb-1">
                                             Email
                                         </label>
                                         {editingField === 'email' ? (
@@ -772,29 +766,29 @@ const handleAnonymizeProfile = async () => {
                                                     type="email"
                                                     value={profileForm.email}
                                                     onChange={(e) => setProfileForm({...profileForm, email: e.target.value})}
-                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                    className="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-500 focus:ring-2 focus:ring-brand-orange focus:border-brand-orange"
                                                 />
                                                 <button
                                                     type="submit"
                                                     disabled={loading}
-                                                    className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50"
+                                                    className="bg-brand-orange text-white px-4 py-2 rounded-lg hover:opacity-90 disabled:opacity-50 font-medium"
                                                 >
                                                     Save
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={() => setEditingField(null)}
-                                                    className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
+                                                    className="bg-slate-600 text-slate-200 px-4 py-2 rounded-lg hover:bg-slate-500"
                                                 >
                                                     Cancel
                                                 </button>
                                             </form>
                                         ) : (
                                             <div className="flex justify-between items-center">
-                                                <span className="text-gray-900">{user.email || 'Not set'}</span>
+                                                <span className="text-slate-200">{user.email || 'Not set'}</span>
                                                 <button
                                                     onClick={() => setEditingField('email')}
-                                                    className="text-blue-500 hover:text-blue-600 text-sm"
+                                                    className="text-brand-orange hover:opacity-90 text-sm font-medium"
                                                 >
                                                     Edit
                                                 </button>
@@ -804,12 +798,12 @@ const handleAnonymizeProfile = async () => {
 
                                     {/* Username (read-only) */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <label className="block text-sm font-medium text-slate-400 mb-1">
                                             Username
                                         </label>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-gray-900">{user.username}</span>
-                                            <span className="text-xs text-gray-500">Cannot be changed</span>
+                                            <span className="text-slate-200">{user.username}</span>
+                                            <span className="text-xs text-slate-500">Cannot be changed</span>
                                         </div>
                                     </div>
                                 </div>
@@ -821,46 +815,46 @@ const handleAnonymizeProfile = async () => {
                     {activeTab === 'security' && (
                         <div className="space-y-6">
                             {/* Change Password */}
-                            <div className="bg-white rounded-lg shadow border border-gray-200">
-                                <div className="p-4 border-b border-gray-200">
-                                    <h3 className="text-lg font-semibold text-gray-900">Change Password</h3>
+                            <div className="bg-slate-800 rounded-lg border border-slate-600/70">
+                                <div className="p-4 border-b border-slate-600/70">
+                                    <h3 className="text-lg font-semibold text-white">Change Password</h3>
                                 </div>
                                 <div className="p-4">
                                     <form onSubmit={handlePasswordChange} className="space-y-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            <label className="block text-sm font-medium text-slate-400 mb-1">
                                                 Current Password
                                             </label>
                                             <input
                                                 type="password"
                                                 value={passwordForm.current_password}
                                                 onChange={(e) => setPasswordForm({...passwordForm, current_password: e.target.value})}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-500 focus:ring-2 focus:ring-brand-orange focus:border-brand-orange"
                                                 required
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            <label className="block text-sm font-medium text-slate-400 mb-1">
                                                 New Password
                                             </label>
                                             <input
                                                 type="password"
                                                 value={passwordForm.new_password}
                                                 onChange={(e) => setPasswordForm({...passwordForm, new_password: e.target.value})}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-500 focus:ring-2 focus:ring-brand-orange focus:border-brand-orange"
                                                 required
                                                 minLength={8}
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            <label className="block text-sm font-medium text-slate-400 mb-1">
                                                 Confirm New Password
                                             </label>
                                             <input
                                                 type="password"
                                                 value={passwordForm.confirm_password}
                                                 onChange={(e) => setPasswordForm({...passwordForm, confirm_password: e.target.value})}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-500 focus:ring-2 focus:ring-brand-orange focus:border-brand-orange"
                                                 required
                                                 minLength={8}
                                             />
@@ -868,7 +862,7 @@ const handleAnonymizeProfile = async () => {
                                         <button
                                             type="submit"
                                             disabled={loading}
-                                            className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 disabled:opacity-50"
+                                            className="w-full bg-brand-orange text-white py-2 px-4 rounded-lg hover:opacity-90 disabled:opacity-50 font-medium"
                                         >
                                             {loading ? 'Changing Password...' : 'Change Password'}
                                         </button>
@@ -877,28 +871,28 @@ const handleAnonymizeProfile = async () => {
                             </div>
 
                             {/* Two-Factor Authentication */}
-                            <div className="bg-white rounded-lg shadow border border-gray-200">
-                                <div className="p-4 border-b border-gray-200">
-                                    <h3 className="text-lg font-semibold text-gray-900">Two-Factor Authentication</h3>
-                                    <p className="text-sm text-gray-600 mt-1">Add an extra layer of security to your account</p>
+                            <div className="bg-slate-800 rounded-lg border border-slate-600/70">
+                                <div className="p-4 border-b border-slate-600/70">
+                                    <h3 className="text-lg font-semibold text-white">Two-Factor Authentication</h3>
+                                    <p className="text-sm text-slate-400 mt-1">Add an extra layer of security to your account</p>
                                 </div>
                                 <div className="p-4">
                                     {user.two_factor_enabled ? (
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                                                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <div className="w-10 h-10 bg-brand-acidGreen/20 rounded-full flex items-center justify-center">
+                                                    <svg className="w-6 h-6 text-brand-acidGreen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                     </svg>
                                                 </div>
                                                 <div>
-                                                    <p className="font-medium text-gray-900">2FA Enabled</p>
-                                                    <p className="text-sm text-gray-600">Your account is protected</p>
+                                                    <p className="font-medium text-white">2FA Enabled</p>
+                                                    <p className="text-sm text-slate-400">Your account is protected</p>
                                                 </div>
                                             </div>
                                             <button
                                                 onClick={() => setShow2FADisable(true)}
-                                                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors"
+                                                className="bg-brand-red hover:opacity-90 text-white px-4 py-2 rounded-lg transition-colors font-medium"
                                             >
                                                 Disable
                                             </button>
@@ -906,19 +900,19 @@ const handleAnonymizeProfile = async () => {
                                     ) : (
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                                                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                                                <div className="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center">
+                                                    <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
                                                     </svg>
                                                 </div>
                                                 <div>
-                                                    <p className="font-medium text-gray-900">2FA Disabled</p>
-                                                    <p className="text-sm text-gray-600">Enable for better security</p>
+                                                    <p className="font-medium text-white">2FA Disabled</p>
+                                                    <p className="text-sm text-slate-400">Enable it to enhance your account security!</p>
                                                 </div>
                                             </div>
                                             <button
                                                 onClick={() => setShow2FASetup(true)}
-                                                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                                                className="bg-brand-orange hover:opacity-90 text-white px-4 py-2 rounded-lg transition-colors font-medium"
                                             >
                                                 Enable
                                             </button>
@@ -932,17 +926,17 @@ const handleAnonymizeProfile = async () => {
                    {/* Privacy Tab */}
                     {activeTab === 'privacy' && (
                         <div className="space-y-6">
-                            <div className="bg-white rounded-lg shadow border border-gray-200">
-                                <div className="p-4 border-b border-gray-200">
-                                    <h3 className="text-lg font-semibold text-gray-900">Privacy policy Ft_transcendence</h3>
+                            <div className="bg-slate-800 rounded-lg border border-slate-600/70">
+                                <div className="p-4 border-b border-slate-600/70">
+                                    <h3 className="text-lg font-semibold text-white">Privacy policy Ft_transcendence</h3>
                                 </div>
                                 <div className="p-6">
-                                    <p className="text-sm text-gray-700 leading-relaxed">
+                                    <p className="text-sm text-slate-300 leading-relaxed">
                                         If you want to read the privacy policy,{' '}
                                         <button
                                             type="button"
                                             onClick={() => setShowPrivacyModal(true)}
-                                            className="text-sm text-blue-600 hover:text-blue-500 font-medium underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded"
+                                            className="text-sm text-brand-orange hover:opacity-90 font-medium underline focus:outline-none focus:ring-2 focus:ring-brand-orange focus:ring-offset-2 focus:ring-offset-slate-800 rounded"
                                         >
                                             click here
                                         </button>
@@ -951,89 +945,89 @@ const handleAnonymizeProfile = async () => {
                                 </div>
                             </div>
 
-                            <div className="bg-white rounded-lg shadow border border-gray-200">
-                                <div className="p-4 border-b border-gray-200">
-                                    <h3 className="text-lg font-semibold text-gray-900">Anonymous Mode</h3>
+                            <div className="bg-slate-800 rounded-lg border border-slate-600/70">
+                                <div className="p-4 border-b border-slate-600/70">
+                                    <h3 className="text-lg font-semibold text-white">Anonymous Mode</h3>
                                 </div>
                                 
                                 <div className="p-6">
                                     {user.is_anonymous ? (
                                         <div className="space-y-4">
-                                            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                                            <div className="bg-brand-acidGreen/10 border border-brand-acidGreen/40 rounded-lg p-4">
                                                 <div className="flex gap-3">
-                                                    <svg className="w-6 h-6 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg className="w-6 h-6 text-brand-acidGreen flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                     </svg>
                                                     <div>
-                                                        <h4 className="text-green-900 font-semibold mb-2">✓ Anonymous Mode Enabled</h4>
-                                                        <p className="text-sm text-green-800 leading-relaxed">
+                                                        <h4 className="text-brand-acidGreen font-semibold mb-2">✓ Anonymous Mode Enabled</h4>
+                                                        <p className="text-sm text-slate-300 leading-relaxed">
                                                             Your profile is now in anonymous mode. Your personal information has been hidden and chat access is permanently restricted.
                                                         </p>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div className="bg-gray-50 rounded-lg p-4">
-                                                <h4 className="font-semibold text-gray-900 mb-3">Current Status:</h4>
-                                                <ul className="space-y-2 text-sm text-gray-700">
+                                            <div className="bg-slate-700/60 rounded-lg p-4 border border-slate-600/50">
+                                                <h4 className="font-semibold text-white mb-3">Current Status:</h4>
+                                                <ul className="space-y-2 text-sm text-slate-300">
                                                     <li className="flex items-start gap-2">
-                                                        <span className="text-green-500 font-bold">✓</span>
+                                                        <span className="text-brand-acidGreen font-bold">✓</span>
                                                         <span>Personal information is hidden</span>
                                                     </li>
                                                     <li className="flex items-start gap-2">
-                                                        <span className="text-green-500 font-bold">✓</span>
+                                                        <span className="text-brand-acidGreen font-bold">✓</span>
                                                         <span>Chat access is permanently restricted</span>
                                                     </li>
                                                     <li className="flex items-start gap-2">
-                                                        <span className="text-blue-500 font-bold">→</span>
+                                                        <span className="text-brand-orange font-bold">→</span>
                                                         <span>Game statistics are preserved</span>
                                                     </li>
                                                     <li className="flex items-start gap-2">
-                                                        <span className="text-blue-500 font-bold">→</span>
+                                                        <span className="text-brand-orange font-bold">→</span>
                                                         <span>You can still play games</span>
                                                     </li>
                                                 </ul>
                                             </div>
 
-                                            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                                                <p className="text-red-800 text-sm text-center font-semibold">
+                                            <div className="bg-brand-red/10 border border-brand-red/40 rounded-lg p-3">
+                                                <p className="text-brand-red text-sm text-center font-semibold">
                                                     ⚠️ This action cannot be reversed
                                                 </p>
                                             </div>
                                         </div>
                                     ) : (
                                         <>
-                                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                                            <div className="bg-brand-orange/10 border border-brand-orange/40 rounded-lg p-4 mb-6">
                                                 <div className="flex gap-3">
-                                                    <svg className="w-6 h-6 text-yellow-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg className="w-6 h-6 text-brand-orange flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                                     </svg>
                                                     <div>
-                                                        <h4 className="text-yellow-900 font-semibold mb-2">Warning: Permanent Action</h4>
-                                                        <p className="text-sm text-yellow-800 leading-relaxed">
+                                                        <h4 className="text-brand-orange font-semibold mb-2">Warning: Permanent Action</h4>
+                                                        <p className="text-sm text-slate-300 leading-relaxed">
                                                             Enabling anonymous mode is <strong>permanent and cannot be reversed</strong>. Your profile will be hidden, personal information removed, and chat access will be permanently restricted.
                                                         </p>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                                                <h4 className="font-semibold text-gray-900 mb-3">What happens:</h4>
-                                                <ul className="space-y-2 text-sm text-gray-700">
+                                            <div className="bg-slate-700/60 rounded-lg p-4 mb-6 border border-slate-600/50">
+                                                <h4 className="font-semibold text-white mb-3">What happens:</h4>
+                                                <ul className="space-y-2 text-sm text-slate-300">
                                                     <li className="flex items-start gap-2">
-                                                        <span className="text-red-500 font-bold">✗</span>
+                                                        <span className="text-brand-red font-bold">✗</span>
                                                         <span>Personal information (email, display name) will be removed</span>
                                                     </li>
                                                     <li className="flex items-start gap-2">
-                                                        <span className="text-red-500 font-bold">✗</span>
+                                                        <span className="text-brand-red font-bold">✗</span>
                                                         <span>Chat access will be permanently restricted</span>
                                                     </li>
                                                     <li className="flex items-start gap-2">
-                                                        <span className="text-green-500 font-bold">✓</span>
+                                                        <span className="text-brand-acidGreen font-bold">✓</span>
                                                         <span>Game statistics will be preserved</span>
                                                     </li>
                                                     <li className="flex items-start gap-2">
-                                                        <span className="text-green-500 font-bold">✓</span>
+                                                        <span className="text-brand-acidGreen font-bold">✓</span>
                                                         <span>You can still play games</span>
                                                     </li>
                                                 </ul>
@@ -1041,7 +1035,7 @@ const handleAnonymizeProfile = async () => {
 
                                             <button
                                                 onClick={() => setShowAnonymousConfirm(true)}
-                                                className="w-full bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                                                className="w-full bg-brand-red hover:opacity-90 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
                                             >
                                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -1054,18 +1048,18 @@ const handleAnonymizeProfile = async () => {
                             </div>
 
                             {/* Delete Account Section */}
-                            <div className="bg-white rounded-lg shadow border border-gray-200">
-                                <div className="p-4 border-b border-gray-200">
-                                    <h4 className="text-lg font-semibold text-gray-900">Delete Account</h4>
+                            <div className="bg-slate-800 rounded-lg border border-slate-600/70">
+                                <div className="p-4 border-b border-slate-600/70">
+                                    <h4 className="text-lg font-semibold text-white">Delete Account</h4>
                                 </div>
                                 <div className="p-6">
-                                    <div className="bg-red-50 rounded-lg p-4">
-                                        <p className="text-sm text-red-800 mb-4">
+                                    <div className="bg-brand-red/10 border border-brand-red/40 rounded-lg p-4">
+                                        <p className="text-sm text-slate-300 mb-4">
                                             Permanently delete your account and all associated data. This action cannot be undone.
                                         </p> 
                                         <button
                                             onClick={() => { setShowDeleteConfirm(true); setDeleteError(''); setDeleteSuccess(''); }}
-                                            className="w-full bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                                            className="w-full bg-brand-red hover:opacity-90 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
                                         >
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
