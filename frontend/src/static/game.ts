@@ -23,7 +23,9 @@ export default async function gameInit (gameMode: string, websocket: WebSocket) 
     assertIsNotNull(drawCtx)
     const main = document.getElementById('main')
     assertIsNotNull(main)
-    main.insertAdjacentElement('afterend', canvas)
+	if (!canvas.isConnected) {  // only insert if not already in DOM
+    	main.insertAdjacentElement('afterend', canvas)
+	}
     console.log(`GAMING MODE: ${gameMode}`)
     switch (gameMode) {
         case "singleplayer":
