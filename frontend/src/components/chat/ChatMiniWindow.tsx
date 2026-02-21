@@ -75,6 +75,22 @@ if (user.is_anonymous) {
         username: string | null;
     }>({ action: null, username: null });
 
+    const [actionPopover, setActionPopover] = useState<{ username: string; messageId: string } | null>(null);
+    const popoverRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!actionPopover) 
+			return;
+        const handleClickOutside = (e: MouseEvent) => {
+            const target = e.target as Node;
+            if (popoverRef.current?.contains(target)) return;
+            if ((e.target as HTMLElement).closest?.('[data-username-trigger]')) return;
+            setActionPopover(null);
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [actionPopover]);
+
     // NEW: Connect to SSE on component mount
     useEffect(() => {
         connectSSE();
@@ -480,19 +496,41 @@ if (user.is_anonymous) {
                     </div>
 
                     {/* Messages Area */}
-                        <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3">
+                        <div className="flex-1 min-h-0 overflow-y-auto p-3 bg-slate-800/50 space-y-0.5 font-mono text-xs">
                             {filteredMessages.length === 0 ? (
-                                <div className="text-center text-slate-400 py-8 text-sm">
+                                <div className="text-center text-slate-400 py-8 text-sm font-sans">
                                     No messages yet. Start the conversation!
                                 </div>
                             ) : (
-                                filteredMessages.map((message) => (
-                                    <div key={message.id} className="text-sm group">
-                                        <div className="flex flex-col space-y-1">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center space-x-2">
-                                                    <span
-                                                        className={`font-medium text-xs cursor-pointer hover:underline ${
+                                filteredMessages.map((message) => {
+                                    const isSystem = !message.username;
+                                    const timeStr = message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                    const showPopover = actionPopover?.messageId === message.id;
+
+                                    if (isSystem) {
+                                        return (
+                                            <div key={message.id} className="text-brand-cyan/90 py-0.5">
+                                                [{timeStr}] {message.message}
+                                            </div>
+                                        );
+                                    }
+
+                                    return (
+                                        <div key={message.id} className="relative py-0.5 flex flex-wrap items-baseline gap-x-1">
+                                            <span className="text-slate-500 shrink-0">[{timeStr}]</span>
+                                            <button
+                                                type="button"
+                                                data-username-trigger
+                                                onClick={() => {
+                                                    if (message.username === user.username) {
+                                                        showToast("This is your own profile!");
+                                                        return;
+                                                    }
+                                                    setActionPopover(prev =>
+                                                        prev?.messageId === message.id ? null : { username: message.username, messageId: message.id }
+                                                    );
+                                                }}
+                                                className={`font-medium hover:underline shrink-0 ${
                                                             message.isPrivate ? 'text-brand-purple' : 'text-brand-orange'
                                                         }`}
                                                         onClick={() => {
@@ -505,52 +543,52 @@ if (user.is_anonymous) {
                                                         title={`View ${message.username}'s profile`}
                                                     >
                                                         {message.username}
-                                                        {message.isPrivate && (
-                                                            <span className="ml-1 text-brand-magenta">→ {message.toUser}</span>
+                                                {message.isPrivate && message.toUser && (
+                                                    <span className="text-brand-orange"> → {message.toUser}</span>
                                                         )}
-                                                    </span>
-                                                    <span className="text-xs text-slate-500">
-                                                        {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                    </span>
-                                                </div>
-                                                {message.username !== user.username && (
-                                                    <div className="opacity-0 group-hover:opacity-100 flex items-center space-x-1 transition-opacity">
-                                                        {!friends.some(f => f.username === message.username) && (
+                                            </button>
+                                            <span className={message.isPrivate ? 'text-brand-orange/90' : 'text-white'}>: {message.message}</span>
+                                            {message.username !== user.username && showPopover && (
+                                                <div
+                                                    ref={popoverRef}
+                                                    className="absolute left-0 top-full mt-0.5 z-50 bg-slate-700 border border-slate-600 rounded shadow-lg py-1 min-w-[140px]"
+                                                >
                                                             <button
-                                                                onClick={() => addFriend(message.username)}
-                                                                className="text-brand-acidGreen hover:text-brand-mint text-xs bg-slate-600 rounded px-1"
-                                                                title="Add friend"
+                                                        type="button"
+                                                        onClick={() => { viewUserProfile(message.username); setActionPopover(null); }}
+                                                        className="w-full text-left px-3 py-1.5 text-slate-200 hover:bg-slate-600 text-xs"
                                                             >
-                                                                +
+                                                        View profile
                                                             </button>
-                                                        )}
-                                                        {friends.some(f => f.username === message.username) && (
+                                                    {!friends.some(f => f.username === message.username) ? (
                                                             <button
-                                                                onClick={() => startPrivateChat(message.username)}
-                                                                className="text-brand-purple hover:text-brand-magenta text-xs bg-slate-600 rounded px-1"
-                                                                title="Private message"
+                                                            type="button"
+                                                            onClick={() => { addFriend(message.username); setActionPopover(null); }}
+                                                            className="w-full text-left px-3 py-1.5 text-brand-acidGreen hover:bg-slate-600 text-xs"
                                                             >
-                                                                💬
+                                                            Add friend
                                                             </button>
-                                                        )}
+                                                    ) : (
                                                         <button
-                                                            onClick={() => confirmAction('block', message.username)}
-                                                            className="text-red-400 hover:text-red-300 text-xs bg-slate-600 rounded px-1"
-                                                            title="Block user"
+                                                            type="button"
+                                                            onClick={() => { startPrivateChat(message.username); setActionPopover(null); }}
+                                                            className="w-full text-left px-3 py-1.5 text-brand-purple hover:bg-slate-600 text-xs"
                                                         >
-                                                            🚫
+                                                            Whisper
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { confirmAction('block', message.username); setActionPopover(null); }}
+                                                        className="w-full text-left px-3 py-1.5 text-brand-red hover:bg-slate-600 text-xs"
+                                                    >
+                                                        Block
                                                         </button>
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className={`break-words pl-2 border-l-2 rounded-r px-2 py-1 ${
-                                                message.isPrivate ? 'border-brand-purple/70 text-slate-200 bg-slate-600/80' : 'border-brand-orange/60 text-slate-200 bg-slate-600/80'
-                                            }`}>
-                                                {message.message}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))
+                                    );
+                                })
                             )}
                             <div ref={messagesEndRef} />
                         </div>
