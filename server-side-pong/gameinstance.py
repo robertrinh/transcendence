@@ -324,6 +324,8 @@ def handle_score(game: GameInstance):
                 }
             )
             game.log(f"upload response code {response.status_code}")
+            message = {'type': 'GAME_FINISH', 'winner_id': winner_id} 
+            broadcast(game.connections, json.dumps(message))
         except requests.ConnectionError as e:
             game.log(f"{repr(e)}")
         game.kill()

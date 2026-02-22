@@ -67,6 +67,11 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
         }
     }
 
+    function backToGameMenu() {
+        useGameStore.getState().setGameMode('none')
+        useGameStore.getState().setScreen('main')
+    }
+
     class Point {
         x: number
         y: number
@@ -239,8 +244,12 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
                 break
             case "OPPONENT_DISCONNECT":
                 alert("Your opponent disconnected, giving you a default win")
-				useGameStore.getState().setGameMode('none')
-				useGameStore.getState().setScreen('main')
+                backToGameMenu()
+                break
+            case "GAME_FINISH":
+                alert("Game finished - " + (JSONObject.winner_id === playerID ? "You won!" : "You lost"))
+                //setScreen('result') // a new screen to show the result and like a button to return to main menu
+                backToGameMenu()
                 break
             default:
                 console.log(`Unrecognized message type: ${JSONObject.type}`)
