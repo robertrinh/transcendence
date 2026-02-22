@@ -206,7 +206,14 @@ export default function Game() {
       const data = await response.json()
       console.log(`data: `, data)
       setLobbyId(data.data.lobby_id);
-      setScreen('host-lobby')
+      setScreen('searching-private')
+      try {
+        await navigator.clipboard.writeText(data.data.lobby_id)
+        alert(`Copied lobby \"${data.data.lobby_id}\" to clipboard, send it to a friend`)
+      }
+      catch (err: any) {
+        alert(`Failed to copy lobby to clipboard, are you using http?`)
+      }
       }
       catch (err: any) {
         console.log(err)
@@ -266,7 +273,6 @@ return (
 		<GameUI
 			screen={screen}
 			gameMode={gameMode}
-			lobbyId={lobbyId}
 			error={error}
 			websocket={websocket}
 			setScreen={setScreen}
