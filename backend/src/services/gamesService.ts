@@ -80,37 +80,9 @@ export const gamesService = {
 
 	hostLobby: (player_id: number) => {
 		const lobby_id = generateLobbyId();
-		const game_created = db.prepare(
-			'INSERT INTO games (player1_id, lobby_id) VALUES(?, ?) RETURNING *')
-			.get(player_id, lobby_id) as Game;
-		db.prepare('UPDATE users SET status = ? WHERE id = ?').run('searching', player_id);
-		return game_created;
-	},
-
-	joinLobby: function(player_id: number, lobby_id: string): Game | null {
-		const privateGame = gamesService.fetchPrivateGame(lobby_id) as Game
-		if (!privateGame.player1_id && privateGame.player2_id !== player_id) {
-			db.prepare('UPDATE games SET player1_id = ? WHERE lobby_id = ?').run(player_id, lobby_id);
-		}
-		else if (!privateGame.player2_id && privateGame.player1_id !== player_id) {
-			db.prepare('UPDATE games SET player2_id = ? WHERE lobby_id = ?').run(player_id, lobby_id);
-		}
-		const privateGameUpdated = gamesService.fetchPrivateGame(lobby_id) as Game
-		if (privateGameUpdated.player1_id && privateGameUpdated.player2_id) {
-			db.prepare('UPDATE users SET status = ? WHERE id = ? OR id = ?')
-			.run('matched', privateGameUpdated.player1_id, privateGameUpdated.player2_id);
-			db.prepare(
-				'UPDATE games SET status = ? WHERE lobby_id = ?')
-				.run('ready', lobby_id);
-			const game = gamesService.fetchPrivateGame(lobby_id) as Game
-			return game
-		}
-		if (Date.now() - Date.parse(privateGameUpdated.created_at) > TIMEOUT_MATCHMAKING) {
-			db.prepare('UPDATE users SET status = ? WHERE id = ?').run('idle', privateGameUpdated.player1_id);
-			db.prepare('DELETE FROM games WHERE lobby_id = ?').run(lobby_id);
-			throw new ApiError(400, 'Opponent did not connect on time')
-		}
-		return null
+		const queue = db.prepare('INSERT INTO game_queue (player_id, private, lobby_id) VALUES(?, ?, ?) RETURNING *').get(player_id, 1, lobby_id) as Queue;
+		db.prepare('UPDATE users SET status = ? WHERE id = ?').run('searching', player_id)
+		return queue;
 	},
 
 	fetchlobby: (lobby_id: string ) => {
