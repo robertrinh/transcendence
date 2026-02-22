@@ -10,12 +10,18 @@ function removeStaleQueueEntries(entry : { player_id: number }) {
 export function  dbCleanUpJob () {
     setInterval(() => {
         const staleTimeRandom  = Math.floor(Date.now() / 1000) - 45;
+        const staleTimeLobby = Math.floor(Date.now() / 1000) - 120;
 
         const cleanup = db.transaction(() => {
-        const staleQueueEntries = db.prepare('SELECT player_id FROM game_queue WHERE joined_at < ?').all(staleTimeRandom) as { player_id: number }[];
+        const staleQueueEntries = db.prepare('SELECT player_id FROM game_queue WHERE lobby_id IS NULL AND joined_at < ?').all(staleTimeRandom) as { player_id: number }[];
         for (const entry of staleQueueEntries) {
             removeStaleQueueEntries(entry);
         }
+        const staleQueueEntriesLobby = db.prepare('SELECT player_id FROM game_queue WHERE lobby_id IS NOT NULL AND joined_at < ?').all(staleTimeLobby) as { player_id: number }[];
+        for (const entry of staleQueueEntriesLobby) {
+            removeStaleQueueEntries(entry);
+        }
+
         const staleGames = db.prepare(`SELECT id, player1_id, player2_id FROM games WHERE status NOT IN ('finished', 'cancelled') AND finished_at IS NULL AND created_at < (datetime('now', '-2 minutes'))`).all() as Game[];
         for (const game of staleGames) {
             db.prepare('UPDATE games SET status = ? WHERE id = ?').run('cancelled', game.id);    
