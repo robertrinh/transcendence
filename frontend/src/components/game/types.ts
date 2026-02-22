@@ -5,6 +5,7 @@ export type Screen =
     | 'host-lobby'
     | 'join-lobby'
     | 'tournament'
+    | 'countdown'
     | 'create-tournament'
     | 'searching'
     | 'game'

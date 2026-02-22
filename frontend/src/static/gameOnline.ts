@@ -163,6 +163,7 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
 
     async function gameSockOnMessage(event: MessageEvent) {
         const JSONObject = JSON.parse(event.data)
+        console.log('📨 WebSocket message received:', JSONObject.type, JSONObject)
         const p1Server = JSONObject.p1
         const p2Server = JSONObject.p2
         const ballServer = JSONObject.ball
