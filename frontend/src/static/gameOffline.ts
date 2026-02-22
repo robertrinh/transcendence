@@ -12,6 +12,7 @@ export async function gameOfflineLobby(
     let deltaTimeMS: number
     let then: number, now: number
     let spacePressed = false
+    let gameEndSent = false
 
     function handleKeyDown(key: KeyboardEvent) {
         switch (key.key) {
@@ -141,10 +142,12 @@ export async function gameOfflineLobby(
             if (app.state === gameState.RoundEnd) {
                 if (spacePressed) {
                     app.state = gameState.ActiveRound
+                    gameEndSent = false
                     playerOne.roundScore = 0
                     playerTwo.roundScore = 0
                     ball.movementSpeed = 5
                     spacePressed = false
+                    dispatchEvent(new CustomEvent("gameOfflineResume"))
                 }
                 else {
                     return
@@ -170,6 +173,7 @@ export async function gameOfflineLobby(
             if (app.state === gameState.RoundEnd) {
                 ball.setStart(getRandomStartVec())
                 app.state = gameState.ActiveRound
+                gameEndSent = false 
             }
             if (playerOne.roundScore === roundMax || playerTwo.roundScore === 
                 roundMax) {
@@ -198,9 +202,14 @@ export async function gameOfflineLobby(
             drawCtx.textAlign = "center"
             printText(drawCtx, 48, arenaWidth/2, arenaHeight * 0.8,
                 textColor, "sans-serif", Array("Press spacebar to continue..."))
+            if (!gameEndSent) {
+                window.dispatchEvent(new CustomEvent("gameOfflineEnd"))
+                gameEndSent = true
+            }
+            //add button to homemenu, should trigger event to return to game menu
         }
         ctx.drawImage(drawCanvas, 0, 0)
-    }
+    }   
 
     canvas.addEventListener("keydown", handleKeyDown)
     canvas.addEventListener("keyup", handleKeyUp)

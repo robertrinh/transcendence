@@ -7,12 +7,12 @@ type GameStore = {
 
     setScreen: (screen: Screen) => void
     setGameMode: (gameMode: GameMode) => void
+
 }
 
 const useGameStore = create<GameStore>((set) => ({
     screen: 'main',
     gameMode: 'none',
-
 
     setScreen: (screen: Screen) => set({ screen }),
     setGameMode: (mode: GameMode) => set({ gameMode: mode })
