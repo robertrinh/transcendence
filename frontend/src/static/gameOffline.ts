@@ -23,10 +23,20 @@ export async function gameOfflineLobby(
                 playerOne.paddle.upPressed = true
                 break
             case "s":
-                playerTwo.paddle.downPressed = true
+                if (gameMode === 'singleplayer') {
+                    playerOne.paddle.downPressed = true
+                }
+                else {
+                    playerTwo.paddle.downPressed = true
+                }
                 break
             case "w":
-                playerTwo.paddle.upPressed = true
+                if (gameMode === 'singleplayer') {
+                    playerOne.paddle.upPressed = true
+                }
+                else {
+                    playerTwo.paddle.upPressed = true
+                }
                 break
             case " ":
                 if (app.state !== gameState.RoundEnd) {
@@ -47,10 +57,20 @@ export async function gameOfflineLobby(
                 playerOne.paddle.upPressed = false
                 break
             case "s":
-                playerTwo.paddle.downPressed = false
+                if (gameMode === 'singleplayer') {
+                    playerOne.paddle.downPressed = false
+                }
+                else {
+                    playerTwo.paddle.downPressed = false
+                }
                 break
             case "w":
-                playerTwo.paddle.upPressed = false
+                if (gameMode === 'singleplayer') {
+                    playerOne.paddle.upPressed = false
+                }
+                else {
+                    playerTwo.paddle.upPressed = false
+                }
                 break
             case " ":
                 if (app.state !== gameState.RoundEnd) {
