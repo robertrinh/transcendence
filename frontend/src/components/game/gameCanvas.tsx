@@ -30,7 +30,7 @@ export default function GameCanvas({mode, websocket}:GameCanvas) {
   }, [])
   return (
     <div className="relative m-auto w-full my-8">
-        <canvas id="game-canvas" className="overflow-hidden bg-white border-4 border-indigo-500" />
+        <canvas id="game-canvas" className="block mx-auto bg-white border-4 border-indigo-500" />
         {showMenu && (
           <div className="absolute inset-x flex justify-center" style={{top: '83%', left: '50%'}}>
             <Button
