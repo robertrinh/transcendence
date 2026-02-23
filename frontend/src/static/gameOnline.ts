@@ -250,7 +250,8 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
                 console.log(`Unrecognized message type: ${JSONObject.type}`)
         }
     }
-
+    removeEventListener("keydown", handleKeyDown)
+    removeEventListener("keyup", handleKeyUp)
     websocket.onmessage = gameSockOnMessage
     ball.x = canvas.width / 2
     ball.y = canvas.height / 2

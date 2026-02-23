@@ -222,7 +222,8 @@ export async function gameOfflineLobby(
         }
         ctx.drawImage(drawCanvas, 0, 0)
     }
-
+    removeEventListener("keydown", handleKeyDown)
+    removeEventListener("keyup", handleKeyUp)
     canvas.addEventListener("keydown", handleKeyDown)
     canvas.addEventListener("keyup", handleKeyUp)
     if (gameMode === 'singleplayer') {
