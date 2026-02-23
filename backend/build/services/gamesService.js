@@ -2,6 +2,8 @@ import { db } from '../databaseInit.js';
 import { dbError } from '../error/dbErrors.js';
 import { ApiError } from '../error/errors.js';
 const TIMEOUT_MATCHMAKING = 30000; //in millisec
+// In-memory ready state (game_id -> Set of player_ids who are ready)
+const readyPlayers = new Map();
 export const gamesService = {
     getAllGames: () => {
         return db.prepare('SELECT * FROM games').all();
@@ -56,12 +58,12 @@ export const gamesService = {
         const player = db.prepare('SELECT status FROM users WHERE id = ?').get(player_id);
         if (player.status === 'playing') {
             db.prepare('UPDATE users SET status = ? WHERE id = ?').run('playing', player_id);
-            return db.prepare('SELECT * FROM games WHERE player1_id = ? OR player2_id = ? ORDER BY created_at DESC LIMIT 1').get(player_id, player_id); //return gamedata
+            return db.prepare('SELECT * FROM games WHERE player1_id = ? OR player2_id = ? ORDER BY created_at DESC LIMIT 1').get(player_id, player_id);
         }
         if (player.status === 'searching') {
             const queue = db.prepare('SELECT joined_at FROM game_queue WHERE player_id = ?').get(player_id);
             if (Date.now() - queue.joined_at * 1000 > TIMEOUT_MATCHMAKING) {
-                db.prepare('UPDATE users SET status = ? WHERE id = ?').run('idle', player_id); //timed out!!!!
+                db.prepare('UPDATE users SET status = ? WHERE id = ?').run('idle', player_id);
                 db.prepare('DELETE FROM game_queue WHERE player_id = ?').run(player_id);
                 return db.prepare('SELECT status FROM users WHERE id = ?').get(player_id);
             }
@@ -81,12 +83,45 @@ export const gamesService = {
     fetchlobby: (lobby_id) => {
         return db.prepare('SELECT * FROM game_queue WHERE lobby_id = ?').get(lobby_id);
     },
+    setPlayerReady: (game_id, player_id) => {
+        const game = db.prepare('SELECT * FROM games WHERE id = ?').get(game_id);
+        if (!game)
+            throw new ApiError(404, 'Game not found');
+        if (game.player1_id !== player_id && game.player2_id !== player_id)
+            throw new ApiError(403, 'Player not in this game');
+        if (!readyPlayers.has(game_id))
+            readyPlayers.set(game_id, new Set());
+        readyPlayers.get(game_id).add(player_id);
+        const allReady = readyPlayers.get(game_id).has(game.player1_id)
+            && readyPlayers.get(game_id).has(game.player2_id);
+        return {
+            game_id,
+            player1_ready: readyPlayers.get(game_id).has(game.player1_id),
+            player2_ready: readyPlayers.get(game_id).has(game.player2_id),
+            all_ready: allReady,
+        };
+    },
+    getReadyStatus: (game_id) => {
+        const game = db.prepare('SELECT * FROM games WHERE id = ?').get(game_id);
+        if (!game)
+            throw new ApiError(404, 'Game not found');
+        const readySet = readyPlayers.get(game_id) || new Set();
+        return {
+            game_id,
+            player1_id: game.player1_id,
+            player2_id: game.player2_id,
+            player1_ready: readySet.has(game.player1_id),
+            player2_ready: readySet.has(game.player2_id),
+            all_ready: readySet.has(game.player1_id) && readySet.has(game.player2_id),
+        };
+    },
     finishGame: (id, score_player1, score_player2, winner_id, finished_at) => {
         const gameObj = gamesService.fetchGame(id);
-        if (gameObj.status !== 'ready') //check this
+        if (gameObj.status !== 'ready')
             throw new ApiError(400, 'game not ongoing');
         try {
             db.prepare('UPDATE users SET status = ? WHERE id = ? OR id = ?').run('idle', gameObj.player1_id, gameObj.player2_id);
+            readyPlayers.delete(id);
             return db.prepare(' UPDATE games SET winner_id = ?, score_player1 = ?, score_player2 = ?, finished_at = ?, status = ? WHERE id = ?').run(winner_id, score_player1, score_player2, finished_at, 'finished', id);
         }
         catch (err) {

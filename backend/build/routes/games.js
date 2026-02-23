@@ -23,6 +23,12 @@ export default async function gamesRoutes(fastify, options) {
             security: [{ bearerAuth: [] }],
         }, preHandler: [authenticate]
     }, gamesController.matchMaking);
+    fastify.post('/ready', {
+        preHandler: [authenticate]
+    }, gamesController.setReady);
+    fastify.get('/:id/ready', {
+        preHandler: [authenticate]
+    }, gamesController.getReadyStatus);
     fastify.get('/matchmaking', {
         schema: {
             tags: ['games'],

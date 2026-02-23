@@ -73,6 +73,17 @@ export const gamesController = {
         const game = gamesService.createGame(game_queue.player_id, player_id, lobby_id);
         return { success: true, data: game, message: 'Game created, connect to gameserver' };
     },
+    setReady: async (req, reply) => {
+        const player_id = req.user.userId;
+        const { game_id } = req.body;
+        const result = gamesService.setPlayerReady(game_id, player_id);
+        return { success: true, data: result };
+    },
+    getReadyStatus: async (req, reply) => {
+        const { id } = req.params;
+        const result = gamesService.getReadyStatus(id);
+        return { success: true, data: result };
+    },
     finishGame: async (req, reply) => {
         const { id } = req.params;
         const { winner_id, score_player1, score_player2, finished_at } = req.body;

@@ -4,6 +4,7 @@ export type Screen =
   | 'online'
   | 'host-lobby'
   | 'join-lobby'
+  | 'ready-room'
   | 'tournament'
   | 'create-tournament'
   | 'tournament-lobby'
@@ -12,9 +13,9 @@ export type Screen =
   | 'searching'
   | 'game'
   | 'timeout'
-  | 'error'  // ✅ ADD THIS
-  | 'websocket-connecting'  // ✅ ADD THIS
-  | 'websocket-closed'  // ✅ ADD THIS
+  | 'error'
+  | 'websocket-connecting'
+  | 'websocket-closed'
 
 export type GameMode = 
   |'none' 
