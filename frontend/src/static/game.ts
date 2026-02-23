@@ -1,8 +1,9 @@
 import { assertIsNotNull } from './lib'
 import { gameOnlineLobby } from './gameOnline'
 import { gameOfflineLobby } from './gameOffline'
+import { GameMode } from '../components/game/types'
 
-export default async function gameInit (gameMode: string, websocket: WebSocket) {
+export default async function gameInit (gameMode: GameMode, websocket: WebSocket) {
     let canvas = document.getElementById('game-canvas') as HTMLCanvasElement | null
     if (canvas === null) {
         canvas = document.createElement("canvas")

@@ -1,10 +1,11 @@
 import {useEffect} from 'react'
 import gameInit from '../../static/game.js'
 import { resetState } from '../../static/lib.js'
+import { GameMode } from './types.js'
 
 interface GameCanvas {
-    mode: string
-	websocket: React.RefObject<null | WebSocket>
+    mode: GameMode
+    websocket: React.RefObject<null | WebSocket>
 }
 
 export default function GameCanvas({mode, websocket}:GameCanvas) {

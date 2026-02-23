@@ -5,9 +5,10 @@ import { playerOne, playerTwo, ball, Point, Vector2,
     roundMax, handlePaddleCollision, assertIsNotNull, printText, 
     arenaHeight, textColor, intervals } from './lib'
 import { DifficultyLevel } from './ai'
+import { GameMode } from '../components/game/types'
 
 export async function gameOfflineLobby(
-    gameMode: string, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D,
+    gameMode: GameMode, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D,
     drawCanvas: HTMLCanvasElement, drawCtx: CanvasRenderingContext2D) {
     let deltaTimeMS: number
     let then: number, now: number
