@@ -60,7 +60,7 @@ function resetBall() {
     ball.dirVector.y = 1
     ball.radius = ballRadius
     ball.movementSpeed = ballSpeed
-    ball.color = "#160f29"
+    ball.color = ballColor 
     ball.speedX = 0
     ball.maxSpeed = 7.5
     ball.reset()
@@ -73,6 +73,7 @@ function resetPlayerOne() {
     playerOne.gameScore = 0
     playerOne.ai = undefined
     playerOne.humanControlled = true
+    playerOne.paddle.color = p1PaddleColor 
 }
 
 function resetPlayerTwo() {
@@ -82,6 +83,7 @@ function resetPlayerTwo() {
     playerTwo.gameScore = 0
     playerTwo.ai = undefined
     playerTwo.humanControlled = true
+    playerTwo.paddle.color = p2PaddleColor
 }
 
 export function resetState() {
