@@ -10,6 +10,7 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
         ctx: CanvasRenderingContext2D, drawCanvas: HTMLCanvasElement,
         drawCtx: CanvasRenderingContext2D, websocket: WebSocket) {
     const serverTick = 1000 / 66
+    let firstStateReceived = false
     let lastHearbeatSent = 0
 
     let p1Score = 0
@@ -175,6 +176,11 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
         const ballServer = JSONObject.ball
         switch (JSONObject.type) {
             case "STATE":
+                if (!firstStateReceived) {
+                    canvas.addEventListener("keydown", handleKeyDown)
+                    canvas.addEventListener("keyup", handleKeyUp)
+                    firstStateReceived = true
+                }
                 interpVelocityBall = pointSubtract(new Point(ballServer.x, ballServer.y), new Point(ball.x, ball.y))
                 interpVelocityBall.x /= serverTick
                 interpVelocityBall.y /= serverTick
@@ -246,8 +252,6 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
     }
 
     websocket.onmessage = gameSockOnMessage
-    canvas.addEventListener("keydown", handleKeyDown)
-    canvas.addEventListener("keyup", handleKeyUp)
     ball.x = canvas.width / 2
     ball.y = canvas.height / 2
     requestAnimationFrame(draw)
