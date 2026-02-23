@@ -33,6 +33,7 @@ CREATE INDEX IF NOT EXISTS idx_users_anonymous ON users(is_anonymous);
 CREATE TABLE IF NOT EXISTS game_queue (
 	player_id INTEGER PRIMARY KEY,
     joined_at INTEGER DEFAULT (strftime('%s','now')),
+    lobby_id TEXT,
     private BOOLEAN DEFAULT 0,
 	UNIQUE(player_id)
 );

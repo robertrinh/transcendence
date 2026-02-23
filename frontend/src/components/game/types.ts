@@ -2,7 +2,6 @@ export type Screen =
     | 'main'
     | 'online'
     | 'local'
-    | 'host-lobby'
     | 'join-lobby'
     | 'tournament'
     | 'create-tournament'

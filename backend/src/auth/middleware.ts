@@ -17,30 +17,59 @@ declare module 'fastify' {
 //* as admin, you can access all data (like all users, all games, all tournaments, etc.)
 //* adding middleware helps protect routes from unauthorized access!
 
-//* Middleware to verify JWT token for authenticated routes
-export const authenticate = async (request: FastifyRequest, reply: FastifyReply) => {
+const extractVerifyToken = (request: FastifyRequest, reply: FastifyReply) => {
 	const authHeader = request.headers.authorization;
 	if (typeof authHeader !== 'string' || !authHeader.startsWith('Bearer ')) {
-		return reply.code(401).send({
+		reply.code(401).send({
 			success: false,
 			error: 'No token provided bruv'
 		})
+		return null;
 	}
 	const token = authHeader.split(' ')[1];
 	const payload = verifyToken(token);
 	if (!payload) {
-		return reply.code(401).send({
+		reply.code(401).send({
 			success: false,
-			error: 'Invalid or expired token brud'
+			error: 'Invalid or expired token'
 		})
+		return null;
 	}
-	
-	//* reject tokens for deleted users (e.g. account deleted in another tab)
 	const userExists = db.prepare('SELECT id FROM users WHERE id = ?').get(payload.userId);
 	if (!userExists) {
-		return reply.code(401).send({
+		reply.code(401).send({
 			success: false,
 			error: 'Account no longer exists'
+		})
+		return null;	
+	}
+	return payload;
+}
+
+//* Middleware to verify JWT token for authenticated routes
+export const authenticate = async (request: FastifyRequest, reply: FastifyReply) => {
+	const payload = extractVerifyToken(request, reply);
+	if (!payload)
+		return;
+	//* reject pending 2FA tokens, must complete 2FA first
+	if (payload.twoFactorPending) {
+		return reply.code(403).send({
+			success: false,
+			error: '2FA verification required'
+		})
+	}
+	request.user = payload;
+}
+
+//* middleware for 2FA verification endpoint: ONLY accepts pending tokens
+export const authenticatePendingOnly = async (request: FastifyRequest, reply: FastifyReply) => {
+	const payload = extractVerifyToken(request, reply);
+	if (!payload)
+		return;
+	if (!payload.twoFactorPending) {
+		return reply.code(403).send({
+			success: false,
+			error: 'This endpoint requires a pending 2FA token'
 		})
 	}
 	request.user = payload;
