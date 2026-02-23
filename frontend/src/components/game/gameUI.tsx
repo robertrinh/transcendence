@@ -1,16 +1,14 @@
 import { useEffect } from 'react'
 import { fetchWithAuth } from '../../config/api'
 import GameCanvas from './gameCanvas.js'
-import { HostLobby, JoinLobby, LocalMenu, MainMenu, OnlineMenu } from './gameMenus.js';
+import { JoinLobby, LocalMenu, MainMenu, OnlineMenu } from './gameMenus.js';
 import {MainMenuTournament, MenuCreateTournament} from './tournamentMenus.js'
 import SearchingScreen from './searchingScreen.js';
-import  { TimeoutScreen, ErrorScreen } from './timeoutScreen.js';
-import { WebSocketConnectingScreen, WebSocketClosedScreen } 
-from './webSocketWaitScreen.js';
+import  { TimeoutScreen, InfoScreen } from './timeoutScreen.js';
 import { Screen, GameMode } from './types.js'
+import { infoBoxType } from './infoBox.js';
 
 type gameProps = {
-	lobbyId: string;
 	gameMode: GameMode;
 	screen: Screen;
 	error: string | null;
@@ -45,7 +43,7 @@ function resizeGameUI(gameUI: HTMLElement) {
 }
 
 export default function GameUI({
-	screen, gameMode, lobbyId, error, websocket, setScreen, setGameMode,
+	screen, gameMode, error, websocket, setScreen, setGameMode,
 	handleRandomPlayer, handleHostReq, joinLobbyReq, resetPlayerStatus}:gameProps) {
 	useEffect(() => {
 		const gameUI = document.getElementById("game-ui")
@@ -87,25 +85,6 @@ export default function GameUI({
 						onTournament={() => setScreen('tournament')}
 						onBack={() => setScreen('main')}
 					/>
-		case 'host-lobby':
-			return 	<HostLobby
-						lobbyId={lobbyId}
-						onCopyLobby={() => {
-							const lobbyElement = document.getElementById("req-lobby-id") as HTMLInputElement | null
-							if (lobbyElement === null) {return}
-							navigator.clipboard.writeText(lobbyElement.value)
-						}}
-						onJoinOwn={() => {
-							websocket.current!.send(
-								JSON.stringify({
-									"type": "HOST_LOBBY",
-									"lobby_id": lobbyId
-								})
-							)
-							setGameMode('online')
-							setScreen('game')
-						}}
-					/>
 		case 'join-lobby':
 			return 	<JoinLobby
 						onJoin={() => {
@@ -130,6 +109,12 @@ export default function GameUI({
 					/>
 		case 'searching':
 			return 	<SearchingScreen
+						message='Searching for match...'
+						onCancel={() => {setGameMode('none'); setScreen('online'); resetPlayerStatus()}}
+					/>
+		case 'searching-private':
+			return 	<SearchingScreen
+						message='Waiting for your opponent to join...'
 						onCancel={() => {setGameMode('none'); setScreen('online'); resetPlayerStatus()}}
 					/>
 		case 'game':
@@ -139,14 +124,23 @@ export default function GameUI({
 						onExit={() => {setGameMode('none'); setScreen('main'); resetPlayerStatus()}}
 						onRetry={async () => { await resetPlayerStatus(); handleRandomPlayer()}}
 					/>
-		case 'error':
-			return <ErrorScreen
-						error={error}
+		case 'info-bad':
+			return <InfoScreen
+						screenType={infoBoxType.Bad}
+						message={error!}
 						onExit={() => {setGameMode('none'); setScreen('main'); resetPlayerStatus()}}
 					/>
-		case 'websocket-connecting':
-			return <WebSocketConnectingScreen/>
-		case 'websocket-closed':
-			return <WebSocketClosedScreen/>
+		case 'info-neutral':
+			return <InfoScreen
+						screenType={infoBoxType.Neutral}
+						message={error!}
+						onExit={() => {setGameMode('none'); setScreen('main'); resetPlayerStatus()}}
+					/>
+		case 'info-good':
+			return <InfoScreen
+						screenType={infoBoxType.Good}
+						message={error!}
+						onExit={() => {setGameMode('none'); setScreen('main'); resetPlayerStatus()}}
+					/>
 	}
   }

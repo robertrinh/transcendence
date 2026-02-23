@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS game_queue (
 
 CREATE TABLE IF NOT EXISTS games (
     id INTEGER PRIMARY KEY,
+    lobby_id TEXT,
     player1_id INTEGER, --NULL for tournament placeholder games
     player2_id INTEGER, --NULL for tournament placeholder games
 	score_player1 INTEGER DEFAULT 0,

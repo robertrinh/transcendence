@@ -9,6 +9,7 @@ frontend_port=8080
 game_server_port=8081
 passwd=$(openssl passwd -1 "")	
 nginx_port=8443
+jwt_secret=$(openssl rand -base64 32)
 
 function create_ssl () {
 	openssl req -x509 -newkey rsa:4096 -keyout $nginx_dir/nginx-selfsigned.key \
@@ -36,7 +37,7 @@ function create_backend_env () {
 
 	# JWT Configuration
 	# Use: openssl rand -base64 32
-	JWT_SECRET=$(openssl rand -base64 32)
+	JWT_SECRET=$jwt_secret
 
 	# JWT Token Expiration Time
 	# Format: 60s, 5m, 1h, 7d, etc.
@@ -45,6 +46,7 @@ function create_backend_env () {
 	# Server Configuration 
 	BACKEND_PORT=$backend_port
 	FRONTEND_PORT=$frontend_port
+	NGINX_PORT=$nginx_port
 	HOST=$hostname
 	EOF
 }
@@ -56,9 +58,6 @@ function create_frontend_env () {
 	VITE_BACKEND_PORT=$backend_port
 	VITE_FRONTEND_PORT=$frontend_port
 	VITE_NGINX_PORT=$nginx_port
-
-	# Use 1 for production and 0 for development
-	VITE_USE_WSS=1
 	EOF
 }
 
@@ -69,6 +68,10 @@ function create_game_env () {
 	# Password to use for the “HTTP Basic Authentication” protocol, used by the
 	# game server to finish games
 	HTTP_PASSWD='$passwd'
+
+	# JWT Configuration
+	# Use: openssl rand -base64 32
+	JWT_SECRET=$jwt_secret
 	EOF
 }
 

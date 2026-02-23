@@ -15,6 +15,10 @@ export const gamesService = {
 		return db.prepare('SELECT * FROM games WHERE id = ?').get(id);
 	},
 
+	fetchPrivateGame: (lobby_id: string) => {
+		return db.prepare('SELECT * FROM games WHERE lobby_id = ?').get(lobby_id)
+	},
+
 	addtoGameQueue: (player: number) => {
 		const result = db.prepare('INSERT INTO game_queue (player_id) VALUES (?)').run(player);
 		db.prepare('UPDATE users SET status = ? WHERE id = ?').run('searching', player);
@@ -38,11 +42,19 @@ export const gamesService = {
 		}
 	},
 
-	createGame: (player: number, new_player: number) => {
+	createGame: (player: number, new_player: number, lobby_id?: string) => {
 		if (player === new_player)
 			throw new ApiError(400, "duplicate player");
 		try {
-			const game_created = db.prepare('INSERT INTO games (player1_id, player2_id, status) VALUES(?, ?, ?) RETURNING *').get(player, new_player, 'ready') as Game;
+			let game_created: Game;
+			if (lobby_id === undefined) {
+				game_created = db.prepare('INSERT INTO games (player1_id, player2_id, status) VALUES(?, ?, ?) RETURNING *')
+				.get(player, new_player, 'ready') as Game;
+			}
+			else {
+				game_created = db.prepare('INSERT INTO games (lobby_id, player1_id, player2_id, status) VALUES(?, ?, ?, ?) RETURNING *')
+				.get(lobby_id, player, new_player, 'ready') as Game;
+			}
 			db.prepare('UPDATE users SET status = ? WHERE id = ? OR id = ?').run('playing', player, new_player);
 			db.prepare('DELETE FROM game_queue WHERE player_id = ?').run(player);
 			return game_created;
