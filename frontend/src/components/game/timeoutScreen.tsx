@@ -1,48 +1,48 @@
 import Button from "./button";
+import { InfoBox, infoBoxType } from "./infoBox";
 
 interface TimeoutScreenProps {
 	onExit: () => void
 	onRetry: () => void
 }
 
-interface ErrorScreenProps {
+interface InfoScreenProps {
 	onExit: () => void
-	error: string | null
+	message: string
+	screenType: infoBoxType
 }
 
 export function TimeoutScreen ({onExit, onRetry}: TimeoutScreenProps) {
 	return (
-		<div>
-			No player found
+		<InfoBox type={infoBoxType.Neutral}>
+			<p>No player found</p>
 			<Button
 				id='btn-retry'
-				className={"bg-indigo-500 text-white py-2 px-8 uppercase rounded-xl"}
+				className={"bg-indigo-500 text-white py-2 px-8 uppercase rounded-xl w-[20%]"}
 				buttonName='retry'
 				onClick={(onRetry)}
 			/>	
 			<Button
 				id='btn-exit'
-				className={"bg-indigo-500 text-white py-2 px-8 uppercase rounded-xl"}
+				className={"bg-indigo-500 text-white py-2 px-8 uppercase rounded-xl w-[20%]"}
 				buttonName='exit'
 				onClick={(onExit)}
-			/>	
-		</div>
+			/>
+		</InfoBox>
+
 	)
 }
 
-
-export function ErrorScreen ({onExit, error}: ErrorScreenProps) {
+export function InfoScreen ({onExit, message, screenType}: InfoScreenProps) {
 	return (
-		<div>
-			<b className="font-bold">Error: </b>
-				{error}
+		<InfoBox type={screenType}>
+			<p>{message}</p>
 			<Button
 				id='btn-exit'
-				className={"bg-indigo-500 text-white py-2 px-8 uppercase rounded-xl"}
+			className={"bg-indigo-500 text-white py-2 px-8 uppercase rounded-xl"}
 				buttonName='exit'
 				onClick={(onExit)}
-			/>	
-		</div>
-
+			/>
+		</InfoBox>
 	)
 }

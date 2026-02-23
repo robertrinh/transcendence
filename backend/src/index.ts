@@ -104,7 +104,7 @@ const start = async () => {
         await server.listen({ port: 3000, host: '0.0.0.0' });
         const devBackendURL = `http://${process.env.HOST}:${process.env.BACKEND_PORT}`
         const devFrontendURL = `http://${process.env.HOST}:${process.env.FRONTEND_PORT}`
-        const prodURL = `https://${process.env.HOST}`
+        const prodURL = `https://${process.env.HOST}:${process.env.NGINX_PORT}`
         console.log(
             `Development access points:\n` + 
             `\t - 🚀 Backend server running on ${devBackendURL}\n` +

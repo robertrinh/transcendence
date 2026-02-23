@@ -1,0 +1,187 @@
+import { db } from '../databaseInit.js';
+import { dbError } from '../error/dbErrors.js';
+export const userService = {
+    fetchAllUsers: () => {
+        return db.prepare(`
+            SELECT 
+                u.id,
+                u.status,
+                u.username, 
+                u.nickname,
+                u.display_name,
+                u.is_anonymous,
+                a.path as avatar_url,
+                u.created_at
+            FROM users u 
+            LEFT JOIN avatars a ON u.avatar_id = a.id
+            WHERE u.is_anonymous = 0
+            ORDER BY u.created_at DESC
+        `).all();
+    },
+    fetchUser: (id) => {
+        return db.prepare(`
+            SELECT 
+                u.id, 
+                u.status,
+                u.username, 
+                u.password,
+                u.nickname,
+                u.display_name,
+                u.email,
+                u.created_at,
+                u.is_anonymous,
+                u.anonymized_at,
+                a.path as avatar_url,
+                (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND winner_id = u.id) as wins,
+                (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND winner_id != u.id AND winner_id IS NOT NULL) as losses,
+                (SELECT COUNT(*) FROM games WHERE player1_id = u.id OR player2_id = u.id) as total_games
+            FROM users u 
+            LEFT JOIN avatars a ON u.avatar_id = a.id 
+            WHERE u.id = ?
+        `).get(id);
+    },
+    fetchOwnProfile: (id) => {
+        return db.prepare(`
+           SELECT 
+                u.id, 
+                u.username, 
+                u.nickname,
+                u.display_name,
+                u.email,
+                u.created_at,
+                u.is_anonymous,
+                u.anonymized_at,
+                u.is_guest,
+                u.two_factor_enabled,
+                a.path as avatar_url,
+                (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND winner_id = u.id) as wins,
+                (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND winner_id != u.id AND winner_id IS NOT NULL) as losses,
+                (SELECT COUNT(*) FROM games WHERE player1_id = u.id OR player2_id = u.id) as total_games
+            FROM users u 
+            LEFT JOIN avatars a ON u.avatar_id = a.id 
+            WHERE u.id = ?
+        `).get(id);
+    },
+    fetchPublicProfile: (username) => {
+        const user = db.prepare(`
+            SELECT 
+                u.id, 
+                u.username, 
+                u.nickname,
+                u.display_name,
+                u.is_anonymous,
+                u.anonymized_at,
+                a.path as avatar_url,
+                (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND winner_id = u.id) as wins,
+                (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND winner_id != u.id AND winner_id IS NOT NULL) as losses,
+                (SELECT COUNT(*) FROM games WHERE player1_id = u.id OR player2_id = u.id) as total_games
+            FROM users u 
+            LEFT JOIN avatars a ON u.avatar_id = a.id 
+            WHERE u.username = ?
+        `).get(username);
+        if (!user)
+            return null;
+        const winRate = user.total_games > 0
+            ? `${((user.wins / user.total_games) * 100).toFixed(1)}%`
+            : '0%';
+        // If anonymous, return limited info
+        if (user.is_anonymous) {
+            return {
+                id: user.id,
+                username: user.username,
+                is_anonymous: true,
+                anonymized_at: user.anonymized_at,
+                wins: user.wins || 0,
+                losses: user.losses || 0,
+                total_games: user.total_games || 0,
+                winRate
+            };
+        }
+        // Return full profile
+        return {
+            id: user.id,
+            username: user.username,
+            nickname: user.nickname,
+            display_name: user.display_name,
+            avatar_url: user.avatar_url,
+            is_anonymous: false,
+            wins: user.wins || 0,
+            losses: user.losses || 0,
+            total_games: user.total_games || 0,
+            winRate
+        };
+    },
+    anonymizeProfile: (id) => {
+        try {
+            // Start transaction
+            const transaction = db.transaction(() => {
+                // Set user as anonymous
+                db.prepare(`
+                    UPDATE users 
+                    SET is_anonymous = 1,
+                        anonymized_at = datetime('now'),
+                        email = NULL,
+                        nickname = NULL,
+                        display_name = NULL,
+                        two_factor_secret = NULL,
+                        two_factor_enabled = 0
+                    WHERE id = ?
+                `).run(id);
+            });
+            transaction();
+            // Return updated user
+            return db.prepare(`
+                SELECT 
+                    id, 
+                    username, 
+                    is_anonymous,
+                    anonymized_at
+                FROM users 
+                WHERE id = ?
+            `).get(id);
+        }
+        catch (err) {
+            dbError(err);
+            throw err;
+        }
+    },
+    isUserAnonymous: (id) => {
+        const result = db.prepare('SELECT is_anonymous FROM users WHERE id = ?').get(id);
+        return result ? Boolean(result.is_anonymous) : false;
+    },
+    addUser: async (username, hashedPassword) => {
+        try {
+            db.prepare('INSERT INTO users (username, password) VALUES (?, ?)').run(username, hashedPassword);
+        }
+        catch (err) {
+            dbError(err);
+        }
+    },
+    updateProfile: (updates, values, id) => {
+        values.push(id);
+        return db.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).run(...values);
+    },
+    uploadAvatar: (fileName, id) => {
+        const avatarResult = db.prepare('INSERT INTO avatars (path, name) VALUES (?, ?)').run(fileName, fileName);
+        db.prepare('UPDATE users SET avatar_id = ? WHERE id = ?').run(avatarResult.lastInsertRowid, id);
+    },
+    deleteUser: (id) => {
+        try {
+            // Delete related data first (cascading)
+            db.prepare('DELETE FROM chat_messages WHERE user_id = ?').run(id);
+            db.prepare('DELETE FROM user_sessions WHERE user_id = ?').run(id);
+            db.prepare('DELETE FROM tournament_participants WHERE user_id = ?').run(id);
+            db.prepare('DELETE FROM games WHERE player1_id = ? OR player2_id = ? OR winner_id = ?').run(id, id, id);
+            // Delete the user
+            const result = db.prepare('DELETE FROM users WHERE id = ?').run(id);
+            return result;
+        }
+        catch (err) {
+            dbError(err);
+            throw err;
+        }
+    }
+};
+/* For route-specific error handling, Fastify supports hooks like preValidation, preHandler, and onError, which can be used to intercept errors at various stages of request processing.
+ These hooks can be used to validate input, perform authentication, or handle errors before they reach the final handler. When using TypeScript, the FastifyInstance type can be extended via module augmentation to add custom methods, such as authenticate, which can be used in pre-handlers to enforce authentication.
+*/ 

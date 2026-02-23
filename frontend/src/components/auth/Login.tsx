@@ -54,14 +54,9 @@ const Login: React.FC<LoginProps> = ({
 
 			console.log('Response status:', response.status);
 			const data = await response.json();
-			console.log('Response data:', data);
+			console.log('Response data:', data); // remove this for production!!!!
 
 			if (response.ok) {
-				//! DELETE LATER: Force 2FA popup for testing
-				setPendingUser(data.user);
-				setPendingToken(data.token);
-				setShowTwoFactor(true);
-
 				if (data.requires2FA) {
 					setPendingUser(data.user);
 					setPendingToken(data.token);
@@ -83,10 +78,8 @@ const Login: React.FC<LoginProps> = ({
 		}
 	};
 
-	const handleTwoFactorSuccess = () => {
-		if (pendingUser && pendingToken) {
-			onLoginSuccess(pendingUser, pendingToken);
-		}
+	const handleTwoFactorSuccess = (token: string, user: User) => {
+		onLoginSuccess(user, token);
 
 		//* Reset state
 		setShowTwoFactor(false);
