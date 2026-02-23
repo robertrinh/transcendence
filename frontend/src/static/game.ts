@@ -25,6 +25,7 @@ export default async function gameInit (gameMode: GameMode, websocket: WebSocket
     const main = document.getElementById('main')
     assertIsNotNull(main)
     main.insertAdjacentElement('afterend', canvas)
+    canvas.focus()
     console.log(`GAMING MODE: ${gameMode}`)
     switch (gameMode) {
         case "singleplayer":
