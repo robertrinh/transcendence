@@ -103,7 +103,7 @@ export const gamesService = {
 	},
 
 	getGameByUserID: (player_id: number) => {
-		const temp =  db.prepare(
+		return db.prepare(
 			`WITH view_own AS (
 				SELECT
 					games.id,
@@ -160,9 +160,6 @@ export const gamesService = {
 				finished_at
 			FROM view_winner`
 		).all({player_id: player_id}) as GameHistoryItem[]
-
-		console.log(temp)
-		return temp
 	}
 }
 
