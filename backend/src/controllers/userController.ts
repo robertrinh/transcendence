@@ -143,11 +143,11 @@ export const userController = {
                 return reply.code(400).send({ success: false, error: 'No file uploaded' })
             }
 
-            const allowedTypes = ['image/jpg']
+            const allowedTypes = ['image/jpeg', 'image/jpg']
             if (!allowedTypes.includes(data.mimetype)) {
                 return reply.code(400).send({ 
                     success: false, 
-                    error: 'Only JPG files are allowed' 
+                    error: 'Only JPG/JPEG files are allowed' 
                 })
             }
 

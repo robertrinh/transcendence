@@ -616,7 +616,7 @@ if (user.is_anonymous) {
                             friends.filter((f) => f.username?.trim()).map((friend) => (
                                 <div key={friend.id} className="flex items-center justify-between p-2 bg-white/30 backdrop-blur-sm border border-white/20 rounded">
                                     <div className="flex items-center space-x-2">
-                                        <div className={`w-2 h-2 rounded-full ${friend.isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                                        <div className={`w-2 h-2 rounded-full ${onlineUsers.includes(friend.username) ? 'bg-green-500' : 'bg-gray-400'}`} title={onlineUsers.includes(friend.username) ? 'Online' : 'Offline'}></div>
                                         <span className="text-sm font-medium text-gray-900">{friend.username}</span>
                                     </div>
                                     <div className="flex items-center space-x-1">
