@@ -120,24 +120,18 @@ export const gamesService = {
         const gameObj = gamesService.fetchGame(id);
         if (!gameObj)
             throw new ApiError(404, 'Game not found');
-        if (gameObj.status !== 'ready')
-            throw new ApiError(400, 'game not ongoing');
-        try {
-            db.prepare('UPDATE users SET status = ? WHERE id = ? OR id = ?').run('idle', gameObj.player1_id, gameObj.player2_id);
-            readyPlayers.delete(id);
-            const result = db.prepare('UPDATE games SET winner_id = ?, score_player1 = ?, score_player2 = ?, finished_at = ?, status = ? WHERE id = ?')
-                .run(winner_id, score_player1, score_player2, finished_at, 'finished', id);
-            // If this is a tournament game, advance the winner to the next round
-            if (gameObj.tournament_id) {
-                console.log(`🏆 Tournament game ${id} finished. Advancing winner ${winner_id} in tournament ${gameObj.tournament_id}`);
-                tournamentService.advanceWinner(id);
-            }
-            return result;
+        db.prepare('UPDATE games SET score_player1 = ?, score_player2 = ?, winner_id = ?, finished_at = ?, status = ? WHERE id = ?')
+            .run(score_player1, score_player2, winner_id, finished_at, 'finished', id);
+        // Reset player status back to idle (not 'online' — schema only allows idle/searching/playing)
+        if (gameObj.player1_id)
+            db.prepare('UPDATE users SET status = ? WHERE id = ?').run('idle', gameObj.player1_id);
+        if (gameObj.player2_id)
+            db.prepare('UPDATE users SET status = ? WHERE id = ?').run('idle', gameObj.player2_id);
+        // Advance winner in tournament if applicable
+        if (gameObj.tournament_id) {
+            tournamentService.advanceWinner(id);
         }
-        catch (err) {
-            dbError(err);
-        }
-    }
+    },
 };
 function generateLobbyId() {
     const hex = '0123456789abcdef';

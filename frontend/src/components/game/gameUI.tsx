@@ -62,8 +62,8 @@ export default function GameUI({
     screen, gameMode, lobbyId, error, websocket, setScreen, setGameMode,
     handleRandomPlayer, handleHostReq, joinLobbyReq, resetPlayerStatus, gameData, 
     tournamentId, selectedBracketSize, currentUser, isTournamentMatch: _isTournamentMatch,
-    setTournamentId, setGameData, setError,
-    handleTournamentPlayMatch: _handleTournamentPlayMatch, handleTournamentFinished: _handleTournamentFinished,
+    setTournamentId: _setTournamentId, setGameData, setError: _setError,
+    handleTournamentPlayMatch, handleTournamentFinished,
     onTournamentJoined, onTournamentCreated, onTournamentStarted,
     onTournamentLeft, onCreateTournament, onBackFromCreate, onBackFromJoin
 }: gameProps) {
@@ -164,28 +164,8 @@ export default function GameUI({
         case 'tournament-bracket':
             return <TournamentBracket
                         tournamentId={tournamentId}
-                        onPlayMatch={async (gameId) => {
-                            console.log('🎯 Playing tournament match - Game ID:', gameId)
-                            try {
-                                const response = await fetchWithAuth(`/api/games/${gameId}`)
-                                if (!response.ok) throw new Error('Failed to fetch game')
-                                const gameResponse = await response.json()
-                                console.log('📦 Tournament game data:', gameResponse.data)
-                                setGameMode('online')
-                                setGameData(gameResponse.data)
-                                setScreen('ready-room')
-                            } catch (err) {
-                                console.error('Failed to start match:', err)
-                                setError(String(err))
-                                setScreen('error')
-                            }
-                        }}
-                        onTournamentFinished={() => {
-                            setGameMode('none')
-                            setTournamentId(null)
-                            setScreen('main')
-                            resetPlayerStatus()
-                        }}
+                        onPlayMatch={handleTournamentPlayMatch}
+                        onTournamentFinished={handleTournamentFinished}
                         currentUserId={currentUser?.id}
                     />
         case 'countdown':

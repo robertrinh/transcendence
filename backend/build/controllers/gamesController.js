@@ -86,11 +86,8 @@ export const gamesController = {
     },
     finishGame: async (req, reply) => {
         const { id } = req.params;
-        const { winner_id, score_player1, score_player2, finished_at } = req.body;
-        const result = gamesService.finishGame(id, score_player1, score_player2, winner_id, finished_at);
-        return {
-            success: true,
-            message: 'Game finished'
-        };
-    }
+        const { score_player1, score_player2, winner_id, finished_at } = req.body;
+        gamesService.finishGame(id, score_player1, score_player2, winner_id, finished_at);
+        return { success: true, message: 'Game finished' };
+    },
 };

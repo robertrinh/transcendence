@@ -13,7 +13,7 @@ export default function Game() {
   const [tournamentId, setTournamentId] = useState<number | null>(null)
   const [selectedBracketSize, setSelectedBracketSize] = useState<number>(4)
   const [currentUser, setCurrentUser] = useState<any>(null)
-  const [isTournamentMatch, setIsTournamentMatch] = useState(false)
+  const isTournamentMatchRef = useRef(false)
 
   // Fetch current user on mount
   useEffect(() => {
@@ -37,13 +37,27 @@ export default function Game() {
     const handleGameOver = (event: Event) => {
       const detail = (event as CustomEvent).detail
       console.log('🏁 Game over event received:', detail)
-      if (isTournamentMatch) {
+      console.log('🏆 isTournamentMatch (ref):', isTournamentMatchRef.current)
+      
+      // Close websocket before state changes to prevent disconnect events
+      if (websocket.current) {
+        const ws = websocket.current
+        ws.onmessage = null
+        ws.onclose = null
+        ws.onerror = null
+        ws.close()
+        websocket.current = null
+      }
+
+      if (isTournamentMatchRef.current) {
         console.log('🏆 Returning to tournament bracket...')
-        setIsTournamentMatch(false)
         setScreen('tournament-bracket')
+        setGameMode('none')
+        setGameData(null)
       } else {
         setGameMode('none')
         setScreen('main')
+        setGameData(null)
         resetPlayerStatus()
       }
     }
@@ -52,7 +66,7 @@ export default function Game() {
     return () => {
       window.removeEventListener('game-over', handleGameOver)
     }
-  }, [isTournamentMatch])
+  }, [])
 
   function handleRandomPlayer() {
     setGameMode("online")
@@ -67,11 +81,9 @@ export default function Game() {
           return response.json()
         }).then(data => {
           if (data.data) {
-            // Game was created immediately (another player was waiting)
             setGameData(data.data)
             setScreen('ready-room')
           } else {
-            // Added to queue, need to poll for match
             setScreen("searching")
           }
         }).catch(err => {
@@ -85,7 +97,6 @@ export default function Game() {
   function handleHostReq() {
     setGameMode("online")
     setScreen("searching")
-    // Cancel any existing matchmaking first
     fetchWithAuth('/api/games/matchmaking/cancel', { method: 'PUT' })
       .catch(() => {})
       .finally(() => {
@@ -164,6 +175,7 @@ export default function Game() {
   const handleTournamentLeft = useCallback(() => {
     console.log('🏟️ Left tournament')
     setTournamentId(null)
+    isTournamentMatchRef.current = false
     setScreen('main')
     setGameMode('none')
   }, [])
@@ -171,26 +183,36 @@ export default function Game() {
   // Play a tournament match
   const handleTournamentPlayMatch = useCallback(async (gameId: number) => {
     console.log('🎯 Playing tournament match - Game ID:', gameId)
+    // Set ref FIRST, before any async work or state updates
+    isTournamentMatchRef.current = true
+    console.log('🏆 Set isTournamentMatchRef to TRUE')
     try {
       const response = await fetchWithAuth(`/api/games/${gameId}`)
       if (!response.ok) throw new Error('Failed to fetch game data')
       const data = await response.json()
       console.log('📦 Tournament game data:', data.data)
-      setIsTournamentMatch(true)
       setGameData(data.data)
       setGameMode('online')
       setScreen('ready-room')
     } catch (err) {
       console.error('❌ Failed to start tournament match:', err)
+      isTournamentMatchRef.current = false
       setError(String(err))
     }
   }, [])
 
   const handleTournamentFinished = useCallback(() => {
     console.log('🏆 Tournament finished!')
+    if (websocket.current) {
+      websocket.current.onmessage = null
+      websocket.current.onclose = null
+      websocket.current.close()
+      websocket.current = null
+    }
     setTournamentId(null)
-    setIsTournamentMatch(false)
+    isTournamentMatchRef.current = false
     setGameMode('none')
+    setGameData(null)
     setScreen('main')
   }, [])
 
@@ -206,7 +228,7 @@ export default function Game() {
           tournamentId={tournamentId}
           selectedBracketSize={selectedBracketSize}
           currentUser={currentUser}
-          isTournamentMatch={isTournamentMatch}
+          isTournamentMatch={isTournamentMatchRef.current}
 
           setScreen={setScreen}
           setGameMode={setGameMode}
