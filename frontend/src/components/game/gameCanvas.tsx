@@ -4,7 +4,7 @@ import { resetState } from '../../static/lib.js'
 
 interface GameCanvas {
     mode: string
-	websocket: React.RefObject<null | WebSocket>
+	websocket: React.MutableRefObject<WebSocket | null>
 }
 
 export default function GameCanvas({mode, websocket}:GameCanvas) {

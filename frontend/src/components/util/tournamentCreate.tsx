@@ -40,8 +40,6 @@ export default function TournamentCreate({ onTournamentCreated, onBack }: Tourna
 
             const data = await response.json()
             console.log('✅ Tournament created:', data.data.id)
-            
-            // ✅ Pass tournament ID back to parent
             onTournamentCreated(data.data.id, data.data.max_participants)
         } catch (err: any) {
             setError(err.message)
@@ -52,84 +50,154 @@ export default function TournamentCreate({ onTournamentCreated, onBack }: Tourna
     }
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
-            <div className="w-full max-w-md bg-gray-900 border-4 border-cyan-400 rounded-xl p-10 shadow-2xl shadow-cyan-500/20">
-                
-                <h1 className="text-4xl font-bold text-cyan-400 text-center mb-8 uppercase tracking-widest font-arcade">
+        <div className="min-h-screen flex items-center justify-center bg-black p-4" style={{
+            backgroundImage: 'linear-gradient(45deg, #1a1a2e 25%, transparent 25%, transparent 75%, #1a1a2e 75%, #1a1a2e), linear-gradient(45deg, #1a1a2e 25%, transparent 25%, transparent 75%, #1a1a2e 75%, #1a1a2e)',
+            backgroundSize: '40px 40px',
+            backgroundPosition: '0 0, 20px 20px'
+        }}>
+            <div className="absolute inset-0 pointer-events-none" style={{
+                backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.15) 0px, rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px)'
+            }}></div>
+
+            <div className="relative z-10 w-full max-w-md">
+                <h1 className="text-4xl font-black text-center mb-2" style={{
+                    color: '#ffff00',
+                    textShadow: '0 0 10px #ffff00, 0 0 20px #ffff00, 3px 3px 0 #ff00ff',
+                    fontFamily: 'monospace',
+                    letterSpacing: '4px'
+                }}>
                     CREATE TOURNAMENT
                 </h1>
 
-                {error && (
-                    <div className="bg-red-500/10 border-2 border-red-500 text-red-400 p-4 rounded-lg mb-6 font-arcade text-center text-sm">
-                        {error}
-                    </div>
-                )}
+                <div className="border-4 p-8 bg-gray-900" style={{
+                    borderColor: '#ffff00',
+                    boxShadow: 'inset 0 0 10px rgba(255,255,0,0.3), 0 0 20px rgba(255,255,0,0.5)'
+                }}>
+                    {error && (
+                        <div className="bg-red-900 border-4 border-red-400 p-4 mb-6 text-center" style={{
+                            fontFamily: 'monospace',
+                            boxShadow: '0 0 15px rgba(255,0,0,0.5)'
+                        }}>
+                            <p className="text-red-300 font-bold text-sm uppercase">{error}</p>
+                        </div>
+                    )}
 
-                <div className="space-y-6">
-                    {/* Tournament Name */}
-                    <div>
-                        <label className="block text-cyan-400 font-bold mb-2 uppercase font-arcade text-sm">
-                            Tournament Name
-                        </label>
-                        <input
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            disabled={loading}
-                            className="w-full bg-gray-800 border-2 border-cyan-400 text-white px-4 py-2 rounded-lg focus:outline-none focus:bg-gray-700 font-arcade disabled:opacity-50"
-                            placeholder="Enter tournament name"
-                        />
+                    <div className="space-y-6">
+                        {/* Tournament Name */}
+                        <div>
+                            <label className="block text-yellow-300 font-bold mb-2 uppercase text-sm" style={{
+                                fontFamily: 'monospace',
+                                textShadow: '0 0 5px #ffff00'
+                            }}>
+                                &gt; TOURNAMENT NAME
+                            </label>
+                            <input
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                disabled={loading}
+                                className="w-full bg-black border-4 border-purple-500 text-green-400 px-4 py-3 focus:outline-none focus:border-yellow-300 disabled:opacity-50"
+                                style={{
+                                    fontFamily: 'monospace',
+                                    boxShadow: '0 0 10px rgba(168,85,247,0.3)',
+                                    textShadow: '0 0 5px #00ff00'
+                                }}
+                                placeholder="ENTER NAME..."
+                            />
+                        </div>
+
+                        {/* Description */}
+                        <div>
+                            <label className="block text-yellow-300 font-bold mb-2 uppercase text-sm" style={{
+                                fontFamily: 'monospace',
+                                textShadow: '0 0 5px #ffff00'
+                            }}>
+                                &gt; DESCRIPTION (OPTIONAL)
+                            </label>
+                            <textarea
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                                disabled={loading}
+                                className="w-full bg-black border-4 border-purple-500 text-green-400 px-4 py-3 focus:outline-none focus:border-yellow-300 disabled:opacity-50 h-20 resize-none"
+                                style={{
+                                    fontFamily: 'monospace',
+                                    boxShadow: '0 0 10px rgba(168,85,247,0.3)',
+                                    textShadow: '0 0 5px #00ff00'
+                                }}
+                                placeholder="ENTER DESCRIPTION..."
+                            />
+                        </div>
+
+                        {/* Max Participants */}
+                        <div>
+                            <label className="block text-yellow-300 font-bold mb-3 uppercase text-sm" style={{
+                                fontFamily: 'monospace',
+                                textShadow: '0 0 5px #ffff00'
+                            }}>
+                                &gt; MAX PLAYERS
+                            </label>
+                            <div className="grid grid-cols-3 gap-3">
+                                {[4, 8, 16].map((num) => (
+                                    <button
+                                        key={num}
+                                        onClick={() => setMaxParticipants(num)}
+                                        disabled={loading}
+                                        className={`p-4 font-black text-xl uppercase border-4 transition-all duration-200 transform hover:scale-110 active:scale-95 ${
+                                            maxParticipants === num
+                                                ? 'bg-yellow-600 border-yellow-300 text-yellow-300'
+                                                : 'bg-gray-800 border-gray-600 text-gray-400 hover:border-yellow-300'
+                                        }`}
+                                        style={{
+                                            fontFamily: 'monospace',
+                                            boxShadow: maxParticipants === num
+                                                ? '0 0 20px rgba(255,255,0,0.6), inset 0 0 10px rgba(255,255,0,0.3)'
+                                                : 'none',
+                                            textShadow: maxParticipants === num ? '2px 2px 0 #000' : 'none'
+                                        }}
+                                    >
+                                        {num}
+                                        <div className="text-xs mt-1">PLAYERS</div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Description */}
-                    <div>
-                        <label className="block text-cyan-400 font-bold mb-2 uppercase font-arcade text-sm">
-                            Description (Optional)
-                        </label>
-                        <textarea
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            disabled={loading}
-                            className="w-full bg-gray-800 border-2 border-cyan-400 text-white px-4 py-2 rounded-lg focus:outline-none focus:bg-gray-700 font-arcade h-20 disabled:opacity-50"
-                            placeholder="Enter tournament description"
-                        />
-                    </div>
-
-                    {/* Max Participants */}
-                    <div>
-                        <label className="block text-cyan-400 font-bold mb-2 uppercase font-arcade text-sm">
-                            Max Players
-                        </label>
-                        <select
-                            value={maxParticipants}
-                            onChange={(e) => setMaxParticipants(parseInt(e.target.value))}
-                            disabled={loading}
-                            className="w-full bg-gray-800 border-2 border-cyan-400 text-white px-4 py-2 rounded-lg focus:outline-none focus:bg-gray-700 font-arcade disabled:opacity-50"
+                    {/* Buttons */}
+                    <div className="flex gap-4 mt-8">
+                        <button
+                            onClick={handleCreate}
+                            disabled={loading || !name.trim()}
+                            className="flex-1 p-4 bg-yellow-600 hover:bg-yellow-500 disabled:bg-gray-700 disabled:border-gray-600 border-4 border-yellow-300 font-black text-yellow-300 uppercase transition-all duration-200 transform hover:scale-105 active:scale-95"
+                            style={{
+                                fontFamily: 'monospace',
+                                boxShadow: loading || !name.trim() ? 'none' : '0 0 20px rgba(255,255,0,0.6)',
+                                textShadow: '2px 2px 0 #000'
+                            }}
                         >
-                            <option value={4}>4 Players</option>
-                            <option value={8}>8 Players</option>
-                            <option value={16}>16 Players</option>
-                        </select>
+                            {loading ? 'CREATING...' : 'CREATE'}
+                        </button>
+                        <button
+                            onClick={onBack}
+                            disabled={loading}
+                            className="flex-1 p-4 bg-red-900 hover:bg-red-700 border-4 border-red-400 font-black text-red-300 uppercase transition-all duration-200 transform hover:scale-105 active:scale-95"
+                            style={{
+                                fontFamily: 'monospace',
+                                boxShadow: '0 0 15px rgba(255,0,0,0.5)',
+                                textShadow: '2px 2px 0 #000'
+                            }}
+                        >
+                            BACK
+                        </button>
                     </div>
                 </div>
 
-                {/* Buttons */}
-                <div className="flex gap-4 mt-8">
-                    <button
-                        onClick={handleCreate}
-                        disabled={loading || !name.trim()}
-                        className="flex-1 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 uppercase tracking-wide font-arcade border-2 border-cyan-500"
-                    >
-                        {loading ? 'CREATING...' : 'CREATE'}
-                    </button>
-                    <button
-                        onClick={onBack}
-                        disabled={loading}
-                        className="flex-1 bg-transparent border-2 border-gray-500 text-gray-400 hover:border-gray-400 hover:text-gray-300 font-bold py-3 px-4 rounded-lg transition-all duration-200 uppercase tracking-wide font-arcade disabled:opacity-50"
-                    >
-                        BACK
-                    </button>
-                </div>
+                <p className="text-green-400 font-bold text-sm text-center mt-6" style={{
+                    fontFamily: 'monospace',
+                    textShadow: '0 0 10px #00ff00'
+                }}>
+                    &gt;&gt;&gt; BUILD YOUR ARENA &lt;&lt;&lt;
+                </p>
             </div>
         </div>
     )

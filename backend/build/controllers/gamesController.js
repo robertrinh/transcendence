@@ -81,7 +81,7 @@ export const gamesController = {
     },
     getReadyStatus: async (req, reply) => {
         const { id } = req.params;
-        const result = gamesService.getReadyStatus(id);
+        const result = gamesService.getReadyStatus(Number(id));
         return { success: true, data: result };
     },
     finishGame: async (req, reply) => {

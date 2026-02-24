@@ -21,11 +21,12 @@ type gameProps = {
     gameMode: GameMode;
     screen: Screen;
     error: string | null;
-    websocket: React.RefObject<null | WebSocket>
+    websocket: React.MutableRefObject<WebSocket | null>
     gameData: any
     tournamentId: number | null
     selectedBracketSize: number
     currentUser: any
+    isTournamentMatch: boolean
 
     setScreen(screen: Screen): void
     setGameMode(gameMode: GameMode): void
@@ -37,26 +38,17 @@ type gameProps = {
     handleHostReq(): void
     joinLobbyReq(lobbyId: string): void
     resetPlayerStatus(): void
+    handleTournamentPlayMatch(gameId: number): void
+    handleTournamentFinished(): void
     
-    onTournamentJoined: (toId: number) => void
-    onTournamentCreated: (toId: number) => void
+    onTournamentJoined: (toId: number, maxParticipants: number) => void
+    onTournamentCreated: (toId: number, maxParticipants: number) => void
     onTournamentStarted: () => void
     onTournamentLeft: () => void
     onCreateTournament: () => void
     onBackFromCreate: () => void
     onBackFromJoin: () => void
 }
-
-// function validateJoinLobby(lobbyID: string): string {
-//     const lobbyEle = document.getElementById(lobbyID) as HTMLInputElement | null
-//     if (lobbyEle === null) {
-//         throw Error("lobbyEle cannot be null")
-//     }
-//     if (lobbyEle.value.length === 0) {
-//         throw Error("lobby ID cannot be empty")
-//     }
-//     return lobbyEle.value
-// }
 
 function resizeGameUI(gameUI: HTMLElement) {
     const oldDisplay = gameUI.style.display
@@ -69,8 +61,10 @@ function resizeGameUI(gameUI: HTMLElement) {
 export default function GameUI({
     screen, gameMode, lobbyId, error, websocket, setScreen, setGameMode,
     handleRandomPlayer, handleHostReq, joinLobbyReq, resetPlayerStatus, gameData, 
-    tournamentId, selectedBracketSize, currentUser,
-    setTournamentId, setGameData, setError, onTournamentJoined, onTournamentCreated, onTournamentStarted,
+    tournamentId, selectedBracketSize, currentUser, isTournamentMatch: _isTournamentMatch,
+    setTournamentId, setGameData, setError,
+    handleTournamentPlayMatch: _handleTournamentPlayMatch, handleTournamentFinished: _handleTournamentFinished,
+    onTournamentJoined, onTournamentCreated, onTournamentStarted,
     onTournamentLeft, onCreateTournament, onBackFromCreate, onBackFromJoin
 }: gameProps) {
     
@@ -176,7 +170,7 @@ export default function GameUI({
                                 const response = await fetchWithAuth(`/api/games/${gameId}`)
                                 if (!response.ok) throw new Error('Failed to fetch game')
                                 const gameResponse = await response.json()
-                                console.log('Game data:', gameResponse.data)
+                                console.log('📦 Tournament game data:', gameResponse.data)
                                 setGameMode('online')
                                 setGameData(gameResponse.data)
                                 setScreen('ready-room')
@@ -205,6 +199,11 @@ export default function GameUI({
         case 'searching':
             return <SearchingScreen
                         onCancel={() => {setGameMode('none'); setScreen('online'); resetPlayerStatus()}}
+                        onGameFound={(gameData: any) => {
+                            setGameData(gameData)
+                            setGameMode('online')
+                            setScreen('ready-room')
+                        }}
                     />
         case 'game':
             return <GameCanvas mode={gameMode} websocket={websocket}/>

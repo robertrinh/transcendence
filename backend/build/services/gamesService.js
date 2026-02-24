@@ -1,6 +1,7 @@
 import { db } from '../databaseInit.js';
 import { dbError } from '../error/dbErrors.js';
 import { ApiError } from '../error/errors.js';
+import { tournamentService } from './tournamentService.js';
 const TIMEOUT_MATCHMAKING = 30000; //in millisec
 // In-memory ready state (game_id -> Set of player_ids who are ready)
 const readyPlayers = new Map();
@@ -117,12 +118,21 @@ export const gamesService = {
     },
     finishGame: (id, score_player1, score_player2, winner_id, finished_at) => {
         const gameObj = gamesService.fetchGame(id);
+        if (!gameObj)
+            throw new ApiError(404, 'Game not found');
         if (gameObj.status !== 'ready')
             throw new ApiError(400, 'game not ongoing');
         try {
             db.prepare('UPDATE users SET status = ? WHERE id = ? OR id = ?').run('idle', gameObj.player1_id, gameObj.player2_id);
             readyPlayers.delete(id);
-            return db.prepare(' UPDATE games SET winner_id = ?, score_player1 = ?, score_player2 = ?, finished_at = ?, status = ? WHERE id = ?').run(winner_id, score_player1, score_player2, finished_at, 'finished', id);
+            const result = db.prepare('UPDATE games SET winner_id = ?, score_player1 = ?, score_player2 = ?, finished_at = ?, status = ? WHERE id = ?')
+                .run(winner_id, score_player1, score_player2, finished_at, 'finished', id);
+            // If this is a tournament game, advance the winner to the next round
+            if (gameObj.tournament_id) {
+                console.log(`🏆 Tournament game ${id} finished. Advancing winner ${winner_id} in tournament ${gameObj.tournament_id}`);
+                tournamentService.advanceWinner(id);
+            }
+            return result;
         }
         catch (err) {
             dbError(err);

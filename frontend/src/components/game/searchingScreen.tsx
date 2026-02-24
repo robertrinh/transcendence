@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
+import { fetchWithAuth } from '../../config/api'
 
 interface SearchingScreenProps {
     onCancel: () => void
+    onGameFound?: (gameData: any) => void
+    onTimeout?: () => void
 }
 
-export default function SearchingScreen ({ onCancel }: SearchingScreenProps) {
+export default function SearchingScreen ({ onCancel, onGameFound, onTimeout }: SearchingScreenProps) {
     const [seconds, setSeconds] = useState(0)
     const [dots, setDots] = useState('.')
 
@@ -24,10 +27,39 @@ export default function SearchingScreen ({ onCancel }: SearchingScreenProps) {
         return () => clearInterval(dotTimer)
     }, [])
 
+    // Poll for match
+    useEffect(() => {
+        const pollTimer = setInterval(async () => {
+            try {
+                const response = await fetchWithAuth('/api/games/matchmaking')
+                if (!response.ok) return
+                const result = await response.json()
+                const data = result.data
+                
+                console.log('🔍 Poll result:', data)
+                
+                if (data && data.player1_id && data.player2_id) {
+                    console.log('🎮 Match found!', data)
+                    clearInterval(pollTimer)
+                    onGameFound?.(data)
+                }
+                else if (data && data.status === 'idle') {
+                    console.log('⏰ Matchmaking timed out')
+                    clearInterval(pollTimer)
+                    onTimeout?.()
+                }
+            } catch (err) {
+                console.error('Polling error:', err)
+            }
+        }, 2000)
+
+        return () => clearInterval(pollTimer)
+    }, [onGameFound, onTimeout])
+
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60)
         const secs = seconds % 60
-        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+        return `${mins}:${secs.toString().padStart(2, '0')}`
     }
 
     return (

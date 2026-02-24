@@ -104,12 +104,14 @@ export const gamesController = {
     },
 
     finishGame: async (req: FastifyRequest, reply: FastifyReply) => {
-        const { id } = req.params as { id: number }
-        const {winner_id, score_player1, score_player2, finished_at } = req.body as {winner_id: number, score_player1: number, score_player2: number, finished_at: string};
-        const result = gamesService.finishGame(id, score_player1, score_player2, winner_id, finished_at);
-        return {
-            success: true,
-            message: 'Game finished'
-        }
-    }
+        const { id } = req.params as { id: number };
+        const { score_player1, score_player2, winner_id, finished_at } = req.body as {
+            score_player1: number,
+            score_player2: number,
+            winner_id: number,
+            finished_at: string
+        };
+        gamesService.finishGame(id, score_player1, score_player2, winner_id, finished_at);
+        return { success: true, message: 'Game finished' };
+    },
 }

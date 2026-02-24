@@ -2,19 +2,22 @@ import { useEffect, useState } from 'react'
 
 interface CountdownScreenProps {
   gameData: any
-  websocket: React.RefObject<WebSocket | null>
+  websocket: React.MutableRefObject<WebSocket | null>
   onCountdownComplete: () => void
   gameMode: string
   currentUserId?: number
 }
 
 export default function CountdownScreen({ 
+  gameData,
+  websocket,
   onCountdownComplete, 
   gameMode,
+  currentUserId,
 }: CountdownScreenProps) {
   const [count, setCount] = useState(3)
+  const [wsReady, setWsReady] = useState(false)
 
-  // ✅ GET MODE LABEL
   const getModeLabel = () => {
     switch (gameMode) {
       case 'singleplayer': return '🤖 VS BOT'
@@ -24,8 +27,71 @@ export default function CountdownScreen({
     }
   }
 
-  // ✅ COUNTDOWN TIMER
+  // Connect WebSocket for online games
   useEffect(() => {
+    if (gameMode !== 'online' || !gameData?.id) {
+      setWsReady(true)
+      return
+    }
+
+    const token = localStorage.getItem('token')
+    if (!token) {
+      console.error('❌ No token for WebSocket connection')
+      return
+    }
+
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
+    const host = window.location.hostname
+    const port = window.location.port
+    const wsUrl = `${protocol}://${host}:${port}/ws/${token}`
+    
+    console.log('🔌 Connecting to game server:', wsUrl)
+    
+    const ws = new WebSocket(wsUrl)
+
+    // Buffer any messages received during countdown so GameCanvas can replay them
+    const bufferedMessages: MessageEvent[] = []
+    ws.onmessage = (event) => {
+      console.log('📩 Buffered message during countdown:', event.data)
+      bufferedMessages.push(event)
+    }
+    // Attach buffer to websocket so GameCanvas can access it
+    ;(ws as any).__bufferedMessages = bufferedMessages
+    
+    ws.onopen = () => {
+      console.log('✅ WebSocket connected to game server')
+      ws.send(JSON.stringify({
+        type: 'START_GAME',
+        game_id: gameData.id,
+        player1_id: gameData.player1_id,
+        player2_id: gameData.player2_id
+      }))
+      console.log('📤 Sent START_GAME:', {
+        game_id: gameData.id,
+        player1_id: gameData.player1_id,
+        player2_id: gameData.player2_id
+      })
+      websocket.current = ws
+      setWsReady(true)
+    }
+
+    ws.onerror = (err) => {
+      console.error('❌ WebSocket error:', err)
+    }
+
+    ws.onclose = () => {
+      console.log('🔌 WebSocket closed')
+    }
+
+    return () => {
+      // Don't close — GameCanvas needs it
+    }
+  }, [gameMode, gameData, currentUserId, websocket])
+
+  // Countdown timer
+  useEffect(() => {
+    if (!wsReady) return
+    
     if (count <= 0) {
       const goTimer = setTimeout(() => {
         onCountdownComplete()
@@ -38,19 +104,14 @@ export default function CountdownScreen({
     }, 1000)
 
     return () => clearTimeout(timer)
-  }, [count, onCountdownComplete])
+  }, [count, onCountdownComplete, wsReady])
 
-  // ✅ SHOW COUNTDOWN (all game modes)
   return (
     <div className="min-h-screen flex items-center justify-center bg-black p-4" style={{
       backgroundImage: 'linear-gradient(45deg, #1a1a2e 25%, transparent 25%, transparent 75%, #1a1a2e 75%, #1a1a2e), linear-gradient(45deg, #1a1a2e 25%, transparent 25%, transparent 75%, #1a1a2e 75%, #1a1a2e)',
       backgroundSize: '40px 40px',
       backgroundPosition: '0 0, 20px 20px'
     }}>
-      <div className="absolute inset-0 pointer-events-none" style={{
-        backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.15) 0px, rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px)'
-      }}></div>
-
       <div className="relative z-10 text-center">
         <p className="text-cyan-400 text-2xl font-bold mb-8 uppercase" style={{
           fontFamily: 'monospace',
@@ -59,28 +120,25 @@ export default function CountdownScreen({
           {getModeLabel()}
         </p>
 
-        <div className="text-9xl font-black mb-8" style={{
-          color: count === 1 ? '#ff0000' : count === 0 ? '#00ffff' : '#00ff00',
-          textShadow: count === 1 
-            ? '0 0 30px #ff0000, 0 0 60px #ff0000' 
-            : '0 0 30px #00ff00, 0 0 60px #00ff00',
-          fontFamily: 'monospace',
-          transition: 'all 0.3s ease',
-          animation: count === 0 ? 'none' : 'pulse 1s infinite'
-        }}>
-          {count > 0 ? count : 'GO!'}
-        </div>
-
-        <div className="border-4 border-green-400 p-8 bg-gray-900 inline-block" style={{
-          boxShadow: '0 0 20px rgba(0,255,0,0.5)'
-        }}>
-          <p className="text-green-400 font-bold uppercase" style={{
+        {!wsReady && gameMode === 'online' ? (
+          <div className="text-yellow-300 text-3xl font-bold animate-pulse" style={{
             fontFamily: 'monospace',
-            textShadow: '0 0 10px #00ff00'
+            textShadow: '0 0 10px #ffff00'
           }}>
-            Get Ready!
-          </p>
-        </div>
+            CONNECTING TO SERVER...
+          </div>
+        ) : (
+          <div className="text-9xl font-black mb-8" style={{
+            color: count === 1 ? '#ff0000' : count === 0 ? '#00ffff' : '#00ff00',
+            textShadow: count === 1 
+              ? '0 0 30px #ff0000, 0 0 60px #ff0000' 
+              : '0 0 30px #00ff00, 0 0 60px #00ff00',
+            fontFamily: 'monospace',
+            animation: count === 0 ? 'none' : 'pulse 1s infinite'
+          }}>
+            {count > 0 ? count : 'GO!'}
+          </div>
+        )}
 
         <style>{`
           @keyframes pulse {
@@ -90,5 +148,5 @@ export default function CountdownScreen({
         `}</style>
       </div>
     </div>
-  );
+  )
 }

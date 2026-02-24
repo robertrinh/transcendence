@@ -16,52 +16,71 @@ export const tournamentService = {
     },
     joinTournament: (tournament_id, user_id) => {
         try {
-            db.prepare('INSERT INTO tournament_participants (tournament_id, user_id) VALUES (?, ?)').run(tournament_id, user_id); //fails here if tournement doesnt exists. checks if player exist or tournament exists
+            db.prepare('INSERT INTO tournament_participants (tournament_id, user_id) VALUES (?, ?)').run(tournament_id, user_id);
         }
         catch (err) {
             dbError(err);
         }
     },
     startTournament: (tournament_id, participants) => {
-        //do i neeed checks if it always comes through joinTournament? : CHECK
-        const current_status = db.prepare('SELECT status FROM tournaments WHERE id = ?').get(tournament_id);
+        const current_status = db.prepare('SELECT status, max_participants FROM tournaments WHERE id = ?').get(tournament_id);
         if (current_status.status != 'open')
             throw new ApiError(400, "tournament not open");
-        const rounds = Math.log2(participants.length);
-        for (let i = 0; i < participants.length; i += 2) {
-            db.prepare('INSERT INTO games (tournament_id, player1_id, player2_id, round, status) VALUES (?, ?, ?, 1, ?)').run(tournament_id, participants[i].user_id, participants[i + 1].user_id, 'ready');
+        // Must be full before starting
+        if (participants.length < current_status.max_participants)
+            throw new ApiError(400, `Need ${current_status.max_participants} players to start. Currently have ${participants.length}.`);
+        // Must be a power of 2
+        if (participants.length & (participants.length - 1))
+            throw new ApiError(400, "Number of participants must be a power of 2");
+        // Shuffle participants randomly
+        const shuffled = [...participants].sort(() => Math.random() - 0.5);
+        const rounds = Math.log2(shuffled.length);
+        // Create round 1 games with actual players
+        for (let i = 0; i < shuffled.length; i += 2) {
+            db.prepare('INSERT INTO games (tournament_id, player1_id, player2_id, round, status) VALUES (?, ?, ?, 1, ?)')
+                .run(tournament_id, shuffled[i].user_id, shuffled[i + 1].user_id, 'ready');
         }
+        // Create placeholder games for future rounds
         for (let round = 2; round <= rounds; round++) {
-            let gamesInRound = Math.pow(2, rounds - round);
+            const gamesInRound = Math.pow(2, rounds - round);
             for (let i = 0; i < gamesInRound; i++) {
-                db.prepare('INSERT INTO games (tournament_id, player1_id, player2_id, round, status) VALUES (?, NULL, NULL, ?, ?)').run(tournament_id, round, 'pending');
+                db.prepare('INSERT INTO games (tournament_id, player1_id, player2_id, round, status) VALUES (?, NULL, NULL, ?, ?)')
+                    .run(tournament_id, round, 'pending');
             }
-            //if tournament cancels, delete these games! : TODO (something on delete cascade in the database??)
         }
-        db.prepare('update tournaments SET status = ? WHERE id = ?').run('ongoing', tournament_id);
+        db.prepare('UPDATE tournaments SET status = ? WHERE id = ?').run('ongoing', tournament_id);
     },
-    //or in a try catch statement? : CHECK
-    //only GAMESERVER allowed! auth token!! : TODO
-    //how to let frontend know next round of games is ready? : CHECK
-    recordResult: (tournament_id, game_id, score1, score2, winner_id) => {
+    // Called when a tournament game finishes — advances winner to next round
+    advanceWinner: (game_id) => {
         const game = db.prepare('SELECT * FROM games WHERE id = ?').get(game_id);
-        if (!game)
-            throw new ApiError(404, 'game not found');
-        db.prepare('UPDATE games SET score_player1 = ?, score_player2 = ?, winner_id = ?, status = ? WHERE id = ?').run(score1, score2, winner_id, 'finished', game_id);
-        const nextGame = db.prepare('SELECT * FROM games WHERE tournament_id = ? AND round = ? AND (player1_id IS NULL OR player2_id IS NULL)').get(tournament_id, game.round + 1);
+        if (!game || !game.tournament_id || !game.winner_id)
+            return;
+        const tournament_id = game.tournament_id;
+        const currentRound = game.round;
+        const nextRound = currentRound + 1;
+        // Check if there are next round games
+        const nextRoundGames = db.prepare('SELECT * FROM games WHERE tournament_id = ? AND round = ? ORDER BY id ASC').all(tournament_id, nextRound);
+        if (nextRoundGames.length === 0) {
+            // This was the final — check if game is finished
+            console.log(`🏆 Tournament ${tournament_id} final completed! Winner: ${game.winner_id}`);
+            db.prepare('UPDATE tournaments SET status = ?, winner_id = ?, end_date = datetime(\'now\') WHERE id = ?')
+                .run('finished', game.winner_id, tournament_id);
+            return;
+        }
+        // Find a next-round game that has an empty slot
+        const nextGame = db.prepare('SELECT * FROM games WHERE tournament_id = ? AND round = ? AND (player1_id IS NULL OR player2_id IS NULL) ORDER BY id ASC LIMIT 1').get(tournament_id, nextRound);
         if (nextGame) {
-            if (nextGame.player1_id === null)
-                db.prepare('UPDATE games SET player1_id = ? WHERE id =?').run(winner_id, nextGame.id);
-            else
-                db.prepare('UPDATE games SET player2_id = ?, status = ? WHERE id =?').run(winner_id, 'ready', nextGame.id);
-            return { nextGame: nextGame, tournamentFinished: false, message: 'next round in tournament ready' };
+            if (nextGame.player1_id === null) {
+                db.prepare('UPDATE games SET player1_id = ? WHERE id = ?')
+                    .run(game.winner_id, nextGame.id);
+                console.log(`➡️ Winner ${game.winner_id} placed in game ${nextGame.id} as player1`);
+            }
+            else {
+                db.prepare('UPDATE games SET player2_id = ?, status = ? WHERE id = ?')
+                    .run(game.winner_id, 'ready', nextGame.id);
+                console.log(`➡️ Winner ${game.winner_id} placed in game ${nextGame.id} as player2 — game is READY`);
+            }
         }
-        else {
-            db.prepare('UPDATE tournaments SET status = ?, winner_id = ?, end_date = ? WHERE id = ?').run('finished', winner_id, Date(), tournament_id);
-            return { nextGame: null, tournamentFinished: true, message: 'tournament finished' };
-        }
-    },
-    finishTournament: (tournament_id) => {
     },
     leaveTournament: (tournament_id, user_id) => {
         try {

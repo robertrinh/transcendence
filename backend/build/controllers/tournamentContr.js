@@ -26,7 +26,7 @@ export const tournamentController = {
         if (result.changes == 0)
             throw new ApiError(404, 'something went wrong creating tournament');
         tournamentService.joinTournament(result.lastInsertRowid, user_id);
-        return { success: true, data: result.lastInsertRowid, message: 'Tournament successfully cerated and creator joined!' };
+        return { success: true, data: { id: result.lastInsertRowid, max_participants }, message: 'Tournament successfully created and creator joined!' };
     },
     //player clicks "join tournament" and an open tournament exists --> player will be added AND start Tournament if full
     joinTournament: async (req, reply) => {
@@ -48,12 +48,10 @@ export const tournamentController = {
     //only GAMESERVER ALLOWED --> add auth token!
     updateTournament: async (req, reply) => {
         const { id } = req.params;
-        const { status, game_id, score_player1, score_player2, winner_id } = req.body;
-        if (status === 'ongoing') //when would rutger send a different status? and what should happen then : CHECK
-         {
-            const result = tournamentService.recordResult(id, game_id, score_player1, score_player2, winner_id);
-            return { success: true, nextGame: result?.nextGame, tournamentFinished: result.tournamentFinished };
-        }
+        const tournament = tournamentService.getTournamentByID(id);
+        if (!tournament)
+            throw new ApiError(404, 'Tournament not found');
+        return { success: true, message: `Tournament ${id} status: ${tournament.status}` };
     },
     deleteTournament: async (req, reply) => {
         const { id } = req.params;

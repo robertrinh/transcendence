@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react'
 import { fetchWithAuth } from '../../config/api'
-import Button from '../game/button'
 
 interface TournamentLobbyProps {
     tournamentId: number | null
     maxParticipants: number
     onStartTournament: () => void
     onLeaveTournament: () => void
-    websocket: React.RefObject<WebSocket | null>  // ✅ Fixed type
+    websocket: React.RefObject<WebSocket | null>
 }
 
 interface Participant {
@@ -25,9 +24,9 @@ interface Tournament {
     created_at: string
 }
 
-export default function TournamentLobby({ 
-    tournamentId, 
-    maxParticipants, 
+export default function TournamentLobby({
+    tournamentId,
+    maxParticipants,
     onStartTournament,
     onLeaveTournament,
     websocket
@@ -36,22 +35,17 @@ export default function TournamentLobby({
     const [participants, setParticipants] = useState<Participant[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [starting, setStarting] = useState(false)
 
-    // ✅ LISTEN FOR WEBSOCKET TOURNAMENT_STARTED EVENT
+    // WebSocket listener
     useEffect(() => {
-        if (!websocket?.current) {
-            console.log('⚠️ WebSocket not available, will use polling fallback')
-            return
-        }
+        if (!websocket?.current) return
 
         const handleWebSocketMessage = (event: MessageEvent) => {
             try {
                 const data = JSON.parse(event.data)
-                
                 if (data.type === 'tournament_started' && data.tournamentId === tournamentId) {
-                    console.log('🎯 WebSocket: Tournament started event received!')
-                    console.log('✅ Moving all users to bracket...')
-                    onStartTournament()  // All users move to bracket instantly
+                    onStartTournament()
                 }
             } catch (err) {
                 console.error('Failed to parse WebSocket message:', err)
@@ -64,7 +58,7 @@ export default function TournamentLobby({
         }
     }, [tournamentId, onStartTournament, websocket])
 
-    // ✅ POLLING FALLBACK - fetch every 2 seconds
+    // Polling
     useEffect(() => {
         if (!tournamentId) return
 
@@ -72,18 +66,16 @@ export default function TournamentLobby({
             try {
                 const response = await fetch(`/api/tournaments/${tournamentId}`)
                 if (!response.ok) throw new Error('Failed to fetch tournament')
-                
+
                 const data = await response.json()
-                console.log('📊 Tournament data:', data)
-                
+                console.log('🔄 Tournament poll:', data)
                 setTournament(data.data)
                 setParticipants(data.participants || [])
                 setError(null)
                 setLoading(false)
 
-                // ✅ Fallback: if status changed to ongoing, move to bracket
+                // If tournament already started (another player clicked start), go to bracket
                 if (data.data.status === 'ongoing') {
-                    console.log('📊 Polling: Tournament status is ongoing, moving to bracket...')
                     onStartTournament()
                 }
             } catch (err) {
@@ -92,152 +84,197 @@ export default function TournamentLobby({
             }
         }
 
-        // Initial fetch
         fetchTournamentStatus()
-
-        // Poll every 2 seconds
         const interval = setInterval(fetchTournamentStatus, 2000)
         return () => clearInterval(interval)
     }, [tournamentId, onStartTournament])
 
-    // ✅ START TOURNAMENT - Manual button click
     const handleStartTournament = async () => {
         try {
-            if (!tournamentId) throw new Error('Tournament ID is required');
-            if (participants.length < 2) throw new Error('Need at least 2 participants');
-            
-            console.log('🎯 Starting tournament with participants:', participants);
-            
+            if (!tournamentId) throw new Error('Tournament ID is required')
+            setStarting(true)
+            setError(null)
+
             const response = await fetchWithAuth(
-                `/api/tournaments/${parseInt(String(tournamentId))}/start`,
+                `/api/tournaments/${tournamentId}/start`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({})
                 }
-            );
-            
-            const result = await response.json();
-            console.log('📊 Start response:', result);  // ✅ ADD THIS
-            
-            if (!response.ok) {
-                console.error('❌ Server error:', result);
-                throw new Error(result.error || 'Failed to start tournament');
-            }
-            
-            console.log('✅ Tournament started successfully');
-            onStartTournament();
-        } catch (err) {
-            console.error('❌ Failed to start tournament:', err);
-            setError(String(err));
-        }
-    };
+            )
 
-    // ✅ LEAVE TOURNAMENT - DELETE request
+            const result = await response.json()
+            if (!response.ok) throw new Error(result.message || result.error || 'Failed to start tournament')
+
+            console.log('✅ Tournament started:', result)
+            onStartTournament()
+        } catch (err: any) {
+            console.error('❌ Failed to start tournament:', err)
+            setError(err.message)
+            setStarting(false)
+        }
+    }
+
     const handleLeaveTournament = async () => {
         try {
             const response = await fetchWithAuth(`/api/tournaments/${tournamentId}/leave`, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' }
             })
-            if (!response.ok) throw new Error('Failed to leave tournament')
-            
-            console.log('✅ Left tournament')
+            if (!response.ok) {
+                const data = await response.json()
+                throw new Error(data.message || data.error || 'Failed to leave tournament')
+            }
             onLeaveTournament()
-        } catch (err) {
+        } catch (err: any) {
             console.error('❌ Failed to leave tournament:', err)
-            setError(String(err))
+            setError(err.message)
         }
     }
 
+    const isFull = participants.length >= maxParticipants
+    const spotsRemaining = Math.max(0, maxParticipants - participants.length)
+
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+            <div className="min-h-screen flex items-center justify-center bg-black" style={{
+                backgroundImage: 'linear-gradient(45deg, #1a1a2e 25%, transparent 25%, transparent 75%, #1a1a2e 75%, #1a1a2e), linear-gradient(45deg, #1a1a2e 25%, transparent 25%, transparent 75%, #1a1a2e 75%, #1a1a2e)',
+                backgroundSize: '40px 40px',
+                backgroundPosition: '0 0, 20px 20px'
+            }}>
                 <div className="text-center">
-                    <p className="text-cyan-400 text-xl animate-pulse font-arcade mb-4">LOADING TOURNAMENT...</p>
-                    <p className="text-gray-400 text-sm">Tournament ID: {tournamentId}</p>
+                    <p className="text-yellow-300 text-2xl animate-pulse font-bold" style={{
+                        fontFamily: 'monospace',
+                        textShadow: '0 0 10px #ffff00'
+                    }}>
+                        LOADING TOURNAMENT...
+                    </p>
+                    <p className="text-gray-500 text-sm mt-2" style={{ fontFamily: 'monospace' }}>
+                        ID: {tournamentId}
+                    </p>
                 </div>
             </div>
         )
     }
-
-    if (error) {
-        return (
-            <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-                <div className="text-center bg-red-500/10 border-2 border-red-500 p-8 rounded-lg">
-                    <p className="text-red-400 text-lg font-arcade mb-4">ERROR</p>
-                    <p className="text-gray-400 text-sm">{error}</p>
-                </div>
-            </div>
-        )
-    }
-
-    const isFull = participants.length === maxParticipants
-    const spotsRemaining = maxParticipants - participants.length
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
-            <div className="w-full max-w-2xl bg-gray-900 border-4 border-cyan-400 rounded-xl p-10 shadow-2xl shadow-cyan-500/20">
-                
-                {/* Header */}
-                <h1 className="text-4xl font-bold text-cyan-400 text-center mb-2 uppercase tracking-widest font-arcade">
+        <div className="min-h-screen flex items-center justify-center bg-black p-4" style={{
+            backgroundImage: 'linear-gradient(45deg, #1a1a2e 25%, transparent 25%, transparent 75%, #1a1a2e 75%, #1a1a2e), linear-gradient(45deg, #1a1a2e 25%, transparent 25%, transparent 75%, #1a1a2e 75%, #1a1a2e)',
+            backgroundSize: '40px 40px',
+            backgroundPosition: '0 0, 20px 20px'
+        }}>
+            <div className="absolute inset-0 pointer-events-none" style={{
+                backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.15) 0px, rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px)'
+            }}></div>
+
+            <div className="relative z-10 w-full max-w-2xl">
+                {/* Title */}
+                <h1 className="text-4xl font-black text-center mb-1" style={{
+                    color: '#ffff00',
+                    textShadow: '0 0 10px #ffff00, 0 0 20px #ffff00, 3px 3px 0 #ff00ff',
+                    fontFamily: 'monospace',
+                    letterSpacing: '4px'
+                }}>
                     TOURNAMENT LOBBY
                 </h1>
-                <p className="text-center text-gray-400 text-sm mb-8 font-arcade">ID: {tournamentId}</p>
+                <p className="text-center text-gray-500 text-sm mb-6" style={{ fontFamily: 'monospace' }}>
+                    ID: {tournamentId}
+                </p>
 
-                {/* Tournament Info */}
-                {tournament && (
-                    <div className="bg-gradient-to-r from-cyan-500/10 to-cyan-400/5 border-2 border-cyan-400/30 rounded-lg p-6 mb-8">
-                        <h2 className="text-2xl font-bold text-white mb-3 font-arcade">{tournament.name}</h2>
-                        <div className="flex justify-between items-center">
-                            <p className="text-cyan-400 font-semibold text-lg font-arcade">{maxParticipants}-PLAYER TOURNAMENT</p>
-                            <p className="text-sm text-gray-400 font-arcade">
-                                STATUS: <span className="text-cyan-400 font-bold">{tournament.status.toUpperCase()}</span>
-                            </p>
-                        </div>
+                {error && (
+                    <div className="bg-red-900 border-4 border-red-400 p-4 mb-6 text-center" style={{
+                        fontFamily: 'monospace',
+                        boxShadow: '0 0 15px rgba(255,0,0,0.5)'
+                    }}>
+                        <p className="text-red-300 font-bold text-sm uppercase">{error}</p>
                     </div>
                 )}
 
-                {/* Participants */}
-                <div className="mb-8">
-                    <h3 className="text-cyan-400 text-lg font-bold uppercase mb-4 tracking-wide font-arcade">
-                        PARTICIPANTS ({participants.length}/{maxParticipants})
+                <div className="border-4 p-8 bg-gray-900" style={{
+                    borderColor: '#ff00ff',
+                    boxShadow: 'inset 0 0 10px rgba(255,0,255,0.3), 0 0 20px rgba(255,0,255,0.5)'
+                }}>
+                    {/* Tournament Info */}
+                    {tournament && (
+                        <div className="bg-black border-4 border-cyan-400 p-4 mb-6" style={{
+                            boxShadow: '0 0 10px rgba(0,255,255,0.3)',
+                            fontFamily: 'monospace'
+                        }}>
+                            <h2 className="text-2xl font-black text-white mb-2" style={{
+                                textShadow: '0 0 5px #fff'
+                            }}>
+                                {tournament.name}
+                            </h2>
+                            <div className="flex justify-between items-center">
+                                <span className="text-cyan-400 font-bold text-sm">
+                                    ⚔️ {maxParticipants}-PLAYER TOURNAMENT
+                                </span>
+                                <span className="text-purple-300 font-bold text-sm">
+                                    STATUS: <span style={{ color: '#ffff00', textShadow: '0 0 5px #ffff00' }}>
+                                        {tournament.status.toUpperCase()}
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Participants Header */}
+                    <h3 className="text-lg font-black mb-4 uppercase" style={{
+                        color: '#00ffff',
+                        textShadow: '0 0 10px #00ffff',
+                        fontFamily: 'monospace',
+                        letterSpacing: '2px'
+                    }}>
+                        PLAYERS ({participants.length}/{maxParticipants})
                     </h3>
-                    
-                    <div className="bg-black/50 border-2 border-cyan-400/30 rounded-lg max-h-96 overflow-y-auto">
+
+                    {/* Participants List */}
+                    <div className="bg-black border-4 border-gray-700 mb-6 max-h-80 overflow-y-auto">
                         {participants.length === 0 ? (
-                            <div className="p-4 text-center text-gray-500 font-arcade">
-                                Waiting for players to join...
+                            <div className="p-6 text-center">
+                                <p className="text-gray-600 font-bold animate-pulse" style={{ fontFamily: 'monospace' }}>
+                                    WAITING FOR PLAYERS...
+                                </p>
                             </div>
                         ) : (
                             <>
-                                {/* Joined participants */}
                                 {participants.map((participant, index) => (
-                                    <div 
-                                        key={participant.user_id} 
-                                        className="flex items-center gap-4 px-4 py-3 border-b border-cyan-400/10 hover:bg-cyan-400/5 transition-colors font-arcade"
+                                    <div
+                                        key={participant.user_id}
+                                        className="flex items-center gap-4 px-4 py-3 border-b-2 border-gray-800"
+                                        style={{ fontFamily: 'monospace' }}
                                     >
-                                        <div className="flex items-center justify-center w-10 h-10 bg-cyan-400 text-gray-900 rounded font-bold text-sm flex-shrink-0">
+                                        <div className="flex items-center justify-center w-10 h-10 bg-yellow-600 border-2 border-yellow-300 text-black font-black text-sm flex-shrink-0" style={{
+                                            boxShadow: '0 0 10px rgba(255,255,0,0.4)'
+                                        }}>
                                             {index + 1}
                                         </div>
-                                        <span className="flex-1 text-white font-bold">
+                                        <span className="flex-1 text-white font-bold" style={{
+                                            textShadow: '0 0 3px #fff'
+                                        }}>
                                             {participant.display_name || participant.username}
                                         </span>
-                                        <span className="text-green-400 text-xs font-bold">✓ JOINED</span>
+                                        <span className="text-green-400 text-xs font-bold" style={{
+                                            textShadow: '0 0 5px #00ff00'
+                                        }}>
+                                            ✓ JOINED
+                                        </span>
                                     </div>
                                 ))}
 
                                 {/* Empty slots */}
                                 {Array.from({ length: spotsRemaining }).map((_, index) => (
-                                    <div 
-                                        key={`empty-${index}`} 
-                                        className="flex items-center gap-4 px-4 py-3 border-b border-cyan-400/10 opacity-40 font-arcade"
+                                    <div
+                                        key={`empty-${index}`}
+                                        className="flex items-center gap-4 px-4 py-3 border-b-2 border-gray-800 opacity-30"
+                                        style={{ fontFamily: 'monospace' }}
                                     >
-                                        <div className="flex items-center justify-center w-10 h-10 bg-gray-700 text-gray-500 rounded font-bold text-sm flex-shrink-0">
+                                        <div className="flex items-center justify-center w-10 h-10 bg-gray-800 border-2 border-gray-600 text-gray-600 font-black text-sm flex-shrink-0">
                                             {participants.length + index + 1}
                                         </div>
-                                        <span className="flex-1 text-gray-500 italic">
-                                            WAITING FOR PLAYER...
+                                        <span className="flex-1 text-gray-600 italic font-bold">
+                                            WAITING...
                                         </span>
                                         <span className="text-gray-700 text-xs">—</span>
                                     </div>
@@ -245,40 +282,63 @@ export default function TournamentLobby({
                             </>
                         )}
                     </div>
+
+                    {/* Status */}
+                    <div className="p-4 mb-6 text-center border-4" style={{
+                        fontFamily: 'monospace',
+                        backgroundColor: isFull ? 'rgba(0,255,0,0.1)' : 'rgba(255,255,0,0.1)',
+                        borderColor: isFull ? '#00ff00' : '#ffff00',
+                        boxShadow: isFull ? '0 0 15px rgba(0,255,0,0.4)' : '0 0 15px rgba(255,255,0,0.4)'
+                    }}>
+                        <p className="font-black text-lg uppercase" style={{
+                            color: isFull ? '#00ff00' : '#ffff00',
+                            textShadow: isFull ? '0 0 10px #00ff00' : '0 0 10px #ffff00'
+                        }}>
+                            {isFull
+                                ? '🎉 TOURNAMENT FULL! READY TO START'
+                                : `⏳ WAITING FOR ${spotsRemaining} MORE PLAYER${spotsRemaining !== 1 ? 'S' : ''}...`
+                            }
+                        </p>
+                    </div>
+
+                    {/* Buttons */}
+                    <div className="flex gap-4">
+                        {isFull && (
+                            <button
+                                onClick={handleStartTournament}
+                                disabled={starting}
+                                className="flex-1 p-4 bg-green-700 hover:bg-green-600 disabled:bg-gray-700 disabled:border-gray-600 border-4 border-green-400 font-black text-green-300 uppercase transition-all duration-200 transform hover:scale-105 active:scale-95"
+                                style={{
+                                    fontFamily: 'monospace',
+                                    boxShadow: starting ? 'none' : '0 0 20px rgba(0,255,0,0.6)',
+                                    textShadow: '2px 2px 0 #000',
+                                    letterSpacing: '2px'
+                                }}
+                            >
+                                {starting ? 'STARTING...' : 'START TOURNAMENT'}
+                            </button>
+                        )}
+
+                        <button
+                            onClick={handleLeaveTournament}
+                            className={`${isFull ? 'flex-1' : 'w-full'} p-4 bg-red-900 hover:bg-red-700 border-4 border-red-400 font-black text-red-300 uppercase transition-all duration-200 transform hover:scale-105 active:scale-95`}
+                            style={{
+                                fontFamily: 'monospace',
+                                boxShadow: '0 0 15px rgba(255,0,0,0.5)',
+                                textShadow: '2px 2px 0 #000'
+                            }}
+                        >
+                            LEAVE TOURNAMENT
+                        </button>
+                    </div>
                 </div>
 
-                {/* Status Message */}
-                <div className={`rounded-lg p-4 mb-8 border-l-4 font-arcade font-bold text-center ${
-                    isFull 
-                        ? 'bg-green-500/10 border-green-500 text-green-400' 
-                        : 'bg-cyan-500/10 border-cyan-500 text-cyan-400'
-                }`}>
-                    {isFull 
-                        ? '🎉 TOURNAMENT FULL! READY TO START' 
-                        : `⏳ WAITING FOR ${spotsRemaining} MORE PLAYER${spotsRemaining !== 1 ? 'S' : ''}...`
-                    }
-                </div>
-
-                {/* Buttons */}
-                <div className="flex gap-4">
-                    {/* ✅ START button only shows when FULL */}
-                    {isFull && (
-                        <Button 
-                            id='btn-start-tournament'
-                            onClick={handleStartTournament}
-                            className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 uppercase tracking-wide font-arcade border-2 border-green-500"
-                            buttonName="START TOURNAMENT"
-                        />
-                    )}
-                    
-                    {/* ✅ LEAVE button always shown */}
-                    <Button 
-                        id='btn-leave-tournament'
-                        onClick={handleLeaveTournament}
-                        className={`${isFull ? 'flex-1' : 'w-full'} bg-transparent border-2 border-cyan-400 text-cyan-400 hover:bg-cyan-400/10 font-bold py-3 px-4 rounded-lg transition-all duration-200 uppercase tracking-wide font-arcade`}
-                        buttonName="LEAVE TOURNAMENT"
-                    />
-                </div>
+                <p className="text-green-400 font-bold text-sm text-center mt-6" style={{
+                    fontFamily: 'monospace',
+                    textShadow: '0 0 10px #00ff00'
+                }}>
+                    &gt;&gt;&gt; GATHERING WARRIORS &lt;&lt;&lt;
+                </p>
             </div>
         </div>
     )

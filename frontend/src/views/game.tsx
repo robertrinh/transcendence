@@ -1,286 +1,235 @@
-import {useState, useEffect, useRef} from 'react'
+import { useState, useRef, useEffect, useCallback } from "react"
+import GameUI from "../components/game/gameUI.tsx"
 import { fetchWithAuth } from '../config/api'
-import GameUI from '../components/game/gameUI.js'
-import { Screen, GameMode } from '../components/game/types.js'
+import type { GameMode, Screen } from "../components/game/types.ts"
 
 export default function Game() {
   const [gameMode, setGameMode] = useState<GameMode>("none")
-  const [screen, setScreen] = useState<Screen>("websocket-connecting") 
-  const [gameData, setGameData] = useState<any>(null)
-  const [lobbyId, setLobbyId] = useState("")
+  const [screen, setScreen] = useState<Screen>("main")
+  const [lobbyId, setLobbyId] = useState<string>("")
   const [error, setError] = useState<string | null>(null)
-  const websocket = useRef<WebSocket|null>(null)
+  const [gameData, setGameData] = useState<any>(null)
+  const websocket = useRef<WebSocket | null>(null)
   const [tournamentId, setTournamentId] = useState<number | null>(null)
+  const [selectedBracketSize, setSelectedBracketSize] = useState<number>(4)
   const [currentUser, setCurrentUser] = useState<any>(null)
+  const [isTournamentMatch, setIsTournamentMatch] = useState(false)
 
-  // ✅ FETCH CURRENT USER
+  // Fetch current user on mount
   useEffect(() => {
-    const fetchCurrentUser = async () => {
+    const fetchUser = async () => {
       try {
-        const response = await fetchWithAuth('/api/users/profile/me');
-        if (!response.ok) throw new Error('Failed to fetch user');
-        const data = await response.json();
-        setCurrentUser(data.data || data);
-        console.log('✅ Current user loaded:', data);
+        const response = await fetchWithAuth('/api/users/profile/me')
+        const data = await response.json()
+        console.log('👤 Full API response:', JSON.stringify(data))
+        const user = data.profile || data.data || data
+        console.log('👤 User object:', JSON.stringify(user), 'id:', user.id)
+        setCurrentUser(user)
       } catch (err) {
-        console.error('Failed to fetch current user:', err);
+        console.error('Failed to fetch user:', err)
       }
-    };
-    fetchCurrentUser();
-  }, []);
+    }
+    fetchUser()
+  }, [])
 
-  // ✅ WEBSOCKET CONNECTION
+  // Listen for game-over events from the pong game
   useEffect(() => {
-    const serverHostname = import.meta.env.VITE_SERVER_HOSTNAME
-    const gameServerPort = import.meta.env.VITE_GAME_SERVER_PORT
-    const nginxPort = import.meta.env.VITE_NGINX_PORT
-    const useWSS = Number(import.meta.env.VITE_USE_WSS)
-    
-    const token = localStorage.getItem('token') || ''
-    
-    let url: string
-    if (window.location.protocol === 'https:' || useWSS === 1) {
-      url = `wss://${serverHostname}:${nginxPort}/ws/${token}`
-    } else {
-      url = `ws://${serverHostname}:${gameServerPort}`
+    const handleGameOver = (event: Event) => {
+      const detail = (event as CustomEvent).detail
+      console.log('🏁 Game over event received:', detail)
+      if (isTournamentMatch) {
+        console.log('🏆 Returning to tournament bracket...')
+        setIsTournamentMatch(false)
+        setScreen('tournament-bracket')
+      } else {
+        setGameMode('none')
+        setScreen('main')
+        resetPlayerStatus()
+      }
     }
-    
-    console.log('🔌 WebSocket connecting to:', url)
-    websocket.current = new WebSocket(url)
-    websocket.current.onopen = () => {
-      setScreen('main')
-      console.log(`[connection opened]`)
-    }
-    websocket.current.onclose = () => {
-      setScreen('websocket-closed')
-      console.log(`[connection closed]`)
-    }
-    websocket.current.onerror = () => {
-      setScreen('websocket-closed')
-      console.log(`[error on connection]`)
-    }
+
+    window.addEventListener('game-over', handleGameOver)
     return () => {
-      websocket.current!.close()
+      window.removeEventListener('game-over', handleGameOver)
+    }
+  }, [isTournamentMatch])
+
+  function handleRandomPlayer() {
+    setGameMode("online")
+    setScreen("searching")
+    fetchWithAuth('/api/games/matchmaking/cancel', { method: 'PUT' })
+      .catch(() => {})
+      .finally(() => {
+        fetchWithAuth('/api/games/matchmaking', {
+          method: 'POST',
+        }).then(response => {
+          if (!response.ok) throw new Error('Failed matchmaking')
+          return response.json()
+        }).then(data => {
+          if (data.data) {
+            // Game was created immediately (another player was waiting)
+            setGameData(data.data)
+            setScreen('ready-room')
+          } else {
+            // Added to queue, need to poll for match
+            setScreen("searching")
+          }
+        }).catch(err => {
+          console.error('Matchmaking failed err:', err)
+          setScreen("main")
+          setGameMode("none")
+        })
+      })
+  }
+
+  function handleHostReq() {
+    setGameMode("online")
+    setScreen("searching")
+    // Cancel any existing matchmaking first
+    fetchWithAuth('/api/games/matchmaking/cancel', { method: 'PUT' })
+      .catch(() => {})
+      .finally(() => {
+        fetchWithAuth('/api/games/host', {
+          method: 'POST',
+        }).then(response => {
+          if(response.ok)
+            return response.json()
+          throw new Error('Failed hosting')
+        }).then(data => {
+          setLobbyId(data.data.lobby_id)
+          setScreen("host-lobby")
+        }).catch(err => {
+          console.error('Hosting failed err:', err)
+          setScreen("main")
+          setGameMode("none")
+        })
+      })
+  }
+
+  function joinLobbyReq(lobbyId: string) {
+    setGameMode("online")
+    setScreen("searching")
+    fetchWithAuth('/api/games/joinlobby', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ lobby_id: lobbyId }),
+    }).then(response => {
+      if(response.ok)
+        return response.json()
+      throw new Error('Failed to join lobby')
+    }).then(data => {
+      console.log('Joined lobby response:', data)
+      setGameData(data.data)
+      setScreen("ready-room")
+    }).catch(err => {
+      console.error('Join lobby failed err:', err)
+      setScreen("main")
+      setGameMode("none")
+    })
+  }
+
+  function resetPlayerStatus() {
+    fetchWithAuth('/api/games/matchmaking/cancel', {
+      method: 'PUT'
+    }).then(response => {
+      if (!response.ok) throw new Error('Failed to cancel matchmaking')
+      console.log('Matchmaking cancelled')
+    }).catch(err => {
+      console.error('Cancel matchmaking failed:', err)
+    })
+  }
+
+  // Tournament handlers
+  const handleTournamentCreated = useCallback((toId: number, maxParticipants: number) => {
+    console.log('🏟️ Tournament created:', toId, 'Max:', maxParticipants)
+    setTournamentId(toId)
+    setSelectedBracketSize(maxParticipants)
+    setScreen('tournament-lobby')
+  }, [])
+
+  const handleTournamentJoined = useCallback((toId: number, maxParticipants: number) => {
+    console.log('🏟️ Joined tournament:', toId, 'Max:', maxParticipants)
+    setTournamentId(toId)
+    setSelectedBracketSize(maxParticipants)
+    setScreen('tournament-lobby')
+  }, [])
+
+  const handleTournamentStarted = useCallback(() => {
+    console.log('🏟️ Tournament started!')
+    setScreen('tournament-bracket')
+  }, [])
+
+  const handleTournamentLeft = useCallback(() => {
+    console.log('🏟️ Left tournament')
+    setTournamentId(null)
+    setScreen('main')
+    setGameMode('none')
+  }, [])
+
+  // Play a tournament match
+  const handleTournamentPlayMatch = useCallback(async (gameId: number) => {
+    console.log('🎯 Playing tournament match - Game ID:', gameId)
+    try {
+      const response = await fetchWithAuth(`/api/games/${gameId}`)
+      if (!response.ok) throw new Error('Failed to fetch game data')
+      const data = await response.json()
+      console.log('📦 Tournament game data:', data.data)
+      setIsTournamentMatch(true)
+      setGameData(data.data)
+      setGameMode('online')
+      setScreen('ready-room')
+    } catch (err) {
+      console.error('❌ Failed to start tournament match:', err)
+      setError(String(err))
     }
   }, [])
 
-  // ✅ MATCHMAKING POLL
-  useEffect(() => {
-    if (screen !== 'searching')
-      return;
-    const interval = setInterval(async () => {
-      try {
-        const response = await fetchWithAuth('/api/games/matchmaking')
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => {})
-          console.error('error: MATCHMAKING POLL: ', errorData)
-          if (errorData?.message) {
-            setError(errorData.message)
-            setScreen('error')
-            throw new Error('failed to poll matchmaking status')
-          }
-        }
-        const data = await response.json()
-        if (data.data?.id) {
-          console.log('Match found! Going to ready room', data)
-          setGameData(data.data)
-          updateGameMode('online')
-          setScreen('ready-room')  // ✅ GO TO READY ROOM FIRST
-        }
-        else if (data.data?.status === 'idle') {
-          console.log('data is idle.... TIMEOUT PROBABLY OCCURED')
-          setScreen('timeout')
-        }
-      } catch (error: any) {
-        console.error(error);
-      }
-    }, 5000)
-    return () => clearInterval(interval);
-  }, [screen])
-
-  // ✅ SEND GAME DATA TO WEBSOCKET - ONLY when screen becomes 'game'
-  // ...existing code...
-
-  // Send START_GAME to gameserver ONLY when game screen loads
-  const startGameSent = useRef(false)
-  useEffect(() => {
-    if (screen === 'game' && gameMode === 'online' && gameData && !startGameSent.current) {
-      startGameSent.current = true
-      console.log('🎮 Sending START_GAME:', gameData.id)
-      websocket.current!.send(JSON.stringify({
-        type: 'START_GAME',
-        game_id: gameData.id,
-        player1_id: gameData.player1_id,
-        player2_id: gameData.player2_id
-      }))
-    }
-    if (screen === 'main' || screen === 'online') {
-      startGameSent.current = false
-    }
-  }, [screen, gameMode, gameData])
-
-  function updateGameMode(gameMode: GameMode) {
-    console.log("Selected mode: ", gameMode)
-    setGameMode(gameMode)
-  }
-
-  // ✅ GAME HANDLERS
-  const handleRandomPlayer = async () => {
-    setScreen('searching')
-    try {
-      const response = await fetchWithAuth('/api/games/matchmaking', { method: 'POST' })
-      if (!response.ok) {
-        const errordata = await response.json().catch(() => {})
-        console.log('errordata: ', errordata)
-        if (errordata?.message) {
-          setError(errordata.message)
-          setScreen('error')
-          throw new Error('failed to join queue')
-        }
-      }
-    }
-    catch (err: any) {
-      console.log(err)
-      updateGameMode('none')
-    }
-  }
-
-  async function handleHostReq() {
-    try {
-      const response = await fetchWithAuth('/api/games/host', { method: 'POST' })
-      if (!response.ok) {
-        const errordata = await response.json().catch(() => {})
-        console.log('errordata: ', errordata)
-        if (errordata?.message) {
-          setError(errordata.message)
-          setScreen('error')
-          throw new Error('failed to create lobbyId')
-        }
-      }
-      const data = await response.json()
-      console.log(`data: `, data)
-      setLobbyId(data.data.lobby_id);
-      setScreen('host-lobby')
-    }
-    catch (err: any) {
-      console.log(err)
-      updateGameMode('none')
-    }
-  }
-
-  async function joinLobbyReq(lobby_id: string) {
-    setLobbyId(lobby_id)
-    try {
-      const response = await fetchWithAuth('/api/games/joinlobby', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lobby_id }),
-      })
-      if (!response.ok) {
-        const errordata = await response.json().catch(() => {})
-        if (errordata?.message) {
-          alert(errordata.message)
-        }
-        throw new Error('failed to join lobby')
-      }
-      const data = await response.json()
-      if (data.data?.id) {
-        console.log(data)
-        setGameData(data.data)
-        updateGameMode('online')
-        setScreen('ready-room')  // ✅ GO TO READY ROOM FIRST
-      }
-    }
-    catch (err: any) {
-      console.error(err)
-      updateGameMode('none')
-    }
-  }
-
-  async function resetPlayerStatus() {
-    console.log('resetting the player_status to none')
-    try {
-      const response = await fetchWithAuth('/api/games/matchmaking/cancel', { method: 'PUT' })
-      if (!response.ok)
-        throw new Error('could not reset user status on backend..')
-      setGameMode('none')
-      setScreen('online')
-    } catch (error: any) {
-      console.error(error);
-      setGameMode('none')
-      setScreen('online')
-    }
-  }
-
-  // ✅ TOURNAMENT HANDLERS
-  const handleTournamentJoined = (tId: number) => {
-    console.log('✅ Joined tournament:', tId)
-    setTournamentId(tId)
-    setScreen('tournament-lobby')
-  }
-
-  const handleTournamentCreated = (tId: number) => {
-    console.log('✅ Created tournament:', tId)
-    setTournamentId(tId)
-    setScreen('tournament-lobby')
-  }
-
-  const handleTournamentStarted = () => {
-    console.log('✅ Tournament started')
-    setScreen('tournament-bracket')
-  }
-
-  const handleTournamentLeft = () => {
-    console.log('❌ Left tournament')
+  const handleTournamentFinished = useCallback(() => {
+    console.log('🏆 Tournament finished!')
     setTournamentId(null)
-    setScreen('online')
-  }
-
-  const handleCreateTournament = () => {
-    setScreen('create-tournament')
-  }
-
-  const handleBackFromCreate = () => {
-    setScreen('tournament')
-  }
-
-  const handleBackFromJoin = () => {
-    setScreen('tournament')
-  }
+    setIsTournamentMatch(false)
+    setGameMode('none')
+    setScreen('main')
+  }, [])
 
   return (
-    <main className='w-80% m-auto my-4' id='main'>
-      <h1 className="text-4xl font-bold text-center mb-8">Pong Game</h1>
-      <GameUI
-        screen={screen}
-        gameMode={gameMode}
-        lobbyId={lobbyId}
-        error={error}
-        websocket={websocket}
-        gameData={gameData}
-        tournamentId={tournamentId}
-        selectedBracketSize={0}
-        currentUser={currentUser}
+    <>
+        <GameUI
+          lobbyId={lobbyId}
+          gameMode={gameMode}
+          screen={screen}
+          error={error}
+          websocket={websocket}
+          gameData={gameData}
+          tournamentId={tournamentId}
+          selectedBracketSize={selectedBracketSize}
+          currentUser={currentUser}
+          isTournamentMatch={isTournamentMatch}
 
-        setScreen={setScreen}
-        setGameMode={setGameMode}
-        setTournamentId={setTournamentId}
-        setGameData={setGameData}
-        setError={setError}
+          setScreen={setScreen}
+          setGameMode={setGameMode}
+          setTournamentId={setTournamentId}
+          setGameData={setGameData}
+          setError={setError}
 
-        handleRandomPlayer={handleRandomPlayer}
-        handleHostReq={handleHostReq}
-        joinLobbyReq={joinLobbyReq}
-        resetPlayerStatus={resetPlayerStatus}
+          handleRandomPlayer={handleRandomPlayer}
+          handleHostReq={handleHostReq}
+          joinLobbyReq={joinLobbyReq}
+          resetPlayerStatus={resetPlayerStatus}
 
-        onTournamentJoined={handleTournamentJoined}
-        onTournamentCreated={handleTournamentCreated}
-        onTournamentStarted={handleTournamentStarted}
-        onTournamentLeft={handleTournamentLeft}
-        onCreateTournament={handleCreateTournament}
-        onBackFromCreate={handleBackFromCreate}
-        onBackFromJoin={handleBackFromJoin}
-      />
-    </main>
+          handleTournamentPlayMatch={handleTournamentPlayMatch}
+          handleTournamentFinished={handleTournamentFinished}
+
+          onTournamentJoined={handleTournamentJoined}
+          onTournamentCreated={handleTournamentCreated}
+          onTournamentStarted={handleTournamentStarted}
+          onTournamentLeft={handleTournamentLeft}
+          onCreateTournament={() => setScreen('create-tournament')}
+          onBackFromCreate={() => setScreen('tournament')}
+          onBackFromJoin={() => { setScreen('main'); setGameMode('none') }}
+        />
+    </>
   )
 }

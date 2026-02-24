@@ -2,6 +2,7 @@ import { db } from '../databaseInit.js'
 import { dbError } from '../error/dbErrors.js'
 import { ApiError } from '../error/errors.js';
 import { Player, Queue, Game } from '../types/database.interfaces.js'
+import { tournamentService } from './tournamentService.js'
 
 const TIMEOUT_MATCHMAKING = 30000 //in millisec
 
@@ -14,7 +15,7 @@ export const gamesService = {
         return db.prepare('SELECT * FROM games').all();
     },
 
-    fetchGame: (id: number | bigint) =>{
+    fetchGame: (id: number | bigint) => {
         return db.prepare('SELECT * FROM games WHERE id = ?').get(id);
     },
 
@@ -28,7 +29,7 @@ export const gamesService = {
         return result;
     },
 
-    fetchGameQueue: () =>{
+    fetchGameQueue: () => {
         return db.prepare('SELECT * FROM game_queue').all() as Queue[];
     },
 
@@ -39,7 +40,7 @@ export const gamesService = {
     addGame: (player1_id: number, player2_id: number) => {
         try {
             return db.prepare('INSERT INTO games (player1_id, player2_id) VALUES (?, ?)').run(player1_id, player2_id);
-        } 
+        }
         catch (err: any) {
             dbError(err);
         }
@@ -52,11 +53,11 @@ export const gamesService = {
             let game_created: Game;
             if (lobby_id === undefined) {
                 game_created = db.prepare('INSERT INTO games (player1_id, player2_id, status) VALUES(?, ?, ?) RETURNING *')
-                .get(player, new_player, 'ready') as Game;
+                    .get(player, new_player, 'ready') as Game;
             }
             else {
                 game_created = db.prepare('INSERT INTO games (lobby_id, player1_id, player2_id, status) VALUES(?, ?, ?, ?) RETURNING *')
-                .get(lobby_id, player, new_player, 'ready') as Game;
+                    .get(lobby_id, player, new_player, 'ready') as Game;
             }
             db.prepare('UPDATE users SET status = ? WHERE id = ? OR id = ?').run('playing', player, new_player);
             db.prepare('DELETE FROM game_queue WHERE player_id = ?').run(player);
@@ -96,7 +97,7 @@ export const gamesService = {
         return queue;
     },
 
-    fetchlobby: (lobby_id: string ) => {
+    fetchlobby: (lobby_id: string) => {
         return db.prepare('SELECT * FROM game_queue WHERE lobby_id = ?').get(lobby_id) as Queue;
     },
 
@@ -112,7 +113,7 @@ export const gamesService = {
         readyPlayers.get(game_id)!.add(player_id);
 
         const allReady = readyPlayers.get(game_id)!.has(game.player1_id!)
-                      && readyPlayers.get(game_id)!.has(game.player2_id!);
+            && readyPlayers.get(game_id)!.has(game.player2_id!);
 
         return {
             game_id,
@@ -139,19 +140,25 @@ export const gamesService = {
         };
     },
 
-    finishGame: (id:number, score_player1:number, score_player2:number, winner_id: number, finished_at: string) =>{
+    finishGame: (id: number, score_player1: number, score_player2: number, winner_id: number, finished_at: string) => {
         const gameObj = gamesService.fetchGame(id) as Game;
-        if (gameObj.status !== 'ready')
-            throw new ApiError(400, 'game not ongoing');
-        try {
-            db.prepare('UPDATE users SET status = ? WHERE id = ? OR id = ?').run('idle', gameObj.player1_id, gameObj.player2_id);
-            readyPlayers.delete(id);
-            return db.prepare(' UPDATE games SET winner_id = ?, score_player1 = ?, score_player2 = ?, finished_at = ?, status = ? WHERE id = ?').run(winner_id, score_player1, score_player2, finished_at, 'finished', id)
+        if (!gameObj)
+            throw new ApiError(404, 'Game not found');
+
+        db.prepare('UPDATE games SET score_player1 = ?, score_player2 = ?, winner_id = ?, finished_at = ?, status = ? WHERE id = ?')
+            .run(score_player1, score_player2, winner_id, finished_at, 'finished', id);
+
+        // Reset player status back to idle (not 'online' — schema only allows idle/searching/playing)
+        if (gameObj.player1_id)
+            db.prepare('UPDATE users SET status = ? WHERE id = ?').run('idle', gameObj.player1_id);
+        if (gameObj.player2_id)
+            db.prepare('UPDATE users SET status = ? WHERE id = ?').run('idle', gameObj.player2_id);
+
+        // Advance winner in tournament if applicable
+        if (gameObj.tournament_id) {
+            tournamentService.advanceWinner(id);
         }
-        catch (err:any) {
-            dbError(err);
-        }
-    }
+    },
 }
 
 function generateLobbyId(): string {
