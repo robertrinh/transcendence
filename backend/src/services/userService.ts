@@ -1,5 +1,5 @@
 import { db } from '../databaseInit.js'
-import { dbError } from '../Errors/dbErrors.js'
+import { dbError } from '../error/dbErrors.js'
 
 export const userService = {
 
@@ -55,6 +55,7 @@ export const userService = {
                 u.created_at,
                 u.is_anonymous,
                 u.anonymized_at,
+                u.is_guest,
                 u.two_factor_enabled,
                 a.path as avatar_url,
                 (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND winner_id = u.id) as wins,

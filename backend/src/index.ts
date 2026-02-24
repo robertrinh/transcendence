@@ -1,7 +1,5 @@
 import fastify from 'fastify';
-import dotenv from 'dotenv/config';
 import databaseRoutes from './routes/database.js';
-import { getMessages } from './controllers/chatcontrollers.js';
 import usersRoutes from './routes/users.js';
 import chatRoutes from './routes/chat.js';
 import gamesRoutes from './routes/games.js';
@@ -9,16 +7,15 @@ import tournamentsRoutes from './routes/tournaments.js';
 import fastifyStatic from '@fastify/static';
 import swagger from '@fastify/swagger'
 import swaggerUI from '@fastify/swagger-ui'
-// import database from './database.js';
 import authRoutes from './routes/auth.js';
 import multipart from '@fastify/multipart';
+import { dbCleanUpJob } from './error/backupCleanup.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import twofaRoutes from './routes/2fa.js';
 
 import { fileURLToPath } from 'node:url';
-import { dirname } from 'node:path'
 import path from 'node:path';
 
 const server = fastify({ logger: true });
@@ -50,7 +47,7 @@ server.register(swagger, {
 })
 
 server.register(swaggerUI, {
-  routePrefix: '/docs'
+  routePrefix: '/api/docs'
 })
 
 //* User logic routes
@@ -71,20 +68,6 @@ server.register(
         prefix: "/api"
     }
 );
-
-// Root endpoint
-server.get('/', async (request, reply) => {
-    return { 
-        message: 'ft_transcendence Backend API',
-        status: 'running',
-        endpoints: {
-            health: '/api/health',
-            auth: '/api/auth/*',
-            chat: '/api/chat/*',
-            chatStream: '/api/chat/stream (SSE with token query param)'
-        }
-    };
-});
 
 //* 2FA routes
 server.register(
@@ -119,11 +102,25 @@ server.register(
 const start = async () => {
     try {
         await server.listen({ port: 3000, host: '0.0.0.0' });
-        console.log('🚀 Backend server running on http://0.0.0.0:3000');
-        console.log('📝 API Documentation available at http://localhost:3000/docs');
-        console.log('🌐 Frontend should be accessible at http://localhost:8080');
-        console.log('📡 SSE Chat endpoint: http://localhost:3000/api/chat/stream?token=YOUR_JWT_TOKEN');
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        const devBackendURL = `http://${process.env.HOST}:${process.env.BACKEND_PORT}`
+        const devFrontendURL = `http://${process.env.HOST}:${process.env.FRONTEND_PORT}`
+        const prodURL = `https://${process.env.HOST}:${process.env.NGINX_PORT}`
+        console.log(
+            `Development access points:\n` + 
+            `\t - 🚀 Backend server running on ${devBackendURL}\n` +
+            `\t - 📝 API Documentation available at ${devBackendURL}/api/docs\n` +
+            `\t - 🌐 Frontend should be accessible at ${devFrontendURL}\n` +
+            `\t - 📡 SSE Chat endpoint: ${devBackendURL}/api/chat/stream?token=YOUR_JWT_TOKEN\n` + 
+            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
+        )
+        console.log(
+            `Production access points:\n` + 
+            `\t - 📝 API Documentation available at ${prodURL}/api/docs\n` +
+            `\t - 🌐 Frontend should be accessible at ${prodURL}\n` +
+            `\t - 📡 SSE Chat endpoint: ${prodURL}/api/chat/stream?token=YOUR_JWT_TOKEN\n` + 
+            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
+        )
+        dbCleanUpJob();
     } catch (err) {
         server.log.error(err);
         process.exit(1);

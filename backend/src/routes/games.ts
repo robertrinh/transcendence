@@ -4,9 +4,6 @@ import { finishGameSchema, joinLobbySchema } from '../schemas/games.schemas.js'
 import { gamesController } from '../controllers/gamesController.js'
 import { authenticate } from '../auth/middleware.js'
 
-
-
-//TODO: add param and response in the schema for swaggerUI 
 export default async function gamesRoutes (
     fastify: FastifyInstance,
     options: FastifyPluginOptions
@@ -24,7 +21,6 @@ export default async function gamesRoutes (
 			params: IDSchema,
 		}}, gamesController.getGameByID);
 
-//playing random ---> match mkaing. maybe make own endpoints?
     fastify.post('/matchmaking', {
 		schema: {
 			tags: ['games'],
@@ -44,7 +40,6 @@ export default async function gamesRoutes (
 			summary: 'reset status and remove from queue',
 		}, preHandler: [authenticate]}, gamesController.cancelMatchmaking);
 
-//private online games!
     fastify.post('/host', {
 		schema: {
 			tags: ['games'],
@@ -66,14 +61,6 @@ export default async function gamesRoutes (
 			summary: 'Get game queue',
 		}}, gamesController.getGameQueue);
 
-    fastify.delete('/:id', {
-		schema: {
-			tags: ['games'],
-			summary: 'Delete a game by ID',
-			params: IDSchema,
-		}}, gamesController.deleteGame);
-
-	//finishing game, update status to finished
     fastify.put('/:id/finish', {
 		schema: {
 			tags: ['games'],

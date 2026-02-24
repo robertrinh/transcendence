@@ -20,10 +20,18 @@ const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN) as SignOptions['expiresIn']
 export interface TokenPayload {
 	userId: number
 	username: string
+	twoFactorPending?: boolean
 }
 
-export function generateToken(userId: number, username: string): string {
+const PENDING_TOKEN_EXPIRES_IN = '5m'
+
+export function generateToken(userId: number, username: string, twoFactorPending: boolean = false): string {
 	const payload: TokenPayload = { userId, username }
+	
+	if (twoFactorPending) {
+		payload.twoFactorPending = true
+		return jwt.sign(payload, JWT_SECRET, { expiresIn: PENDING_TOKEN_EXPIRES_IN })
+	}
 
 	return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN })
 }

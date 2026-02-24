@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User, fetchUserProfile, getAvatarUrl, fetchUserGameHistory,
     GameHistoryItem, calculateWinRate } from '../components/util/profileUtils';
+import { Navigate } from 'react-router-dom';
 
 interface ProfileProps {
     user: User | null;
@@ -12,7 +13,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
     const [gamesLoading, setGamesLoading] = useState(true);
 
     useEffect(() => {
-        if (user) {
+        if (user && !user.is_guest) {
             loadProfile();
         }
     }, [user]);
@@ -39,6 +40,9 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
         setGameHistory(history);
         setGamesLoading(false);
     };
+    if (user?.is_guest) {
+        return <Navigate to="/" replace />;
+    }
 
     if (loading && !profileData) {
         return (

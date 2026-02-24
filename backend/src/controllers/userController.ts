@@ -1,4 +1,4 @@
-import { ApiError } from '../Errors/errors.js';
+import { ApiError } from '../error/errors.js';
 import { userService } from '../services/userService.js'
 import { FastifyRequest, FastifyReply } from 'fastify';
 import bcrypt from 'bcrypt'
@@ -22,14 +22,6 @@ export const userController = {
     getAllUsers: async () => {
         const users = userService.fetchAllUsers();
         return {success: true, users }
-    },
-
-    getUserByID: async (req: FastifyRequest, reply: FastifyReply) => {
-        const { id } = req.params as { id: number }
-        const user = userService.fetchUser(id);
-        if (!user)
-            throw new ApiError(404, 'User not found', 'USER_NOT_FOUND');
-        return { success: true, user }
     },
 
     createUser: async (req: FastifyRequest, reply: FastifyReply) => {
@@ -188,7 +180,7 @@ export const userController = {
                     error: 'Password is required to delete account'
                 });
             }
-
+			
             // Get user with password hash - cast as any to access password property
             const user = userService.fetchUser(userId) as { id: number; username: string; password: string };
             if (!user) {
@@ -200,7 +192,7 @@ export const userController = {
             // Verify password before deletion
             const isPasswordValid = await bcrypt.compare(password, user.password);
             if (!isPasswordValid) {
-                return reply.status(401).send({
+                return reply.status(403).send({
                     error: 'Invalid password'
                 });
             }

@@ -1,4 +1,4 @@
-import { ApiError } from '../Errors/errors.js';
+import { ApiError } from '../error/errors.js';
 import { gamesService } from '../services/gamesService.js'
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { userService } from '../services/userService.js';
@@ -69,14 +69,24 @@ export const gamesController = {
 		const { lobby_id } = req.body as { lobby_id: string }
 
 		const player = userService.fetchUser(player_id) as Player;
-		if (player.status === 'playing' || player.status === 'searching')
-			throw new ApiError(400, "player already playing");
-
+		// look if a game is already there first, create one otherwise
+		const foundPrivateGame = gamesService.fetchPrivateGame(lobby_id)
+		if (foundPrivateGame) {
+			return {success: true, data: foundPrivateGame, message: 'Game found, connect to gameserver'}
+		}
 		const game_queue = gamesService.fetchlobby(lobby_id);
 		if (game_queue === undefined)
-			throw new ApiError(404, 'lobby not found')
-
-		const game = gamesService.createGame(game_queue.player_id, player_id);
+			throw new ApiError(404, `Lobby \"${lobby_id}\" not found`)
+		if (game_queue.player_id === player_id) {
+			return {success: false, message: 'Waiting for your opponent to join...'}
+		}
+		if (player.status === 'playing') {
+			throw new ApiError(400, 'You are already playing a game')
+		}
+		if (player.status === 'searching') {
+			throw new ApiError(400, 'You are already searching for a game')
+		}
+		const game = gamesService.createGame(game_queue.player_id, player_id, lobby_id);
 		return {success: true, data: game, message: 'Game created, connect to gameserver'}
 	},
 
@@ -89,17 +99,6 @@ export const gamesController = {
 			message: 'Game finished'
 		}
 	},
-	
-	deleteGame: async (req: FastifyRequest, reply: FastifyReply) => {
-		const { id } = req.params as { id: number }
-		const result = gamesService.removeGame(id);
-		if (result.changes == 0)
-			throw new ApiError(404, 'Game not found');
-		return { 
-			success: true, 
-			message: 'Game deleted' 
-		}
-	},
 
 	getGameByUserID: async (req: FastifyRequest, reply: FastifyReply) => {
 		const result = gamesService.getGameByUserID(req.user!.userId)
@@ -108,8 +107,4 @@ export const gamesController = {
 			result: result
 		};
 	}
-
-	//What happens if a player exits mid game? 
-	//What are errors that can happen?
-	//need to add some clean up funcs if something is left opened or so
 }

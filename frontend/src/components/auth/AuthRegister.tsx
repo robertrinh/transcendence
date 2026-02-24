@@ -1,21 +1,11 @@
 import React, { useState } from 'react';
 import PrivacyPolicy from '../../views/privacy';
+import { getApiUrl } from './lib';
 
 interface AuthRegisterProps {
     onSwitchToLogin: () => void;
     isInPanel?: boolean;  // ← NEW: Add panel mode support
 }
-
-// For Docker containers, use the backend container name
-// For development outside Docker, use localhost
-const getApiUrl = () => {
-    // Check if we're in a Docker environment
-    if (typeof window !== 'undefined') {
-        // Browser environment - check if we can reach backend container
-        return 'http://backend:3000';
-    }
-    return 'http://localhost:3000';
-};
 
 const API_URL = getApiUrl();
 

@@ -30,21 +30,28 @@ export const ballRadius = 15
 export const ballSize = ballRadius * 2
 // physics, the speeds need to be equal to the server
 const targetFPS = 60
+export const heartbeatFrequencyMS = 3000
 export const clientTick = 1000 / targetFPS
 const ballSpeedPerTick = 0.25
 const paddleSpeedPerTick = 0.5
 const ballSpeed = ballSpeedPerTick * clientTick
 export const paddleMoveUnits = paddleSpeedPerTick * clientTick
+// colors
+const ballColor = "#160f29"
+const p1PaddleColor = "#5885a2"
+const p2PaddleColor = "#b8383b"
+export const textColor = "#36454f"
+// objects
+const trailColors = new Array("#ffffff", "#cdc3e9", "#9c88d3")
 export const ball = new Ball(
-    0, 0, {x: 1, y: 1}, ballRadius, ballSpeed, "#160f29", 0, 7.5,
-    new Array("#ffffff", "#cdc3e9", "#9c88d3"))
+    0, 0, {x: 1, y: 1}, ballRadius, ballSpeed, ballColor, 0, 7.5,
+    trailColors)
 export const playerOne = new Player(
-    0, 0, ballSize, ballSize * 4, paddleMoveUnits, "#5885a2")
+    0, 0, ballSize, ballSize * 4, paddleMoveUnits, p1PaddleColor)
 export const playerTwo = new Player(
     arenaWidth - ballSize, 0, ballSize, ballSize * 4, paddleMoveUnits,
-    "#b8383b")
+    p2PaddleColor)
 export const intervals = new Intervals()
-export const textColor = "#36454f"
 
 function resetBall() {
     ball.x = 0
@@ -53,7 +60,7 @@ function resetBall() {
     ball.dirVector.y = 1
     ball.radius = ballRadius
     ball.movementSpeed = ballSpeed
-    ball.color = "#160f29"
+    ball.color = ballColor 
     ball.speedX = 0
     ball.maxSpeed = 7.5
     ball.reset()
@@ -66,6 +73,7 @@ function resetPlayerOne() {
     playerOne.gameScore = 0
     playerOne.ai = undefined
     playerOne.humanControlled = true
+    playerOne.paddle.color = p1PaddleColor 
 }
 
 function resetPlayerTwo() {
@@ -75,6 +83,7 @@ function resetPlayerTwo() {
     playerTwo.gameScore = 0
     playerTwo.ai = undefined
     playerTwo.humanControlled = true
+    playerTwo.paddle.color = p2PaddleColor
 }
 
 export function resetState() {

@@ -1,13 +1,15 @@
 // API configuration
 const getApiBaseUrl = (): string => {
+    const backendPort = import.meta.env.VITE_BACKEND_PORT
+    const serverHostname = import.meta.env.VITE_SERVER_HOSTNAME
     // In Docker environment, containers communicate via service names
     // In browser, this will be resolved by Docker networking
     if (process.env.NODE_ENV === 'production') {
-        return 'http://backend:3000';
+        return `http://backend:${backendPort}`;
     }
     
     // For development, try backend container first, then localhost
-    return 'http://localhost:3000';
+    return `http://${serverHostname}:${backendPort}`;
 };
 
 const API_BASE = '/api';
@@ -120,8 +122,7 @@ export const API_ENDPOINTS = {
         join: `${API_BASE_URL}/api/chat/join`,
         leave: `${API_BASE_URL}/api/chat/leave`,
         users: `${API_BASE_URL}/api/chat/users`,
-    },
-    health: `${API_BASE_URL}/api/health`,
+    }
 };
 
 // Utility function to make API calls with fallback

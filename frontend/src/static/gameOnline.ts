@@ -1,8 +1,6 @@
 import { Ball } from './ball'
 import { playerOne, playerTwo, ball, clientTick, drawPlayerScores,
-    intervals } from './lib'
-import websocket from './websocket'
-
+    intervals, heartbeatFrequencyMS } from './lib'
 interface MoveTS {
     type: string,
     timestamp: number
@@ -10,8 +8,10 @@ interface MoveTS {
 
 export async function gameOnlineLobby(canvas: HTMLCanvasElement, 
         ctx: CanvasRenderingContext2D, drawCanvas: HTMLCanvasElement,
-        drawCtx: CanvasRenderingContext2D) {
-  const serverTick = 1000 / 66
+        drawCtx: CanvasRenderingContext2D, websocket: WebSocket) {
+    const serverTick = 1000 / 66
+    let firstStateReceived = false
+    let lastHearbeatSent = 0
 
     let p1Score = 0
     let p2Score = 0
@@ -117,6 +117,13 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
             then = now - (deltaTimeMS % clientTick)
             moveBall(ball)
         }
+        const dateNow = Date.now()
+        if (lastHearbeatSent === 0 || dateNow - lastHearbeatSent > heartbeatFrequencyMS) {
+            websocket.send(JSON.stringify(
+                {'type': 'HEARTBEAT', 'timestamp': dateNow}
+            ))
+            lastHearbeatSent = dateNow
+        }
 	}
 
     function draw() {
@@ -169,6 +176,11 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
         const ballServer = JSONObject.ball
         switch (JSONObject.type) {
             case "STATE":
+                if (!firstStateReceived) {
+                    canvas.addEventListener("keydown", handleKeyDown)
+                    canvas.addEventListener("keyup", handleKeyUp)
+                    firstStateReceived = true
+                }
                 interpVelocityBall = pointSubtract(new Point(ballServer.x, ballServer.y), new Point(ball.x, ball.y))
                 interpVelocityBall.x /= serverTick
                 interpVelocityBall.y /= serverTick
@@ -219,7 +231,6 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
                     playerTwo.paddle.color = p1Color
                 }
                 console.log(`You are player ${playerID}`)
-                websocket.send(JSON.stringify({type: 'READY'}))
                 break
             case "SCORE":
                 scoreReceived = true
@@ -232,33 +243,16 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
                         break
                 }
                 break
-            case "WHOAREYOU":
-                try {
-                    const { fetchWithAuth } = await import('../config/api');
-                    const response = await fetchWithAuth("/api/users/profile/me");
-                    if (!response.ok) {
-                        throw Error("Failed to process message 'WHOAREYOU'; backend error")
-                    }
-                    const parsed = await response.json()
-                    websocket.send(JSON.stringify(
-                        {
-                            'type': 'ID',
-                            'id': parsed.profile.id
-                        }
-                    ))
-                }
-                catch (error) {
-                    console.log(error)
-                }
+            case "OPPONENT_DISCONNECT":
+                alert("Your opponent disconnected, giving you a default win")
                 break
             default:
                 console.log(`Unrecognized message type: ${JSONObject.type}`)
         }
     }
-
+    removeEventListener("keydown", handleKeyDown)
+    removeEventListener("keyup", handleKeyUp)
     websocket.onmessage = gameSockOnMessage
-    canvas.addEventListener("keydown", handleKeyDown)
-    canvas.addEventListener("keyup", handleKeyUp)
     ball.x = canvas.width / 2
     ball.y = canvas.height / 2
     requestAnimationFrame(draw)

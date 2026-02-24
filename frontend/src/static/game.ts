@@ -1,8 +1,9 @@
 import { assertIsNotNull } from './lib'
 import { gameOnlineLobby } from './gameOnline'
 import { gameOfflineLobby } from './gameOffline'
+import { GameMode } from '../components/game/types'
 
-export default async function gameInit (gameMode: string) {
+export default async function gameInit (gameMode: GameMode, websocket: WebSocket) {
     let canvas = document.getElementById('game-canvas') as HTMLCanvasElement | null
     if (canvas === null) {
         canvas = document.createElement("canvas")
@@ -24,6 +25,7 @@ export default async function gameInit (gameMode: string) {
     const main = document.getElementById('main')
     assertIsNotNull(main)
     main.insertAdjacentElement('afterend', canvas)
+    canvas.focus()
     console.log(`GAMING MODE: ${gameMode}`)
     switch (gameMode) {
         case "singleplayer":
@@ -31,6 +33,6 @@ export default async function gameInit (gameMode: string) {
             await gameOfflineLobby(gameMode, canvas, ctx, drawCanvas, drawCtx)
             break
         case "online":
-            await gameOnlineLobby(canvas, ctx, drawCanvas, drawCtx)
+            await gameOnlineLobby(canvas, ctx, drawCanvas, drawCtx, websocket)
     }
 }
