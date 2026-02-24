@@ -116,7 +116,7 @@ if (user.is_anonymous) {
     //* connect to SSE on component mount + load friends/blocked
     useEffect(() => {
         connectSSE();
-        
+        loadFriendsAndBlocked();
         return () => {
             if (eventSourceRef.current) {
                 eventSourceRef.current.close();
@@ -285,28 +285,51 @@ if (user.is_anonymous) {
         setConfirmation({ action, username });
     };
 
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
         if (confirmation.action === 'remove' && confirmation.username) {
-            setFriends(prev => prev.filter(f => f.username !== confirmation.username));
-            fetchWithAuth('/api/friends/remove', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: confirmation.username })
-            }).catch(error => console.error('Failed to remove friend:', error));
-        } else if (confirmation.action === 'block' && confirmation.username) {
-            if (!blockedUsers.includes(confirmation.username) && confirmation.username !== user.username) {
-                // for type guard, avoid test error
-                const userToBlock = confirmation.username;
-                setBlockedUsers(prev => [...prev, userToBlock]);
-                setFriends(prev => prev.filter(f => f.username !== userToBlock));
-                fetchWithAuth('/api/friends/block', {
+            const username = confirmation.username;
+            setConfirmation({ action: null, username: null });
+            try {
+                const res = await fetchWithAuth('/api/friends/remove', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: userToBlock })
-                }).catch(error => console.error('Failed to block user:', error));
+                    body: JSON.stringify({ username })
+                });
+                if (res.ok) 
+					loadFriendsAndBlocked();
+                else {
+                    const errorData = await res.json() as { error?: string };
+                    showToast(errorData?.error || 'Failed to remove friend');
+                }
+            } catch {
+                showToast('Failed to remove friend');
             }
+        } else if (confirmation.action === 'block' && confirmation.username) {
+            if (!blockedUsers.includes(confirmation.username) && confirmation.username !== user.username) {
+                const userToBlock = confirmation.username;
+                setConfirmation({ action: null, username: null });
+                try {
+                    const res = await fetchWithAuth('/api/friends/block', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username: userToBlock })
+                    });
+                    if (res.ok)
+                        loadFriendsAndBlocked();
+                    else if (!user.is_guest) {
+                        const errorData = await res.json() as { error?: string };
+                        showToast(errorData?.error || 'Failed to block user');
+                    }
+                } catch {
+                    if (!user.is_guest) 
+						showToast('Failed to block user');
+                }
+            } else {
+                setConfirmation({ action: null, username: null });
+            }
+        } else {
+            setConfirmation({ action: null, username: null });
         }
-        setConfirmation({ action: null, username: null });
     };
 
     const handleCancel = () => {
@@ -366,29 +389,43 @@ if (user.is_anonymous) {
         }
     };
 
-    const addFriend = (username: string) => {
-        if (!friends.some(f => f.username === username) && username !== user.username) {
-            const newFriend: Friend = {
-                id: Date.now().toString(),
-                username,
-                isOnline: onlineUsers.includes(username)
-            };
-            setFriends(prev => [...prev, newFriend]);
-            fetchWithAuth('/api/friends/add', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username })
-            }).catch(error => console.error('Failed to add friend:', error));
+    const addFriend = async (username: string) => {
+        if (!friends.some(friend => friend.username === username) && username !== user.username) {
+            try {
+                const res = await fetchWithAuth('/api/friends/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username })
+                });
+                if (res.ok) 
+					loadFriendsAndBlocked();
+                else {
+                    const errorData = await res.json() as { error?: string };
+                    showToast(errorData?.error || 'Failed to add friend');
+                }
+            } catch {
+                showToast('Failed to add friend');
+            }
         }
     };
 
-    const unblockUser = (username: string) => {
-        setBlockedUsers(prev => prev.filter(u => u !== username));
-        fetchWithAuth('/api/friends/unblock', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username })
-        }).catch(error => console.error('Failed to unblock user:', error));
+    const unblockUser = async (username: string) => {
+        try {
+            const res = await fetchWithAuth('/api/friends/unblock', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username })
+            });
+            if (res.ok)
+                loadFriendsAndBlocked();
+            else if (!user.is_guest) {
+                const errorData = await res.json() as { error?: string };
+                showToast(errorData?.error || 'Failed to unblock');
+            }
+        } catch {
+            if (!user.is_guest) 
+				showToast('Failed to unblock');
+        }
     };
 
     const startPrivateChat = (username: string) => {
