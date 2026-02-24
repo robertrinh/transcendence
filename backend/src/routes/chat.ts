@@ -187,6 +187,10 @@ fastify.post('/send', {
         if (!message || !message.trim()) {
             return reply.status(400).send({ error: 'Message cannot be empty' });
         }
+		
+		if (message.length > 1000) {
+			return reply.status(400).send({ error: 'Message cannot be longer than 1000 characters' });
+		}
 
         const connection = sseConnections.get(connectionId);
         if (!connection) {
