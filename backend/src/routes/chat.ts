@@ -202,6 +202,9 @@ fastify.post('/send', {
         }
 
         const isPrivateMessage = Boolean(isPrivate && toUser);
+        if (isPrivate && (!toUser || !String(toUser).trim())) {
+            return reply.status(400).send({ error: 'Recipient required for private message' });
+        }
 
         if (isPrivateMessage) {
 			//* check for valid recipient andsend only to sender

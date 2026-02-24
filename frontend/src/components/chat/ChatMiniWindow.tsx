@@ -25,6 +25,8 @@ interface ChatMiniWindowProps {
 type ChatMode = 'public' | 'private';
 type TabMode = 'chat' | 'friends' | 'blocked';
 
+const SYSTEM_USERNAME = 'System';
+
 const ChatMiniWindow: React.FC<ChatMiniWindowProps> = ({ user, navigateToUserProfile }) => {
 
 if (user.is_anonymous) {
@@ -163,7 +165,7 @@ if (user.is_anonymous) {
                             console.log('👥 User joined:', data);
                             setMessages(prev => [...prev, {
                                 id: Date.now().toString(),
-                                username: '',
+                                username: SYSTEM_USERNAME,
                                 message: data.message,
                                 timestamp: new Date(data.timestamp)
                             }]);
@@ -181,7 +183,7 @@ if (user.is_anonymous) {
                             console.log('👥 User event:', data);
                             setMessages(prev => [...prev, {
                                 id: Date.now().toString(),
-                                username: '',
+                                username: SYSTEM_USERNAME,
                                 message: data.message,
                                 timestamp: new Date(data.timestamp)
                             }]);
@@ -302,6 +304,10 @@ if (user.is_anonymous) {
             console.log('⚠️ Cannot send: message=', newMessage.trim(), 'connId=', connectionId, 'connected=', connected);
             return;
         }
+        if (chatMode === 'private' && (!privateChatWith || !privateChatWith.trim())) {
+            showToast('Select a user for private chat');
+            return;
+        }
 
         const msgToSend = newMessage.trim();
         console.log('📤 Sending message:', msgToSend);
@@ -315,8 +321,8 @@ if (user.is_anonymous) {
                 body: JSON.stringify({
                     connectionId,
                     message: msgToSend,
-                    isPrivate: chatMode === 'private',
-                    toUser: chatMode === 'private' ? privateChatWith : undefined
+                    isPrivate: chatMode === 'private' && privateChatWith?.trim(),
+                    toUser: chatMode === 'private' && privateChatWith?.trim() ? privateChatWith.trim() : undefined
                 })
             })
             .then(res => {
@@ -329,6 +335,8 @@ if (user.is_anonymous) {
     };
 
     const addFriend = (username: string) => {
+        if (!username || typeof username !== 'string' || !username.trim()) 
+			return;
         if (!friends.some(f => f.username === username) && username !== user.username) {
             const newFriend: Friend = {
                 id: Date.now().toString(),
@@ -366,7 +374,13 @@ if (user.is_anonymous) {
 
     const getUniqueUsernames = () => {
         const usernames = Array.from(new Set(messages.map(m => m.username)));
-        return usernames.filter(username => username !== user.username);
+        return usernames.filter(
+            (username) =>
+                username != null &&
+                String(username).trim() !== '' &&
+                username !== user.username &&
+                username !== SYSTEM_USERNAME
+        );
     };
 
     const showToast = (message: string) => {
@@ -431,7 +445,7 @@ if (user.is_anonymous) {
                             : 'text-gray-700 hover:text-gray-900 hover:bg-white/30'
                     }`}
                 >
-                    Friends ({friends.length})
+                    Friends ({friends.filter((f) => f.username?.trim()).length})
                 </button>
                 <button
                     onClick={() => setActiveTab('blocked')}
@@ -492,17 +506,19 @@ if (user.is_anonymous) {
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center space-x-2">
                                                     <span 
-                                                        className={`font-medium text-xs cursor-pointer hover:underline ${
+                                                        className={`font-medium text-xs ${message.username !== SYSTEM_USERNAME ? 'cursor-pointer hover:underline' : ''} ${
                                                             message.isPrivate ? 'text-purple-700' : 'text-blue-700'
                                                         }`}
                                                         onClick={() => {
+                                                            if (message.username === SYSTEM_USERNAME) 
+																return;
                                                             if (message.username !== user.username) {
-                                                            viewUserProfile(message.username);
-                                                        } else {
-                                                            showToast("This is your own profile");
-                                                        }
-                                                    }}
-                                                        title={`View ${message.username}'s profile`}
+                                                                viewUserProfile(message.username);
+                                                            } else {
+                                                                showToast("This is your own profile");
+                                                            }
+                                                        }}
+                                                        title={message.username === SYSTEM_USERNAME ? 'System message' : `View ${message.username}'s profile`}
                                                     >
                                                         {message.username}
                                                         {message.isPrivate && (
@@ -517,8 +533,8 @@ if (user.is_anonymous) {
                                                     </span>
                                                 </div>
                                                 
-                                                {/* User Actions (show on hover) */}
-                                                {message.username !== user.username && (
+                                                {/* User Actions (show on hover, exclude system messages) */}
+                                                {message.username !== user.username && message.username !== SYSTEM_USERNAME && (
                                                     <div className="opacity-0 group-hover:opacity-100 flex items-center space-x-1">
                                                         {!friends.some(f => f.username === message.username) && (
                                                             <button
@@ -598,12 +614,12 @@ if (user.is_anonymous) {
             {activeTab === 'friends' && (
                 <div className="flex-1 min-h-0 overflow-y-auto p-3">
                     <div className="space-y-2">
-                        {friends.length === 0 ? (
+                        {friends.filter((f) => f.username?.trim()).length === 0 ? (
                             <div className="text-center text-gray-700 text-sm py-4">
                                 No friends yet. Add friends from chat messages!
                             </div>
                         ) : (
-                            friends.map((friend) => (
+                            friends.filter((f) => f.username?.trim()).map((friend) => (
                                 <div key={friend.id} className="flex items-center justify-between p-2 bg-white/30 backdrop-blur-sm border border-white/20 rounded">
                                     <div className="flex items-center space-x-2">
                                         <div className={`w-2 h-2 rounded-full ${friend.isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></div>
