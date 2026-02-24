@@ -484,12 +484,6 @@ if (user.is_anonymous) {
                                     </span>
                                 )}
                             </div>
-                            <div className="flex items-center space-x-2">
-                                <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                                <span className="text-xs text-gray-600">
-                                    {connected ? 'Connected' : 'Disconnected'}
-                                </span>
-                            </div>
                         </div>
                     </div>
 
@@ -694,14 +688,12 @@ if (user.is_anonymous) {
                 </div>
             )}
 
-            {/* Status Bar */}
-            <div className="px-3 py-1 border-t border-white/20 bg-white/30 backdrop-blur-sm flex-shrink-0">
-                <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-700">
-                        {filteredMessages.length} messages
-                    </span>
-                    <span className="text-xs text-gray-700">
-                        {onlineUsers.length} online
+            {/* Status Bar: connection status bottom right */}
+            <div className="px-3 py-1 border-t border-white/20 bg-white/30 backdrop-blur-sm flex-shrink-0 flex justify-end">
+                <div className="flex items-center space-x-1.5">
+                    <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`} />
+                    <span className="text-xs text-gray-600">
+                        {connected ? 'Connected' : 'Disconnected'}
                     </span>
                 </div>
             </div>
