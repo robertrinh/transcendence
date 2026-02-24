@@ -14,6 +14,7 @@ import { dbCleanUpJob } from './error/backupCleanup.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import twofaRoutes from './routes/2fa.js';
+import friendsRoutes from './routes/friends.js';
 
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -96,6 +97,12 @@ server.register(
 server.register(
     tournamentsRoutes, {
         prefix: '/api/tournaments'
+    }
+)
+
+server.register(
+    friendsRoutes, {
+        prefix: '/api/friends'
     }
 )
 
