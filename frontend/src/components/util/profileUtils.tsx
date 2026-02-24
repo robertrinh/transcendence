@@ -3,15 +3,13 @@ import { fetchWithAuth, notifyAuthFailure } from '../../config/api';
 /** Game history item returned by GET /api/games/user */
 export interface GameHistoryItem {
     id: number;
-    player1_id: number | null;
-    player2_id: number | null;
-    score_player1: number | null;
-    score_player2: number | null;
-    winner_id: number | null;
-    status: string;
+	username_own?: string | null;
+    username_opponent?: string | null;
+	username_winner: string | null;
+    score_own: number | null;
+    score_opponent: number | null;
     created_at: string;
     finished_at?: string | null;
-    opponent_username?: string | null;
 }
 
 export interface User {
