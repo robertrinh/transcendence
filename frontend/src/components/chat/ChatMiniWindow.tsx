@@ -75,7 +75,45 @@ if (user.is_anonymous) {
         username: string | null;
     }>({ action: null, username: null });
 
-    // NEW: Connect to SSE on component mount
+    //* load friends and blocked from API (guests only get blocked list)
+    const loadFriendsAndBlocked = async () => {
+        try {
+            if (user.is_guest) {
+                const blockedRes = await fetchWithAuth('/api/friends/blocked');
+                if (blockedRes.ok) {
+                    const data = await blockedRes.json();
+                    if (data?.blocked) {
+                        setBlockedUsers(data.blocked.map((blockedUser: { username: string }) => blockedUser.username));
+                    }
+                }
+                return;
+            }
+            const [friendsRes, blockedRes] = await Promise.all([
+                fetchWithAuth('/api/friends'),
+                fetchWithAuth('/api/friends/blocked')
+            ]);
+            if (friendsRes.ok) {
+                const data = await friendsRes.json();
+                if (data?.friends) {
+                    setFriends(data.friends.map((friend: { id: number; username: string }) => ({
+                        id: String(friend.id),
+                        username: friend.username,
+                        isOnline: onlineUsers.includes(friend.username)
+                    })));
+                }
+            }
+            if (blockedRes.ok) {
+                const data = await blockedRes.json();
+                if (data?.blocked) {
+                    setBlockedUsers(data.blocked.map((blockedUser: { username: string }) => blockedUser.username));
+                }
+            }
+        } catch {
+            //* ignore! list will have no changes
+        }
+    };
+
+    //* connect to SSE on component mount + load friends/blocked
     useEffect(() => {
         connectSSE();
         
