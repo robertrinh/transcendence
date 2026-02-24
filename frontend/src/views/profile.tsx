@@ -170,11 +170,10 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
                     <p className="text-gray-500 text-center py-4">No games played yet</p>
                 ) : (
                     <ul className="divide-y divide-gray-200">
-                        {gameHistory.map((game) => {
-                            const userId = Number(displayUser.id);
-                            const isWinner = game.winner_id != null && game.winner_id === userId;
-                            const score1 = game.score_player1 ?? '-'; //* ?? means if score_player1 is null, use '-'
-                            const score2 = game.score_player2 ?? '-';
+                        {gameHistory.map((game: GameHistoryItem) => {
+                            const isWinner = game.username_winner === displayUser.username;
+                            const displayScoreOwn = game.score_own ?? '?'; //* ?? means if score_player1 is null, use '-'
+                            const diplayScoreOpp = game.score_opponent ?? '?';
                             const dateStr = game.finished_at
                                 ? new Date(game.finished_at).toLocaleDateString(undefined, { dateStyle: 'medium' })
                                 : game.created_at
@@ -184,15 +183,15 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
                                 <li key={game.id} className="py-3 flex items-center justify-between gap-4">
                                     <div className="flex-1 min-w-0">
                                         <span className="font-medium text-gray-900 truncate block">
-                                            vs {game.opponent_username ?? 'Unknown'}
+                                            vs {game.username_opponent ?? 'Unknown'}
                                         </span>
                                         <span className="text-sm text-gray-500">{dateStr}</span>
                                     </div>
                                     <div className="flex items-center gap-3 shrink-0">
                                         <span className="text-gray-700 font-mono">
-                                            {score1} – {score2}
+                                            {displayScoreOwn} – {diplayScoreOpp}
                                         </span>
-                                        {game.status === 'finished' && (
+                                        {(
                                             <span
                                                 className={`px-2 py-0.5 rounded text-sm font-medium ${
                                                     isWinner ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
