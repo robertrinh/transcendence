@@ -98,5 +98,13 @@ export const gamesController = {
 			success: true,
 			message: 'Game finished'
 		}
+	},
+
+	getGameByUserID: async (req: FastifyRequest, reply: FastifyReply) => {
+		const result = gamesService.getGameByUserID(req.user!.userId)
+		return {
+			success: true,
+			result: result
+		};
 	}
 }
