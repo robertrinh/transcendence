@@ -35,7 +35,7 @@ export default async function chatRoutes (
         }
 
         if (userService.isUserAnonymous(payload.userId)) {
-            // console.log(`Anonymous user ${payload.username} attempted to connect to chat`);
+            console.log(`Anonymous user ${payload.username} attempted to connect to chat`);
             return reply.status(403).send({ error: 'Anonymous users cannot access chat' });
         }
 
