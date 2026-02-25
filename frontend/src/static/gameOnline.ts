@@ -190,10 +190,6 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
 
         canvas.removeEventListener("keydown", handleKeyDown)
         canvas.removeEventListener("keyup", handleKeyUp)
-        if (intervals.gameOnlineUpdate !== undefined) {
-            clearInterval(intervals.gameOnlineUpdate)
-            intervals.gameOnlineUpdate = undefined
-        }
     }
 
     async function gameSockOnMessage(event: MessageEvent) {
