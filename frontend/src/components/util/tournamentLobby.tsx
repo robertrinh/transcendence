@@ -119,8 +119,7 @@ export default function TournamentLobby({
     const handleLeaveTournament = async () => {
         try {
             const response = await fetchWithAuth(`/api/tournaments/${tournamentId}/leave`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' }
+                method: 'DELETE'
             })
             if (!response.ok) {
                 const data = await response.json()
