@@ -35,14 +35,12 @@ export default async function chatRoutes (
         }
 
         if (userService.isUserAnonymous(payload.userId)) {
-            // console.log(`🚫 Anonymous user ${payload.username} attempted to connect to chat`);
+            console.log(`Anonymous user ${payload.username} attempted to connect to chat`);
             return reply.status(403).send({ error: 'Anonymous users cannot access chat' });
         }
 
-        console.log(`✅ New SSE connection from user: ${payload.username} (ID: ${payload.userId})`);
-
         const connectionId = Date.now().toString() + Math.random().toString();
-        console.log(`📡 SSE connectionId: ${connectionId}`);
+        console.log(`[SSE] Connected: ${payload.username} (id=${payload.userId}), connection=${connectionId}, connections=${sseConnections.size + 1}`);
 
         // Set SSE headers
         reply.raw.writeHead(200, {
@@ -61,8 +59,6 @@ export default async function chatRoutes (
             connectedAt: new Date()
         });
 
-        console.log(`👥 Active connections: ${sseConnections.size}`);
-
         // Send initial connection success
         reply.raw.write(`data: ${JSON.stringify({
             type: 'connected',
@@ -78,7 +74,6 @@ export default async function chatRoutes (
         // Send recent messages
         if (chatMessages.length > 0) {
             const recentMessages = chatMessages.slice(-20);
-            console.log(`📨 Sending ${recentMessages.length} recent messages`);
             reply.raw.write(`data: ${JSON.stringify({
                 type: 'history',
                 messages: recentMessages
@@ -87,10 +82,8 @@ export default async function chatRoutes (
 
         // Handle client disconnect
         request.raw.on('close', () => {
-            console.log(`❌ SSE connection closed: ${connectionId}`);
             const connection = sseConnections.get(connectionId);
             if (connection && connection.username) {
-                console.log(`🚪 Broadcasting user_left for ${connection.username}`);
                 broadcastSSE({
                     type: 'user_left',
                     userId: connection.userId,
@@ -100,11 +93,11 @@ export default async function chatRoutes (
                 }, connectionId);
             }
             sseConnections.delete(connectionId);
-            console.log(`👥 Active connections: ${sseConnections.size}`);
+            console.log(`[SSE] Closed: ${connectionId}, connections=${sseConnections.size}`);
         });
 
         request.raw.on('error', (error: any) => {
-            console.error(`⚠️ SSE connection error: ${connectionId}`, error);
+            console.error(`[SSE] Error ${connectionId}:`, error?.message ?? error);
             sseConnections.delete(connectionId);
         });
 
@@ -138,24 +131,24 @@ fastify.post('/join', {
         const { connectionId } = request.body as any;
         
         const connection = sseConnections.get(connectionId);
-        if (connection) {
-            connection.userId = payload.userId;
-            connection.username = payload.username;
-            
-            console.log(`🎯 User ${payload.username} (ID: ${payload.userId}) joined chat via connection ${connectionId}`);
-            
-            // Broadcast user joined
-            broadcastSSE({
-                type: 'user_joined',
-                userId: payload.userId,
-                username: payload.username,
-                message: `${payload.username} joined the chat`,
-                timestamp: new Date().toISOString()
-            }, connectionId);
-        } else {
-            console.warn(`⚠️ Connection not found: ${connectionId}`);
+        if (!connection) {
+            return reply.status(400).send({ error: 'Invalid connection' });
         }
-        
+        if (connection.userId !== payload.userId) {
+            return reply.status(403).send({ error: 'Connection does not belong to this user' });
+        }
+
+        connection.userId = payload.userId;
+        connection.username = payload.username;
+        console.log(`[Chat] Joined: ${payload.username} (id=${payload.userId})`);
+        broadcastSSE({
+            type: 'user_joined',
+            userId: payload.userId,
+            username: payload.username,
+            message: `${payload.username} joined the chat`,
+            timestamp: new Date().toISOString()
+        }, connectionId);
+
         return { success: true };
     } catch (error) {
         console.error('Join chat error:', error);
@@ -182,18 +175,79 @@ fastify.post('/send', {
             });
         }
 
-        const { connectionId, message } = request.body as any;
+        const { connectionId, message, isPrivate, toUser } = request.body as any;
         
         if (!message || !message.trim()) {
             return reply.status(400).send({ error: 'Message cannot be empty' });
         }
+		
+		if (message.length > 1000) {
+			return reply.status(400).send({ error: 'Message cannot be longer than 1000 characters' });
+		}
 
         const connection = sseConnections.get(connectionId);
         if (!connection) {
-            console.warn(`⚠️ Invalid connection: ${connectionId}`);
+            console.warn(`[Chat] Invalid connection: ${connectionId}`);
             return reply.status(400).send({ error: 'Invalid connection' });
         }
+        if (connection.userId !== payload.userId) {
+            return reply.status(403).send({ error: 'Connection does not belong to this user' });
+        }
 
+        const isPrivateMessage = Boolean(isPrivate && toUser);
+        if (isPrivate && (!toUser || !String(toUser).trim())) {
+            return reply.status(400).send({ error: 'Recipient required for private message' });
+        }
+
+        if (isPrivateMessage) {
+			//* check for valid recipient andsend only to sender
+            const toUsername = String(toUser).trim();
+            if (toUsername === payload.username) {
+                return reply.status(400).send({ error: 'Cannot send a private message to yourself' });
+            }
+            const targetRow = db.prepare('SELECT id FROM users WHERE username = ?').get(toUsername) as { id: number } | undefined;
+            if (!targetRow) {
+                return reply.status(400).send({ error: 'User not found' });
+            }
+            const targetUserId = targetRow.id;
+
+            const messageData = {
+                type: 'message',
+                id: Date.now().toString(),
+                userId: payload.userId,
+                username: payload.username,
+                message: message.trim(),
+                timestamp: new Date().toISOString(),
+                isPrivate: true,
+                toUser: toUsername
+            };
+
+            try {
+                const insertMessage = db.prepare(`
+                    INSERT INTO chat_messages (user_id, username, message, timestamp) 
+                    VALUES (?, ?, ?, ?)
+                `);
+                insertMessage.run(payload.userId, payload.username, message.trim(), new Date().toISOString());
+            } catch (dbError: any) {
+                console.error('Error saving message to database:', dbError);
+                if (dbError?.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
+                    return reply.status(401).send({ error: 'Account no longer exists' });
+                }
+                return reply.status(500).send({ error: 'Failed to save message' });
+            }
+
+            //* send only to sender and recipient(s)
+            const recipientConnectionIds: string[] = [];
+            for (const [cid, conn] of sseConnections) {
+                if (conn.userId === targetUserId) recipientConnectionIds.push(cid);
+            }
+            const connectionIdsToSend = [connectionId, ...recipientConnectionIds];
+            sendSSEToConnections(connectionIdsToSend, messageData);
+
+            return { success: true, messageId: messageData.id };
+        }
+
+        //* public message
         const messageData = {
             type: 'message',
             id: Date.now().toString(),
@@ -203,16 +257,12 @@ fastify.post('/send', {
             timestamp: new Date().toISOString()
         };
 
-        console.log(`💬 New message from ${payload.username}: "${message.trim()}"`);
-
-        //* save to database first; if user was deleted, do not broadcast
         try {
             const insertMessage = db.prepare(`
                 INSERT INTO chat_messages (user_id, username, message, timestamp) 
                 VALUES (?, ?, ?, ?)
             `);
             insertMessage.run(payload.userId, payload.username, message.trim(), new Date().toISOString());
-            console.log(`✅ Message saved to database`);
         } catch (dbError: any) {
             console.error('Error saving message to database:', dbError);
             if (dbError?.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
@@ -221,9 +271,7 @@ fastify.post('/send', {
             return reply.status(500).send({ error: 'Failed to save message' });
         }
 
-        //* save to memory and broadcast only after successful DB write
         chatMessages.push(messageData);
-        console.log(`📡 Broadcasting message to ${sseConnections.size} connections`);
         broadcastSSE(messageData);
 
         return { success: true, messageId: messageData.id };
@@ -232,6 +280,25 @@ fastify.post('/send', {
         return reply.status(500).send({ error: 'Failed to send message' });
     }
 });
+
+//* send SSE event only to the given connection ids (e.g. for private messages)
+function sendSSEToConnections(connectionIds: string[], message: any) {
+    const messageString = `data: ${JSON.stringify(message)}\n\n`;
+    const idSet = new Set(connectionIds);
+    for (const [connectionid, connection] of sseConnections) {
+        if (!idSet.has(connectionid)) continue;
+        try {
+            if (!connection.response.destroyed) {
+                connection.response.write(messageString);
+            } else {
+                sseConnections.delete(connectionid);
+            }
+        } catch (error) {
+            console.error(`Error sending to ${connectionid}:`, error);
+            sseConnections.delete(connectionid);
+        }
+    }
+}
 
 // Function to broadcast messages via SSE
 function broadcastSSE(message: any, excludeConnectionId?: string) {
@@ -255,7 +322,5 @@ function broadcastSSE(message: any, excludeConnectionId?: string) {
             sseConnections.delete(connectionId);
         }
     }
-    
-    console.log(`✅ Message broadcasted to ${broadcastCount} connections`);
 }
 }

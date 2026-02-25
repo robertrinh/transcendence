@@ -103,5 +103,13 @@ export const gamesController = {
 	getLeaderboard: async () => {
 		const leaderboard = gamesService.getLeaderboard();
 		return {success: true, data: leaderboard }
+	},
+
+	getGameByUserID: async (req: FastifyRequest, reply: FastifyReply) => {
+		const result = gamesService.getGameByUserID(req.user!.userId)
+		return {
+			success: true,
+			result: result
+		};
 	}
 }

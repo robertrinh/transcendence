@@ -74,4 +74,11 @@ export default async function gamesRoutes (
 			tags: ['games'],
 			summary: 'Get the leaderboard',
 		}}, gamesController.getLeaderboard);
+	
+	fastify.get('/user', {
+		schema: {
+			tags: ['games'],
+			security: [{ bearerAuth: [] }],
+			summary: 'Get all the games the user was a part of',
+		}, preHandler: [authenticate]}, gamesController.getGameByUserID);
 }
