@@ -1,7 +1,7 @@
 import { db } from '../databaseInit.js'
 import { dbError } from '../Errors/dbErrors.js'
 import { ApiError } from '../Errors/errors.js';
-import { Player, Queue, Game, GameHistoryItem } from '../types/database.interfaces.js'
+import { Player, Queue, Game, GameHistoryItem, LeaderBoard } from '../types/database.interfaces.js'
 
 const TIMEOUT_MATCHMAKING = 30000 //in millisec
 
@@ -110,6 +110,46 @@ export const gamesService = {
 		}
 	},
 
+	getLeaderboard: () => {
+		return db.prepare(`
+			WITH player_games AS (
+				SELECT 
+					player1_id AS player_id,
+					winner_id
+				FROM games WHERE status = 'finished'
+				UNION ALL
+				SELECT 
+					player2_id AS player_id,
+					winner_id 
+				FROM games WHERE status = 'finished'
+			)
+			SELECT 
+				CASE users.is_anonymous
+					WHEN 1
+						THEN 'Anonymous'
+					ELSE users.username
+				END as username,
+				SUM (
+					CASE player_id
+						WHEN winner_id
+							THEN 1
+						ELSE 0
+					END
+				) as wins, 
+				SUM (
+					CASE player_id
+						WHEN winner_id
+							THEN 0
+						ELSE 1
+					END
+				) as losses 
+			FROM player_games 
+			JOIN users ON player_id = users.id
+			GROUP BY player_id
+			ORDER BY wins DESC`
+		).all() as LeaderBoard[]
+	},
+	
 	getGameByUserID: (player_id: number) => {
 		return db.prepare(
 			`WITH view_own AS (
@@ -169,6 +209,7 @@ export const gamesService = {
 			FROM view_winner`
 		).all({player_id: player_id}) as GameHistoryItem[]
 	}
+
 }
 
 function generateLobbyId(): string {
