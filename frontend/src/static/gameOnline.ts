@@ -308,8 +308,6 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
         }
         buffered.length = 0
     }
-    canvas.addEventListener("keydown", handleKeyDown)
-    canvas.addEventListener("keyup", handleKeyUp)
     ball.x = canvas.width / 2
     ball.y = canvas.height / 2
     requestAnimationFrame(draw)
