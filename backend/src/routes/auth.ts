@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyReply } from 'fastify'
-import { db, SYSTEM_USERNAME } from '../databaseInit.js'
+import { db } from '../databaseInit.js'
 import bcrypt from 'bcrypt'
 import { authenticate } from '../auth/middleware.js'
 import { generateToken, verifyToken } from '../auth/utils.js'
@@ -128,12 +128,6 @@ export default async function authRoutes (
 			return reply.code(400).send({
 				success: false,
 				error: 'Username must be at least 3 characters long'
-			})
-		}
-		if (username.trim().toLowerCase() === SYSTEM_USERNAME.toLowerCase()) {
-			return reply.code(400).send({
-				success: false,
-				error: 'This username is cannot be used'
 			})
 		}
 		//* check if username exists
