@@ -49,3 +49,14 @@ export interface Queue {
 	lobby_id: string;
 	private: boolean;
 }
+
+export interface GameHistoryItem {
+    id: number;
+	username_own?: string | null;
+    username_opponent?: string | null;
+	username_winner: string | null;
+    score_own: number | null;
+    score_opponent: number | null;
+    created_at: string;
+    finished_at?: string | null;
+}

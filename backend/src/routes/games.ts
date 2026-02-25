@@ -68,4 +68,11 @@ export default async function gamesRoutes (
 			params: IDSchema,
 			body: finishGameSchema,
 		}}, gamesController.finishGame);
+	
+	fastify.get('/user', {
+		schema: {
+			tags: ['games'],
+			security: [{ bearerAuth: [] }],
+			summary: 'Get all the games the user was a part of',
+		}, preHandler: [authenticate]}, gamesController.getGameByUserID);
 }
