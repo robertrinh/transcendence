@@ -49,3 +49,9 @@ export interface Queue {
 	lobby_id: string;
 	private: boolean;
 }
+
+export interface LeaderBoard {
+	username: string;
+	wins: number;
+	losses: number;
+}
