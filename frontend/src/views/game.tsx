@@ -34,7 +34,7 @@ export default function Game() {
 
   // Listen for game-over events from the pong game
   useEffect(() => {
-    const handleGameOver = (event: Event) => {
+      const handleGameOver = (event: Event) => {
       const detail = (event as CustomEvent).detail
       console.log('🏁 Game over event received:', detail)
       console.log('🏆 isTournamentMatch (ref):', isTournamentMatchRef.current)
@@ -68,6 +68,18 @@ export default function Game() {
     }
   }, [])
 
+  useEffect(() => {
+    const handleOnBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+      return (event.returnValue);
+    }
+    window.addEventListener('beforeunload', handleOnBeforeUnload, {capture : true})
+    return () =>{
+      window.removeEventListener('beforeunload', handleOnBeforeUnload, {capture : true})
+    }
+  },[])
+  
   function handleRandomPlayer() {
     setGameMode("online")
     setScreen("searching")

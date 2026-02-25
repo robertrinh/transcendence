@@ -50,6 +50,12 @@ export interface Queue {
 	private: boolean;
 }
 
+export interface LeaderBoard {
+	username: string;
+	wins: number;
+	losses: number;
+}
+
 export interface GameHistoryItem {
     id: number;
 	username_own?: string | null;
