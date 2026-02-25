@@ -119,7 +119,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
                             <span className="text-purple-600 font-bold text-xl">{winRate || '0%'}</span>
                         </div>
 						    <p className="text-xs text-gray-500 mt-4 pt-3 border-t border-gray-100">
-                    			Game statistics consists of online games only.
+                    			Game statistics consists of completed online games only.
                 			</p>
                     </div>
                     {(displayUser.total_games || 0) === 0 && (
@@ -211,7 +211,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
                     </ul>
                 )}
                 <p className="text-xs text-gray-500 mt-4 pt-3 border-t border-gray-100">
-                    Match history consists of online games only.
+                    Match history consists of completed online games only.
                 </p>
             </div>
         </div>
