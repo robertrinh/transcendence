@@ -1,15 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface TwoFactorSetupProps {
-    onSuccess?: () => void; // ✅ Add callback prop
+    onSuccess?: () => void;
 }
 
-function TwoFactorSetup({ onSuccess } : TwoFactorSetupProps) {
-	const [qrCode, setQrCode] = useState<string | null>(null); //* null before, string qr code after
+function TwoFactorSetup({ onSuccess }: TwoFactorSetupProps) {
+	const [qrCode, setQrCode] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState(''); //* empty string
+	const [error, setError] = useState('');
 	const [message, setMessage] = useState('');
-    const [verificationCode, setVerificationCode] = useState('');
+	const [verificationCode, setVerificationCode] = useState('');
+
+	//* Show QR code straight away when modal opens 
+	useEffect(() => {
+		setupTwoFactor();
+	}, []);
 
 	const setupTwoFactor = async () => {
 		setLoading(true);
@@ -32,8 +37,7 @@ function TwoFactorSetup({ onSuccess } : TwoFactorSetupProps) {
 			const data = await response.json();
 			if (response.ok && data.success) {
 				setQrCode(data.qrCode); //* qrCode is now a string, stored in state
-				setMessage(data.message); //! add this in later, delete current message
-				// setMessage("Setup c'est fini! move it around later Joao :D");
+				setMessage(data.message);
 			} else {
 				setError(data.error || 'Failed to setup 2FA');
 			}
@@ -85,50 +89,60 @@ function TwoFactorSetup({ onSuccess } : TwoFactorSetupProps) {
 
 	return (
         <div className="space-y-4">
-            {!qrCode ? (
-                <button 
-                    onClick={setupTwoFactor}
-                    disabled={loading}
-                    className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400 transition-colors"
-                >
-                    {loading ? 'Generating QR Code...' : 'Generate QR Code'}
-                </button>
-            ) : (
+            {loading && !qrCode ? (
+                <div className="py-8 text-center text-slate-400 text-sm">
+                    Generating QR code…
+                </div>
+            ) : qrCode ? (
                 <div className="space-y-4">
-                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <p className="text-sm text-gray-700 mb-3">{message}</p>
+                    {/* White box around QR so scanning works */}
+                    <div className="bg-white p-4 rounded-lg border border-slate-600/50 shadow-inner">
+                        {message && (
+                            <p className="text-sm text-slate-700 mb-3">{message}</p>
+                        )}
                         <div className="flex justify-center mb-4">
-                            <img src={qrCode} alt="2FA QR Code" className="border-4 border-white shadow-lg rounded" />
+                            <img src={qrCode} alt="2FA QR Code" className="border-2 border-slate-200 shadow rounded" />
                         </div>
-                        {/* verification input */}
                         <div className="space-y-3 mt-4">
-                            <p className="text-sm text-gray-700 font-semibold">Enter the code from your authenticator app:</p>
+                            <p className="text-sm text-slate-700 font-semibold">Enter the code from your authenticator app:</p>
                             <input
                                 type="text"
                                 value={verificationCode}
-                                onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                onChange={(e) => { setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setError(''); }}
                                 placeholder="000000"
                                 maxLength={6}
                                 inputMode="numeric"
-                                className="w-full px-4 py-2 text-center text-xl tracking-widest border rounded-md focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2 text-center text-xl tracking-widest bg-slate-100 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-brand-orange focus:border-brand-orange"
                             />
+                            {error && (
+                                <div className="p-3 bg-brand-red/10 border border-brand-red/40 rounded-lg">
+                                    <p className="text-brand-red text-sm">{error}</p>
+                                </div>
+                            )}
                             <button
                                 onClick={verifyAndEnable2FA}
                                 disabled={loading || verificationCode.length !== 6}
-                                className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:bg-gray-400 transition-colors"
+                                className="w-full bg-brand-orange text-white px-4 py-2 rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                             >
                                 {loading ? 'Verifying...' : 'Verify & Enable 2FA'}
                             </button>
                         </div>
                     </div>
                 </div>
-            )}
-            
-            {error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-red-700 text-sm">{error}</p>
+            ) : error ? (
+                <div className="space-y-3">
+                    <div className="p-3 bg-brand-red/10 border border-brand-red/40 rounded-lg">
+                        <p className="text-brand-red text-sm">{error}</p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => { setError(''); setupTwoFactor(); }}
+                        className="w-full bg-slate-600 text-slate-200 px-4 py-2 rounded-lg hover:bg-slate-500 font-medium"
+                    >
+                        Retry
+                    </button>
                 </div>
-            )}
+            ) : null}
         </div>
     );
 }

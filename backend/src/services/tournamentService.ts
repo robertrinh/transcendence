@@ -24,7 +24,12 @@ export const tournamentService = {
 
     joinTournament: (tournament_id: number, user_id: number) => {
         try {
-            db.prepare('INSERT INTO tournament_participants (tournament_id, user_id) VALUES (?, ?)').run(tournament_id, user_id);
+			const user_already_in = db.prepare(
+				'SELECT * FROM tournament_participants WHERE tournament_id = @tournament_id AND user_id = @user_id'
+			).all({tournament_id: tournament_id, user_id: user_id})
+			if (user_already_in.length === 0) {
+				db.prepare('INSERT INTO tournament_participants (tournament_id, user_id) VALUES (?, ?)').run(tournament_id, user_id);
+			}
         }
         catch (err: any) {
             dbError(err);

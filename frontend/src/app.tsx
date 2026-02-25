@@ -29,11 +29,9 @@ function UserProfileRoute() {
 //* uses old logic from MainLayout component to avoid dependencies
 function AppLayout({
 	user: user,
-	onLogin: onLogin,
 	onLogout: onLogout,
 }: {
 	user: User | null;
-	onLogin: (userData: User, token: string) => void;
 	onLogout: () => void;
 }) {
 	const navigate = useNavigate();
@@ -80,7 +78,6 @@ function AppLayout({
 			user={user}
 			currentView={getCurrentView()}
 			setCurrentView={handleSetCurrentView}
-			onLogin={onLogin}
 			onLogout={onLogout}
 			navigateToUserProfile={navigateToUserProfile}
 		>
@@ -204,27 +201,34 @@ export function App() {
 
 	return (
 		<BrowserRouter>
-			<div className="min-h-screen bg-gradient-to-b from-slate-800 via-blue-950 to-slate-950">
-				<Routes>
-					<Route 
-						path="/"
-						element={
-						<AppLayout 
-							user={user} 
-							onLogin={handleLogin} 
-							onLogout={handleLogout} 
-						/>
-						}
-					>
-						<Route index element={<Home user={user} />} />
-						<Route path="/game" element={<Game />} />
-						<Route path="/leaderboard" element={<Leaderboard />} />
-						<Route path="/profile" element={<Profile user={user} />} />
-						<Route path="/settings" element={<Settings user={user} onUserUpdate={setUser} />} />
-						<Route path="/user/:username" element={<UserProfileRoute />} />
-						<Route path="*" element={<NotFound />} />
+			<div className="min-h-screen relative">
+				<img
+					src="/Digital_rain_animation_medium_letters_shine.gif"
+					alt=""
+					className="fixed inset-0 z-0 w-full h-full object-cover pointer-events-none brightness-90 contrast-90"
+					aria-hidden
+				/>
+				<div className="relative z-10 min-h-screen bg-gradient-to-b from-black/80 via-black/80 to-black/80">
+					<Routes>
+						<Route
+							path="/"
+							element={
+								<AppLayout
+									user={user}
+									onLogout={handleLogout}
+								/>
+							}
+						>
+							<Route index element={<Home user={user} />} />
+							<Route path="/game" element={<Game />} />
+							<Route path="/leaderboard" element={<Leaderboard />} />
+							<Route path="/profile" element={<Profile user={user} />} />
+							<Route path="/settings" element={<Settings user={user} onUserUpdate={setUser} />} />
+							<Route path="/user/:username" element={<UserProfileRoute />} />
+							<Route path="*" element={<NotFound />} />
 						</Route>
-				</Routes>
+					</Routes>
+				</div>
 			</div>
 		</BrowserRouter>
 	);

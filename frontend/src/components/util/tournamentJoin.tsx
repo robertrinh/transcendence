@@ -31,8 +31,14 @@ export default function TournamentJoin({
         const fetchTournaments = async () => {
             try {
                 const response = await fetch('/api/tournaments')
-                if (!response.ok) throw new Error('Failed to fetch tournaments')
-
+				switch (response.status) {
+					case 404:
+						return
+					case 200:
+						break
+					default:
+						throw new Error('Failed to fetch tournaments')
+				}
                 const data = await response.json()
                 const openTournaments = data.data.filter((t: Tournament) => t.status === 'open')
                 setTournaments(openTournaments)
