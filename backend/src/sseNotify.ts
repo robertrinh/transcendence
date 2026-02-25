@@ -53,6 +53,16 @@ export function broadcast(message: any, excludeConnectionId?: string) {
 	writeToConnections(connectionIds, message);
 }
 
+export function systemBroadcast(message: string) {
+		broadcast({
+			type: 'message',
+			userId: 0,
+			username: 'System',
+			message: message,
+			timestamp: new Date().toISOString()
+	}, undefined)
+}
+
 //* get connection IDs for a user (private messages) */
 export function getConnectionIdsForUser(userId: number): string[] {
 	const ids: string[] = [];
