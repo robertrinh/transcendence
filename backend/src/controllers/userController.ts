@@ -1,5 +1,5 @@
 import { ApiError } from '../error/errors.js';
-import { userService } from '../services/userService.js'
+import { userService } from '../services/userService.js';
 import { FastifyRequest, FastifyReply } from 'fastify';
 import bcrypt from 'bcrypt'
 import { createWriteStream, existsSync, mkdirSync } from 'fs'
@@ -25,10 +25,10 @@ export const userController = {
     },
 
     createUser: async (req: FastifyRequest, reply: FastifyReply) => {
-        const { username, password } = req.body as { username: string, password: string}
-        const hashedPassword = await bcrypt.hash(password, 10)
+        const { username, password } = req.body as { username: string, password: string};
+        const hashedPassword = await bcrypt.hash(password, 10);
         userService.addUser(username, hashedPassword);
-        return {success: true, message: 'User created, welcome to the game!'};
+        return { success: true, message: 'User created, welcome to the game!' };
     },
 
     // GET OWN PROFILE - Always full data
@@ -143,11 +143,11 @@ export const userController = {
                 return reply.code(400).send({ success: false, error: 'No file uploaded' })
             }
 
-            const allowedTypes = ['image/jpg']
+            const allowedTypes = ['image/jpeg', 'image/jpg']
             if (!allowedTypes.includes(data.mimetype)) {
                 return reply.code(400).send({ 
                     success: false, 
-                    error: 'Only JPG files are allowed' 
+                    error: 'Only JPG/JPEG files are allowed' 
                 })
             }
 

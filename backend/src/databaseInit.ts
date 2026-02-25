@@ -63,6 +63,18 @@ export const initializeDatabase = () => {
                 inserttester.run('tester', testerPassword, 'tester@transcendence.local');
                 console.log('✅ Default tester user created (username: tester, password: tester123)');
             }
+			
+            // System/system user: reserved for chat/tournament system messages;
+            const systemCheck = db.prepare('SELECT COUNT(*) as count FROM users WHERE username = ?').get('System') as { count: number };
+            if (systemCheck.count === 0) {
+                db.prepare('INSERT INTO users (username, is_guest) VALUES (?, 1)').run('System');
+                console.log('✅ System user created (reserved for system messages)');
+            }
+            const systemLowerCheck = db.prepare('SELECT COUNT(*) as count FROM users WHERE username = ?').get('system') as { count: number };
+            if (systemLowerCheck.count === 0) {
+                db.prepare('INSERT INTO users (username, is_guest) VALUES (?, 1)').run('system');
+                console.log('✅ system user created (reserved)');
+            }
         });
 
         insertDefaults();

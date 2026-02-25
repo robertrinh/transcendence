@@ -185,7 +185,7 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
-        if (file.type !== 'image/jpg') {
+        if (file.type !== 'image/jpeg' && file.type !== 'image/jpg') {
             showMessage('error', 'Only JPG files are allowed');
             event.target.value = '';
             return;
@@ -645,7 +645,7 @@ const handleAnonymizeProfile = async () => {
                                         <div className="flex-1">
                                             <input
                                                 type="file"
-                                                accept=".jpg,image/jpg"
+                                                accept=".jpg,.jpeg,image/jpeg,image/jpg"
                                                 onChange={handleFileSelect}
                                                 className="hidden"
                                                 id="avatar-upload"
@@ -666,7 +666,7 @@ const handleAnonymizeProfile = async () => {
                                                 </button>
                                             )}
                                             <p className="text-sm text-gray-500 mt-2">
-                                                JPG Max 5MB.
+                                                JPG/JPEG Max 5MB.
                                             </p>
                                         </div>
                                     </div>
