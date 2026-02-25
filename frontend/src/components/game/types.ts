@@ -1,24 +1,25 @@
-export type Screen = 
-  | 'main'
-  | 'local'
-  | 'online'
-  | 'host-lobby'
-  | 'join-lobby'
-  | 'ready-room'
-  | 'tournament'
-  | 'create-tournament'
-  | 'tournament-lobby'
-  | 'tournament-bracket'
-  | 'countdown'
-  | 'searching'
-  | 'game'
-  | 'timeout'
-  | 'error'
-  | 'websocket-connecting'
-  | 'websocket-closed'
-
 export type GameMode = 
-  |'none' 
-  | 'singleplayer' 
-  | 'multiplayer' 
-  | 'online'
+  | "none" 
+  | "singleplayer" 
+  | "multiplayer" 
+  | "online"
+
+export type Screen =
+  | "main"
+  | "local"
+  | "online"
+  | "searching"
+  | "host-lobby"
+  | "join-lobby"
+  | "ready-room"
+  | "countdown"
+  | "game"
+  | "tournament"
+  | "tournament-lobby"
+  | "tournament-bracket"
+  | "create-tournament"
+  | "game-results"
+  | "timeout"
+  | "error"
+  | "websocket-connecting"
+  | "websocket-closed"

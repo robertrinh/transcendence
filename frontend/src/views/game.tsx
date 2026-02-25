@@ -3,6 +3,15 @@ import GameUI from "../components/game/gameUI.tsx"
 import { fetchWithAuth } from '../config/api'
 import type { GameMode, Screen } from "../components/game/types.ts"
 
+interface GameResult {
+  gameMode: string
+  winnerLabel: string
+  scorePlayer1: number
+  scorePlayer2: number
+  player1Label: string
+  player2Label: string
+}
+
 export default function Game() {
   const [gameMode, setGameMode] = useState<GameMode>("none")
   const [screen, setScreen] = useState<Screen>("main")
@@ -13,7 +22,18 @@ export default function Game() {
   const [tournamentId, setTournamentId] = useState<number | null>(null)
   const [selectedBracketSize, setSelectedBracketSize] = useState<number>(4)
   const [currentUser, setCurrentUser] = useState<any>(null)
+  const currentUserRef = useRef<any>(null)
   const isTournamentMatchRef = useRef(false)
+  const [gameResult, setGameResult] = useState<GameResult | null>(null)
+  const gameModeRef = useRef<GameMode>("none")
+
+  // Keep refs in sync
+  useEffect(() => {
+    gameModeRef.current = gameMode
+  }, [gameMode])
+  useEffect(() => {
+    currentUserRef.current = currentUser
+  }, [currentUser])
 
   // Fetch current user on mount
   useEffect(() => {
@@ -21,9 +41,7 @@ export default function Game() {
       try {
         const response = await fetchWithAuth('/api/users/profile/me')
         const data = await response.json()
-        console.log('👤 Full API response:', JSON.stringify(data))
         const user = data.profile || data.data || data
-        console.log('👤 User object:', JSON.stringify(user), 'id:', user.id)
         setCurrentUser(user)
       } catch (err) {
         console.error('Failed to fetch user:', err)
@@ -36,9 +54,7 @@ export default function Game() {
   useEffect(() => {
     const handleGameOver = (event: Event) => {
       const detail = (event as CustomEvent).detail
-      console.log('🏁 Game over event received:', detail)
-      console.log('🏆 isTournamentMatch (ref):', isTournamentMatchRef.current)
-      
+
       // Close websocket before state changes to prevent disconnect events
       if (websocket.current) {
         const ws = websocket.current
@@ -50,16 +66,79 @@ export default function Game() {
       }
 
       if (isTournamentMatchRef.current) {
-        console.log('🏆 Returning to tournament bracket...')
         setScreen('tournament-bracket')
         setGameMode('none')
         setGameData(null)
+        return
+      }
+
+      // Build result for display
+      if (detail.winnerLabel) {
+        // Offline game (singleplayer / multiplayer) — detail already has labels
+        setGameResult({
+          gameMode: detail.gameMode || gameModeRef.current,
+          winnerLabel: detail.winnerLabel,
+          scorePlayer1: detail.scorePlayer1,
+          scorePlayer2: detail.scorePlayer2,
+          player1Label: detail.player1Label,
+          player2Label: detail.player2Label,
+        })
+      } else if (detail.disconnect) {
+        // Online game — opponent disconnected
+        setGameResult({
+          gameMode: 'online',
+          winnerLabel: 'YOU WIN!',
+          scorePlayer1: 0,
+          scorePlayer2: 0,
+          player1Label: 'OPPONENT',
+          player2Label: 'YOU',
+        })
+      } else if (detail.error) {
+        // Error
+        setGameResult({
+          gameMode: 'online',
+          winnerLabel: 'ERROR',
+          scorePlayer1: 0,
+          scorePlayer2: 0,
+          player1Label: '-',
+          player2Label: '-',
+        })
+      } else if (detail.winnerId !== undefined) {
+        // Online game — normal finish
+        const myId = currentUserRef.current?.id
+        const iWon = Number(detail.winnerId) === Number(myId)
+        let scoreMe, scoreOpponent, labelMe, labelOpponent;
+        // Make sure player1Id/player2Id are present in detail
+        if (Number(detail.player1Id) === Number(myId)) {
+          scoreMe = detail.scorePlayer1 ?? 0;
+          scoreOpponent = detail.scorePlayer2 ?? 0;
+          labelMe = 'YOU';
+          labelOpponent = 'OPPONENT';
+        } else {
+          scoreMe = detail.scorePlayer2 ?? 0;
+          scoreOpponent = detail.scorePlayer1 ?? 0;
+          labelMe = 'YOU';
+          labelOpponent = 'OPPONENT';
+        }
+        setGameResult({
+          gameMode: 'online',
+          winnerLabel: iWon ? 'YOU WIN!' : 'YOU LOST!',
+          scorePlayer1: scoreOpponent,
+          scorePlayer2: scoreMe,
+          player1Label: labelOpponent,
+          player2Label: labelMe,
+        })
       } else {
+        // Fallback
         setGameMode('none')
         setScreen('main')
         setGameData(null)
         resetPlayerStatus()
+        return
       }
+
+      setScreen('game-results')
+      setGameData(null)
     }
 
     window.addEventListener('game-over', handleGameOver)
@@ -86,8 +165,7 @@ export default function Game() {
           } else {
             setScreen("searching")
           }
-        }).catch(err => {
-          console.error('Matchmaking failed err:', err)
+        }).catch(() => {
           setScreen("main")
           setGameMode("none")
         })
@@ -109,8 +187,7 @@ export default function Game() {
         }).then(data => {
           setLobbyId(data.data.lobby_id)
           setScreen("host-lobby")
-        }).catch(err => {
-          console.error('Hosting failed err:', err)
+        }).catch(() => {
           setScreen("main")
           setGameMode("none")
         })
@@ -131,11 +208,9 @@ export default function Game() {
         return response.json()
       throw new Error('Failed to join lobby')
     }).then(data => {
-      console.log('Joined lobby response:', data)
       setGameData(data.data)
       setScreen("ready-room")
-    }).catch(err => {
-      console.error('Join lobby failed err:', err)
+    }).catch(() => {
       setScreen("main")
       setGameMode("none")
     })
@@ -146,63 +221,57 @@ export default function Game() {
       method: 'PUT'
     }).then(response => {
       if (!response.ok) throw new Error('Failed to cancel matchmaking')
-      console.log('Matchmaking cancelled')
-    }).catch(err => {
-      console.error('Cancel matchmaking failed:', err)
-    })
+    }).catch(() => {})
   }
+
+  const handleBackToMenu = useCallback(() => {
+    setGameResult(null)
+    setGameMode('none')
+    setScreen('main')
+    setGameData(null)
+    resetPlayerStatus()
+  }, [])
 
   // Tournament handlers
   const handleTournamentCreated = useCallback((toId: number, maxParticipants: number) => {
-    console.log('🏟️ Tournament created:', toId, 'Max:', maxParticipants)
     setTournamentId(toId)
     setSelectedBracketSize(maxParticipants)
     setScreen('tournament-lobby')
   }, [])
 
   const handleTournamentJoined = useCallback((toId: number, maxParticipants: number) => {
-    console.log('🏟️ Joined tournament:', toId, 'Max:', maxParticipants)
     setTournamentId(toId)
     setSelectedBracketSize(maxParticipants)
     setScreen('tournament-lobby')
   }, [])
 
   const handleTournamentStarted = useCallback(() => {
-    console.log('🏟️ Tournament started!')
     setScreen('tournament-bracket')
   }, [])
 
   const handleTournamentLeft = useCallback(() => {
-    console.log('🏟️ Left tournament')
     setTournamentId(null)
     isTournamentMatchRef.current = false
     setScreen('main')
     setGameMode('none')
   }, [])
 
-  // Play a tournament match
   const handleTournamentPlayMatch = useCallback(async (gameId: number) => {
-    console.log('🎯 Playing tournament match - Game ID:', gameId)
-    // Set ref FIRST, before any async work or state updates
     isTournamentMatchRef.current = true
-    console.log('🏆 Set isTournamentMatchRef to TRUE')
     try {
       const response = await fetchWithAuth(`/api/games/${gameId}`)
       if (!response.ok) throw new Error('Failed to fetch game data')
       const data = await response.json()
-      console.log('📦 Tournament game data:', data.data)
       setGameData(data.data)
       setGameMode('online')
       setScreen('ready-room')
     } catch (err) {
-      console.error('❌ Failed to start tournament match:', err)
       isTournamentMatchRef.current = false
       setError(String(err))
     }
   }, [])
 
   const handleTournamentFinished = useCallback(() => {
-    console.log('🏆 Tournament finished!')
     if (websocket.current) {
       websocket.current.onmessage = null
       websocket.current.onclose = null
@@ -229,6 +298,8 @@ export default function Game() {
           selectedBracketSize={selectedBracketSize}
           currentUser={currentUser}
           isTournamentMatch={isTournamentMatchRef.current}
+          gameResult={gameResult}
+          handleBackToMenu={handleBackToMenu}
 
           setScreen={setScreen}
           setGameMode={setGameMode}
