@@ -5,3 +5,5 @@ package-lock.json
 database
 __pycache__
 frontend/nginx
+server-side-pong/.venv
+backend/build
