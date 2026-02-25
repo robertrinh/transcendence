@@ -72,6 +72,18 @@ export default function Game() {
     }
   }, [wsReadyState])
 
+  useEffect(() => {
+    const handleOnBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+      return (event.returnValue);
+    }
+    window.addEventListener('beforeunload', handleOnBeforeUnload, {capture : true})
+    return () =>{
+      window.removeEventListener('beforeunload', handleOnBeforeUnload, {capture : true})
+    }
+  },[])
+  
   // this hook is for the random queue
   useEffect(() => {
     if (screen !== 'searching')
