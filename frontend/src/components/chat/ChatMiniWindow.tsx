@@ -85,6 +85,9 @@ if (user.is_anonymous) {
         username: string | null;
     }>({ action: null, username: null });
 
+    const [actionPopover, setActionPopover] = useState<{ username: string; messageId: string } | null>(null);
+    const popoverRef = useRef<HTMLDivElement>(null);
+
     //* load friends and blocked from API (guests only get blocked list)
     const loadFriendsAndBlocked = async () => {
         try {
@@ -652,23 +655,23 @@ if (user.is_anonymous) {
             {activeTab === 'chat' && (
                 <>
                     {/* Chat Mode Indicator */}
-                    <div className="bg-slate-700/60 px-3 py-2 border-b border-slate-600/70 flex-shrink-0">
+                    <div className="bg-slate-700/60 px-3 py-2 border-b border-slate-600/70 flex-shrink-0 font-mono text-xs">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
                                 {chatMode === 'private' ? (
                                     <>
-                                        <span className="text-xs text-brand-purple font-medium">
-                                            Private with {privateChatWith}
+                                        <span className="text-brand-purple font-medium">
+                                            Whispering {privateChatWith}
                                         </span>
                                         <button
                                             onClick={switchToPublicChat}
-                                            className="text-xs text-brand-orange hover:underline"
+                                            className="text-brand-orange hover:underline"
                                         >
                                             Switch to Public
                                         </button>
                                     </>
                                 ) : (
-                                    <span className="text-xs text-brand-acidGreen font-medium">
+                                    <span className="text-brand-acidGreen font-medium">
                                         Public Chat
                                     </span>
                                 )}
@@ -682,17 +685,17 @@ if (user.is_anonymous) {
                                 <div className="text-center text-slate-400 py-8 text-sm font-sans">
                                     No messages yet. Start the conversation!
                                 </div>
-                            ) : (
-								//! OLD CODE: NEEDS TO MERGE WITH NEW CODE
+							) : (
                                 filteredMessages.map((message) => {
-                                    const isSystem = !message.username;
+                                    const isSystem = !message.username || message.username === SYSTEM_USERNAME;
                                     const timeStr = message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                                     const showPopover = actionPopover?.messageId === message.id;
 
                                     if (isSystem) {
                                         return (
-                                            <div key={message.id} className="text-brand-cyan/90 py-0.5">
-                                                [{timeStr}] {message.message}
+                                            <div key={message.id} className="py-0.5 flex flex-wrap items-baseline gap-x-1">
+                                                <span className="text-brand-cyan/90">[{timeStr}]</span>
+                                                <span className="text-brand-cyan/90">{message.message}</span>
                                             </div>
                                         );
                                     }
@@ -702,7 +705,6 @@ if (user.is_anonymous) {
                                             <span className="text-slate-500 shrink-0">[{timeStr}]</span>
                                             <button
                                                 type="button"
-                                                data-username-trigger
                                                 onClick={() => {
                                                     if (message.username === user.username) {
                                                         showToast("This is your own profile!");
@@ -712,78 +714,13 @@ if (user.is_anonymous) {
                                                         prev?.messageId === message.id ? null : { username: message.username, messageId: message.id }
                                                     );
                                                 }}
-                                                className={`font-medium hover:underline shrink-0 ${
+                                                className={`font-medium text-xs shrink-0 hover:underline ${
                                                     message.isPrivate ? 'text-brand-purple' : 'text-brand-orange'
                                                 }`}
                                             >
                                                 {message.username}
-                                                {message.isPrivate && message.toUser && (
-                                                    <span className="text-brand-orange"> → {message.toUser}</span>
-                                filteredMessages.map((message) => (
-                                    <div key={message.id} className="text-sm group">
-                                        <div className="flex flex-col space-y-1">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center space-x-2">
-                                                    <span 
-                                                        className={`font-medium text-xs ${message.username !== SYSTEM_USERNAME ? 'cursor-pointer hover:underline' : ''} ${
-                                                            message.isPrivate ? 'text-purple-700' : 'text-blue-700'
-                                                        }`}
-                                                        onClick={() => {
-                                                            if (message.username === SYSTEM_USERNAME) 
-																return;
-                                                            if (message.username !== user.username) {
-                                                                viewUserProfile(message.username);
-                                                            } else {
-                                                                showToast("This is your own profile");
-                                                            }
-                                                        }}
-                                                        title={message.username === SYSTEM_USERNAME ? 'System message' : `View ${message.username}'s profile`}
-                                                    >
-                                                        {message.username}
-                                                        {message.isPrivate && (
-                                                            <span className="ml-1 text-purple-500">→ {message.toUser}</span>
-                                                        )}
-                                                    </span>
-                                                    <span className="text-xs text-gray-500">
-                                                        {message.timestamp.toLocaleTimeString([], { 
-                                                            hour: '2-digit', 
-                                                            minute: '2-digit' 
-                                                        })}
-                                                    </span>
-                                                </div>
-                                                
-                                                {/* User Actions (show on hover, exclude system messages) */}
-                                                {message.username !== user.username && message.username !== SYSTEM_USERNAME && (
-                                                    <div className="opacity-0 group-hover:opacity-100 flex items-center space-x-1">
-                                                        {!friends.some(f => f.username === message.username) && !outgoingRequests.some(r => r.username === message.username) && (
-                                                            <button
-                                                                onClick={() => sendFriendRequest(message.username)}
-                                                                className="text-green-600 hover:text-green-800 text-xs bg-white/50 rounded px-1"
-                                                                title="Send friend request"
-                                                            >
-                                                                +
-                                                            </button>
-                                                        )}
-                                                        {friends.some(f => f.username === message.username) && (
-                                                            <button
-                                                                onClick={() => startPrivateChat(message.username)}
-                                                                className="text-purple-600 hover:text-purple-800 text-xs bg-white/50 rounded px-1"
-                                                                title="Private message"
-                                                            >
-                                                                💬
-                                                            </button>
-                                                        )}
-                                                        <button
-                                                            onClick={() => confirmAction('block', message.username)}
-                                                            className="text-red-600 hover:text-red-800 text-xs bg-white/50 rounded px-1"
-                                                            title="Block user"
-                                                        >
-                                                            🚫
-                                                        </button>
-                                                    </div>
-                                                )}
                                             </button>
-                                            <span className={message.isPrivate ? 'text-brand-orange/90' : 'text-white'}>: {message.message}</span>
+                                            <span className={message.isPrivate ? 'text-brand-purple/90' : 'text-white'}>: {message.message}</span>
                                             {message.username !== user.username && showPopover && (
                                                 <div
                                                     ref={popoverRef}
@@ -796,15 +733,15 @@ if (user.is_anonymous) {
                                                     >
                                                         View profile
                                                     </button>
-                                                    {!friends.some(f => f.username === message.username) ? (
+                                                    {!friends.some(f => f.username === message.username) && !outgoingRequests.some(r => r.username === message.username) ? (
                                                         <button
                                                             type="button"
-                                                            onClick={() => { addFriend(message.username); setActionPopover(null); }}
+                                                            onClick={() => { sendFriendRequest(message.username); setActionPopover(null); }}
                                                             className="w-full text-left px-3 py-1.5 text-brand-acidGreen hover:bg-slate-600 text-xs"
                                                         >
                                                             Add friend
                                                         </button>
-                                                    ) : (
+                                                    ) : friends.some(f => f.username === message.username) ? (
                                                         <button
                                                             type="button"
                                                             onClick={() => { startPrivateChat(message.username); setActionPopover(null); }}
@@ -812,7 +749,7 @@ if (user.is_anonymous) {
                                                         >
                                                             Whisper
                                                         </button>
-                                                    )}
+                                                    ) : null}
                                                     <button
                                                         type="button"
                                                         onClick={() => { confirmAction('block', message.username); setActionPopover(null); }}
@@ -828,7 +765,6 @@ if (user.is_anonymous) {
                             )}
                             <div ref={messagesEndRef} />
                         </div>
-						//! END OF OLD CODE
 
                     {/* Message Input */}
                     <div className="border-t border-slate-600/70 p-3 flex-shrink-0 bg-slate-700/60">
@@ -866,116 +802,141 @@ if (user.is_anonymous) {
 
             {/* Friends Tab */}
             {activeTab === 'friends' && (
-                <div className="flex-1 min-h-0 overflow-y-auto p-3">
-                    <div className="space-y-4">
-                        {/* Pending: Incoming friend requests */}
-                        {incomingRequests.length > 0 && (
-                            <div>
-                                <div className="text-xs font-medium text-gray-700 mb-2">Pending friend requests</div>
-                                <div className="space-y-2">
-                                    {incomingRequests.map((req) => (
-                                        <div key={`in-${req.id}-${req.username}`} className="flex items-center justify-between p-2 bg-amber-50/80 border border-amber-200/80 rounded">
-                                            <span className="text-sm font-medium text-gray-900">{req.username}</span>
-                                            <div className="flex items-center space-x-1">
-                                                <button
-                                                    onClick={() => acceptRequest(req.username)}
-                                                    className="text-green-600 hover:text-green-800 text-sm bg-white/80 rounded px-2 py-1"
-                                                    title="Accept"
-                                                >
-                                                    Accept
-                                                </button>
-                                                <button
-                                                    onClick={() => declineRequest(req.username)}
-                                                    className="text-red-600 hover:text-red-800 text-sm bg-white/80 rounded px-2 py-1"
-                                                    title="Decline"
-                                                >
-                                                    Decline
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Outgoing: Friend request sent to ... */}
-                        {outgoingRequests.length > 0 && (
-                            <div>
-                                <div className="text-xs font-medium text-gray-700 mb-2">Friend request sent to</div>
-                                <div className="space-y-2">
-                                    {outgoingRequests.map((req) => (
-                                        <div key={`out-${req.id}-${req.username}`} className="flex items-center justify-between p-2 bg-blue-50/80 border border-blue-200/80 rounded">
-                                            <span className="text-sm font-medium text-gray-900">{req.username}</span>
-                                            <button
-                                                onClick={() => cancelRequest(req.username)}
-                                                className="text-gray-600 hover:text-gray-800 text-sm bg-white/80 rounded px-2 py-1"
-                                                title="Cancel request"
-                                            >
-                                                Cancel
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Friends list */}
-                        <div>
-                            <div className="text-xs font-medium text-gray-700 mb-2">Friends</div>
-                            {friends.filter((f) => f.username?.trim()).length === 0 ? (
-                                <div className="text-center text-gray-600 text-sm py-3">
-                                    No friends yet. Send a request or accept one from the sections above!
-                                </div>
-                            ) : (
-                                <div className="space-y-2">
-                                    {friends.filter((f) => f.username?.trim()).map((friend) => (
-                                        <div key={friend.id} className="flex items-center justify-between p-2 bg-white/30 backdrop-blur-sm border border-white/20 rounded">
-                                            <div className="flex items-center space-x-2">
-                                                <div className={`w-2 h-2 rounded-full ${onlineUsers.includes(friend.username) ? 'bg-green-500' : 'bg-gray-400'}`} title={onlineUsers.includes(friend.username) ? 'Online' : 'Offline'}></div>
-                                                <span className="text-sm font-medium text-gray-900">{friend.username}</span>
-                                            </div>
-                                            <div className="flex items-center space-x-1">
-                                                <button
-                                                    onClick={() => startPrivateChat(friend.username)}
-                                                    className="text-purple-600 hover:text-purple-800 text-sm bg-white/50 rounded px-2 py-1"
-                                                    title="Private chat"
-                                                >
-                                                    💬
-                                                </button>
-                                                <button
-                                                    onClick={() => confirmAction('remove', friend.username)}
-                                                    className="text-red-600 hover:text-red-800 text-sm bg-white/50 rounded px-2 py-1"
-                                                    title="Remove friend"
-                                                >
-                                                    🗑️
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Send request: Quick add from recent users */}
-                        <div className="pt-3 border-t border-white/20">
-                            <div className="text-xs text-gray-700 mb-2">Send request to recent users:</div>
-                            <div className="space-y-1">
-                                {getUniqueUsernames()
-                                    .filter(username => !friends.some(f => f.username === username))
-                                    .filter(username => !outgoingRequests.some(r => r.username === username))
-                                    .filter(username => !blockedUsers.includes(username))
-                                    .slice(0, 5)
-                                    .map(username => (
+                <div className="flex-1 min-h-0 overflow-y-auto p-3 bg-slate-800/50 font-mono text-xs flex flex-col gap-4">
+                    {/* Pending: Incoming friend requests */}
+                    {incomingRequests.length > 0 && (
+                        <div className="space-y-0.5">
+                            <div className="text-slate-400 font-medium pb-1 border-b border-slate-600/40 mb-1.5">Pending friend requests</div>
+                            {incomingRequests.map((req) => (
+                                <div key={`in-${req.id}-${req.username}`} className="py-1.5 border-b border-slate-600/40 last:border-0 flex items-center justify-between">
+                                    <span className="text-slate-200">{req.username}</span>
+                                    <div className="flex items-center gap-1">
                                         <button
-                                            key={username}
-                                            onClick={() => sendFriendRequest(username)}
-                                            className="block w-full text-left text-sm text-blue-700 hover:text-blue-900 hover:bg-white/30 px-2 py-1 rounded bg-white/20"
+                                            type="button"
+                                            onClick={() => acceptRequest(req.username)}
+                                            className="text-brand-acidGreen hover:underline"
+                                            title="Accept"
                                         >
-                                            + Send request to {username}
+                                            Accept
                                         </button>
-                                    ))}
-                            </div>
+                                        <span className="text-slate-600">|</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => declineRequest(req.username)}
+                                            className="text-brand-red hover:underline"
+                                            title="Decline"
+                                        >
+                                            Decline
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
+                    )}
+
+                    {/* Outgoing: Friend request sent to ... */}
+                    {outgoingRequests.length > 0 && (
+                        <div className="space-y-0.5">
+                            <div className="text-slate-400 font-medium pb-1 border-b border-slate-600/40 mb-1.5">Friend request sent to</div>
+                            {outgoingRequests.map((req) => (
+                                <div key={`out-${req.id}-${req.username}`} className="py-1.5 border-b border-slate-600/40 last:border-0 flex items-center justify-between">
+                                    <span className="text-slate-200">{req.username}</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => cancelRequest(req.username)}
+                                        className="text-slate-400 hover:underline"
+                                        title="Cancel request"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Friends list */}
+                    <div className="space-y-0.5">
+                        <div className="text-slate-400 font-medium pb-1 border-b border-slate-600/40 mb-1.5">Friends</div>
+                        {friends.filter((f) => f.username?.trim()).length === 0 ? (
+                            <div className="text-center text-slate-400 py-6 font-sans text-sm space-y-1">
+                                <div>No friends yet.</div>
+                                <div>Add friends from chat (click a username).</div>
+                            </div>
+                        ) : (
+                            friends.filter((f) => f.username?.trim()).map((friend) => (
+                                <div
+                                    key={friend.id}
+                                    className="py-1.5 group border-b border-slate-600/40 last:border-0 flex flex-col gap-0.5"
+                                >
+                                    <div className="flex items-center gap-x-2">
+                                        <span
+                                            className={`inline-block w-1.5 h-1.5 rounded-full shrink-0 ${
+                                                friend.isOnline ? 'bg-brand-acidGreen' : 'bg-slate-500'
+                                            }`}
+                                            title={friend.isOnline ? 'Online' : 'Offline'}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => viewUserProfile(friend.username)}
+                                            className="font-medium text-brand-orange hover:text-brand-mint hover:underline"
+                                        >
+                                            {friend.username}
+                                        </button>
+                                        <span className="text-slate-500">
+                                            {friend.isOnline ? 'online' : 'offline'}
+                                        </span>
+                                    </div>
+                                    <div className="pl-3.5 opacity-80 group-hover:opacity-100 flex items-center gap-1 flex-shrink-0">
+                                        <button
+                                            type="button"
+                                            onClick={() => startPrivateChat(friend.username)}
+                                            className="text-brand-purple hover:text-brand-magenta hover:underline"
+                                            title="Whisper"
+                                        >
+                                            Whisper
+                                        </button>
+                                        <span className="text-slate-600">|</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => confirmAction('remove', friend.username)}
+                                            className="text-brand-red hover:underline"
+                                            title="Remove friend"
+                                        >
+                                            Remove
+                                        </button>
+                                        <span className="text-slate-600">|</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => confirmAction('block', friend.username)}
+                                            className="text-brand-red hover:underline"
+                                            title="Block"
+                                        >
+                                            Block
+                                        </button>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+
+                    {/* Send request: Quick add from recent users */}
+                    <div className="space-y-0.5 border-t border-slate-600/40 pt-2">
+                        <div className="text-slate-400 font-medium pb-1 border-b border-slate-600/40 mb-1.5">Send request to recent users:</div>
+                        {getUniqueUsernames()
+                            .filter(username => !friends.some(f => f.username === username))
+                            .filter(username => !outgoingRequests.some(r => r.username === username))
+                            .filter(username => !blockedUsers.includes(username))
+                            .slice(0, 5)
+                            .map(username => (
+                                <button
+                                    key={username}
+                                    type="button"
+                                    onClick={() => sendFriendRequest(username)}
+                                    className="block w-full text-left text-brand-orange hover:text-brand-mint hover:underline py-1"
+                                >
+                                    + Send request to {username}
+                                </button>
+                            ))}
                     </div>
                 </div>
             )}
@@ -1011,10 +972,10 @@ if (user.is_anonymous) {
             )}
 
             {/* Status Bar: connection status bottom right */}
-            <div className="px-3 py-1 border-t border-white/20 bg-white/30 backdrop-blur-sm flex-shrink-0 flex justify-end">
+            <div className="px-3 py-1 border-t border-slate-600/70 bg-slate-700/60 flex-shrink-0 flex justify-end">
                 <div className="flex items-center space-x-1.5">
-                    <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`} />
-                    <span className="text-xs text-gray-600">
+                    <div className={`w-2 h-2 rounded-full shrink-0 ${connected ? 'bg-brand-acidGreen' : 'bg-brand-red'}`} />
+                    <span className="text-xs text-white">
                         {connected ? 'Connected' : 'Disconnected'}
                     </span>
                 </div>
