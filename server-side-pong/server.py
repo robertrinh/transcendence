@@ -93,12 +93,12 @@ async def process_message(
         return
     match message_type:
         case 'MOVE_DOWN':
-            if player.connection == lobby.players[0].connection:
+            if player.user_id == lobby.db_p1_id:
                 lobby.p1_input.append(['DOWN', message_content['timestamp']])
             else:
                 lobby.p2_input.append(['DOWN', message_content['timestamp']])
         case 'MOVE_UP':
-            if player.connection == lobby.players[0].connection:
+            if player.user_id == lobby.db_p1_id:
                 lobby.p1_input.append(['UP', message_content['timestamp']])
             else:
                 lobby.p2_input.append(['UP', message_content['timestamp']])

@@ -74,6 +74,8 @@ function resetPlayerOne() {
     playerOne.ai = undefined
     playerOne.humanControlled = true
     playerOne.paddle.color = p1PaddleColor 
+    playerOne.paddle.downPressed = false
+    playerOne.paddle.upPressed = false
 }
 
 function resetPlayerTwo() {
@@ -84,6 +86,8 @@ function resetPlayerTwo() {
     playerTwo.ai = undefined
     playerTwo.humanControlled = true
     playerTwo.paddle.color = p2PaddleColor
+    playerTwo.paddle.downPressed = false
+    playerTwo.paddle.upPressed = false
 }
 
 export function resetState() {
