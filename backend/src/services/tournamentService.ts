@@ -2,7 +2,7 @@ import { db } from '../databaseInit.js'
 import { ApiError } from '../error/errors.js'
 import { dbError } from '../error/dbErrors.js'
 import { Tournament, TournamentParticipant, Game } from '../types/database.interfaces.js';
-
+import { systemBroadcast } from '../sseNotify.js';
 
 export const tournamentService = {
 
@@ -43,7 +43,8 @@ export const tournamentService = {
         // Must be a power of 2
         if (participants.length & (participants.length - 1))
             throw new ApiError(400, "Number of participants must be a power of 2");
-
+		const tournamentRow = tournamentService.getTournamentByID(tournament_id) as Tournament
+		systemBroadcast(`Tournament "${tournamentRow.name}" is full, let the epic victory royale begin!`)
         // Shuffle participants randomly
         const shuffled = [...participants].sort(() => Math.random() - 0.5);
 
