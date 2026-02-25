@@ -37,7 +37,7 @@ export const userService = {
                 a.path as avatar_url,
                 (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND winner_id = u.id) as wins,
                 (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND winner_id != u.id AND winner_id IS NOT NULL) as losses,
-                (SELECT COUNT(*) FROM games WHERE player1_id = u.id OR player2_id = u.id) as total_games
+                (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND status = 'finished') as total_games
             FROM users u 
             LEFT JOIN avatars a ON u.avatar_id = a.id 
             WHERE u.id = ?
@@ -60,7 +60,7 @@ export const userService = {
                 a.path as avatar_url,
                 (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND winner_id = u.id) as wins,
                 (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND winner_id != u.id AND winner_id IS NOT NULL) as losses,
-                (SELECT COUNT(*) FROM games WHERE player1_id = u.id OR player2_id = u.id) as total_games
+                (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND status = 'finished') as total_games
             FROM users u 
             LEFT JOIN avatars a ON u.avatar_id = a.id 
             WHERE u.id = ?
