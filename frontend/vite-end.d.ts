@@ -4,6 +4,7 @@ interface ImportMetaEnv {
 	readonly VITE_BACKEND_PORT: string
 	readonly VITE_FRONTEND_PORT: string
 	readonly VITE_NGINX_PORT: string
+	readonly VITE_USE_WSS: string
 }
 
 interface ImportMeta {

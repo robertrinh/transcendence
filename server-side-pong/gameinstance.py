@@ -124,7 +124,7 @@ class GameInstance:
         print(f"lobby {self.db_game_id}: {message}")
 
     async def add_player(self, player: Player):
-        is_p1 = self.db_p1_id is player.user_id
+        is_p1 = self.db_p1_id == player.user_id
         game_player_id = 1 if is_p1 else 2
         self.players.append(player)
         self.connections.append(player.connection)
@@ -163,11 +163,14 @@ class GameInstance:
 
     async def on_client_disconnect(self, player):
         # the player that is left gets a default win
-        was_p1 = False
-        player_left: Player = self.players[0]
-        if player is player_left:
-            was_p1 = True
-            player_left = self.players[1]
+        was_p1 = player.user_id == self.db_p1_id
+        player_left = None
+        for p in self.players:
+            if p is not player:
+                player_left = p
+                break
+        if player_left is None:
+            return
         if was_p1:
             self.p2_score = ROUND_MAX
         else:
@@ -308,6 +311,14 @@ def handle_score(game: GameInstance):
             winner_id = game.db_p1_id
         else:
             winner_id = game.db_p2_id
+        # Send GAME_END to all clients before killing
+        game_end_message = {
+            'type': 'GAME_END',
+            'winner_id': winner_id,
+            'score_player1': game.p1_score,
+            'score_player2': game.p2_score
+        }
+        broadcast(game.connections, json.dumps(game_end_message))
         game.log("game finished, uploading results...")
         try:
             timestamp = '{:%Y-%m-%d %H:%M:%S}'.format(datetime.now())
