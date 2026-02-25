@@ -101,7 +101,7 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
         playerTwo.paddle.y += interpVelocityEnemy.y * updateDelta
     }
 
-    let deltaTimeMS: number, now: number, then: number
+    let deltaTimeMS: number, now: number, then: number | undefined
     let gameRunning = true
 
     function update() {
@@ -171,7 +171,23 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
 
     function cleanup() {
         resetState()
+        interpVelocityBall.x = 0
+        interpVelocityBall.y = 0
+        interpVelocityEnemy.x = 0
+        interpVelocityEnemy.y = 0
+        playerID = 0
+        scoreReceived = false
         gameRunning = false
+        pendingMoves = new Array<MoveTS>()
+        firstStateReceived = false
+        lastHearbeatSent = 0
+        p1Score = 0
+        p2Score = 0
+        deltaTimeMS = 0
+        now = 0
+        then = undefined
+        scoreCounter = 0
+
         canvas.removeEventListener("keydown", handleKeyDown)
         canvas.removeEventListener("keyup", handleKeyUp)
         if (intervals.gameOnlineUpdate !== undefined) {
