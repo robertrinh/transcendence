@@ -1,8 +1,8 @@
 import { db } from '../databaseInit.js'
-import { dbError } from '../error/dbErrors.js'
-import { ApiError } from '../error/errors.js';
-import { Player, Queue, Game } from '../types/database.interfaces.js'
 import { tournamentService } from './tournamentService.js'
+import { dbError } from '../Errors/dbErrors.js'
+import { ApiError } from '../Errors/errors.js';
+import { Player, Queue, Game, GameHistoryItem } from '../types/database.interfaces.js'
 
 const TIMEOUT_MATCHMAKING = 30000 //in millisec
 
@@ -144,21 +144,85 @@ export const gamesService = {
         const gameObj = gamesService.fetchGame(id) as Game;
         if (!gameObj)
             throw new ApiError(404, 'Game not found');
+        try {
+            db.prepare('UPDATE games SET score_player1 = ?, score_player2 = ?, winner_id = ?, finished_at = ?, status = ? WHERE id = ?')
+                .run(score_player1, score_player2, winner_id, finished_at, 'finished', id);
 
-        db.prepare('UPDATE games SET score_player1 = ?, score_player2 = ?, winner_id = ?, finished_at = ?, status = ? WHERE id = ?')
-            .run(score_player1, score_player2, winner_id, finished_at, 'finished', id);
+            // Reset player status back to idle (not 'online' — schema only allows idle/searching/playing)
+            if (gameObj.player1_id)
+                db.prepare('UPDATE users SET status = ? WHERE id = ?').run('idle', gameObj.player1_id);
+            if (gameObj.player2_id)
+                db.prepare('UPDATE users SET status = ? WHERE id = ?').run('idle', gameObj.player2_id);
 
-        // Reset player status back to idle (not 'online' — schema only allows idle/searching/playing)
-        if (gameObj.player1_id)
-            db.prepare('UPDATE users SET status = ? WHERE id = ?').run('idle', gameObj.player1_id);
-        if (gameObj.player2_id)
-            db.prepare('UPDATE users SET status = ? WHERE id = ?').run('idle', gameObj.player2_id);
-
-        // Advance winner in tournament if applicable
-        if (gameObj.tournament_id) {
-            tournamentService.advanceWinner(id);
+            // Advance winner in tournament if applicable
+            if (gameObj.tournament_id) {
+                tournamentService.advanceWinner(id);
+            }
+        }
+        catch (err: any) {
+            dbError(err)
         }
     },
+
+	getGameByUserID: (player_id: number) => {
+		return db.prepare(
+			`WITH view_own AS (
+				SELECT
+					games.id,
+					games.created_at,
+					games.finished_at,
+					@player_id AS own_id,
+					CASE
+						WHEN games.player1_id = @player_id
+							THEN games.player2_id
+						ELSE games.player1_id
+					END opp_id,
+					CASE
+						WHEN games.player1_id = @player_id
+							THEN games.score_player1
+						ELSE games.score_player2
+					END score_own,
+					CASE
+						WHEN games.player1_id != @player_id
+							THEN games.score_player1
+						ELSE games.score_player2
+					END score_opp
+				FROM games
+				WHERE (games.player1_id = @player_id OR games.player2_id = @player_id) AND games.status = 'finished'
+			),
+			view_winner AS (
+				SELECT
+					view_own.id,
+					users_own.username AS username_own,
+					CASE users_opp.is_anonymous
+						WHEN 1
+							THEN 'Anonymous'
+						ELSE users_opp.username
+					END username_opp,
+					view_own.score_own,
+					view_own.score_opp,
+					view_own.created_at,
+					view_own.finished_at
+				FROM view_own
+				LEFT JOIN users users_own ON view_own.own_id = users_own.id
+				LEFT JOIN users users_opp ON view_own.opp_id = users_opp.id
+			)
+			SELECT
+				id,
+				username_own,
+				username_opp AS username_opponent,
+				score_own,
+				score_opp AS score_opponent,
+				CASE
+					WHEN score_own > score_opp
+						THEN username_own
+					ELSE username_opp
+				END username_winner,
+				created_at,
+				finished_at
+			FROM view_winner`
+		).all({player_id: player_id}) as GameHistoryItem[]
+	}
 }
 
 function generateLobbyId(): string {

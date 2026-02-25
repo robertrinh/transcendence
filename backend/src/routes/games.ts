@@ -70,10 +70,17 @@ export default async function gamesRoutes (
         }}, gamesController.getGameQueue);
 
     fastify.put('/:id/finish', {
-        schema: {
-            tags: ['games'],
-            summary: 'Finish a game',
-            params: IDSchema,
-            body: finishGameSchema,
-        }}, gamesController.finishGame);
+		schema: {
+			tags: ['games'],
+			summary: 'Finish a game',
+			params: IDSchema,
+			body: finishGameSchema,
+		}}, gamesController.finishGame);
+	
+	fastify.get('/user', {
+		schema: {
+			tags: ['games'],
+			security: [{ bearerAuth: [] }],
+			summary: 'Get all the games the user was a part of',
+		}, preHandler: [authenticate]}, gamesController.getGameByUserID);
 }

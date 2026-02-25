@@ -5,9 +5,10 @@ import { playerOne, playerTwo, ball, Point, Vector2,
     roundMax, handlePaddleCollision, assertIsNotNull, printText, 
     arenaHeight, textColor, intervals } from './lib'
 import { DifficultyLevel } from './ai'
+import { GameMode } from '../components/game/types'
 
 export async function gameOfflineLobby(
-    gameMode: string, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D,
+    gameMode: GameMode, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D,
     drawCanvas: HTMLCanvasElement, drawCtx: CanvasRenderingContext2D) {
     let deltaTimeMS: number
     let then: number, now: number
@@ -22,10 +23,20 @@ export async function gameOfflineLobby(
                 playerOne.paddle.upPressed = true
                 break
             case "s":
-                playerTwo.paddle.downPressed = true
+                if (gameMode === 'singleplayer') {
+                    playerOne.paddle.downPressed = true
+                }
+                else {
+                    playerTwo.paddle.downPressed = true
+                }
                 break
             case "w":
-                playerTwo.paddle.upPressed = true
+                if (gameMode === 'singleplayer') {
+                    playerOne.paddle.upPressed = true
+                }
+                else {
+                    playerTwo.paddle.upPressed = true
+                }
                 break
             case " ":
                 if (app.state !== gameState.RoundEnd) {
@@ -46,10 +57,20 @@ export async function gameOfflineLobby(
                 playerOne.paddle.upPressed = false
                 break
             case "s":
-                playerTwo.paddle.downPressed = false
+                if (gameMode === 'singleplayer') {
+                    playerOne.paddle.downPressed = false
+                }
+                else {
+                    playerTwo.paddle.downPressed = false
+                }
                 break
             case "w":
-                playerTwo.paddle.upPressed = false
+                if (gameMode === 'singleplayer') {
+                    playerOne.paddle.upPressed = false
+                }
+                else {
+                    playerTwo.paddle.upPressed = false
+                }
                 break
             case " ":
                 if (app.state !== gameState.RoundEnd) {
@@ -201,7 +222,8 @@ export async function gameOfflineLobby(
         }
         ctx.drawImage(drawCanvas, 0, 0)
     }
-
+    removeEventListener("keydown", handleKeyDown)
+    removeEventListener("keyup", handleKeyUp)
     canvas.addEventListener("keydown", handleKeyDown)
     canvas.addEventListener("keyup", handleKeyUp)
     if (gameMode === 'singleplayer') {
