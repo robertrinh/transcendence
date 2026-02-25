@@ -203,7 +203,7 @@ export function App() {
 		<BrowserRouter>
 			<div className="min-h-screen relative">
 				<img
-					src="/public/Digital_rain_animation_medium_letters_shine.gif"
+					src="/Digital_rain_animation_medium_letters_shine.gif"
 					alt=""
 					className="fixed inset-0 z-0 w-full h-full object-cover pointer-events-none brightness-90 contrast-90"
 					aria-hidden

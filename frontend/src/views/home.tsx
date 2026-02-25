@@ -90,7 +90,7 @@ const Home: React.FC<HomeProps> = ({ user }) => {
 
 			<div className="mt-8 w-full max-w-md flex justify-center flex-shrink-0">
 				<img
-					src="/public/2-neo-pong.jpeg"
+					src="/2-neo-pong.jpeg"
 					alt="Two Neo's playing Pong"
 					className="max-h-[220px] w-auto object-contain rounded-xl border border-white/10 shadow-[0_0_24px_rgba(0,255,128,0.15)]"
 				/>
