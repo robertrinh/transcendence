@@ -46,7 +46,7 @@ function TwoFactorVerify({ token, onVerifySuccess, onCancel }: TwoFactorVerifyPr
 
 	return (
 		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-			<div className="bg-black/95 border border-white/10 rounded-2xl shadow-2xl w-96 p-8">
+			<div className="bg-black/95 border border-brand-mint/50 rounded-2xl shadow-2xl w-96 p-8">
 				<h2 className="text-2xl font-bold text-white text-center mb-2">
 					Two-Factor Authentication
 				</h2>
@@ -63,7 +63,7 @@ function TwoFactorVerify({ token, onVerifySuccess, onCancel }: TwoFactorVerifyPr
 						placeholder="012345"
 						maxLength={6}
 						inputMode="numeric"
-						className="w-full px-4 py-3 text-center text-2xl tracking-widest bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+						className="w-full px-4 py-3 text-center text-2xl tracking-widest bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-mint focus:border-brand-mint transition-all"
 						autoFocus
 					/>
 
@@ -71,7 +71,7 @@ function TwoFactorVerify({ token, onVerifySuccess, onCancel }: TwoFactorVerifyPr
 						type="submit"
 						//! add back in later: disabled={loading || code.length !== 6}
 						disabled={loading || code.length !== 6}
-						className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white p-3 rounded-lg hover:from-blue-500 hover:to-blue-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium shadow-lg shadow-blue-500/25"
+						className="w-full bg-brand-mint text-black p-3 rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium shadow-lg shadow-brand-mint/25"
 					>
 						{loading ? 'Verifying...' : 'Verify Code'}
 					</button>
@@ -86,7 +86,7 @@ function TwoFactorVerify({ token, onVerifySuccess, onCancel }: TwoFactorVerifyPr
 				<div className="mt-6 text-center">
 					<button
 						onClick={onCancel}
-						className="text-blue-400 hover:text-blue-300 text-sm hover:underline transition-colors"
+						className="text-brand-mint hover:opacity-90 text-sm hover:underline transition-colors"
 					>
 						← Back to login
 					</button>

@@ -8,6 +8,19 @@ export default {
   ],
   theme: {
     extend: {
+        colors: {
+            brand: {
+                cyan: '#00FFFF',
+                orange: '#FF6600',
+                magenta: '#FF00FF',
+                acidGreen: '#00FF80',
+                yellow: '#FFFF00',
+                purple: '#9D00FF',
+                hotPink: '#FF1493',
+                mint: '#00FFCC',
+                red: '#FF0040',
+            },
+        },
         fontFamily: {
             montserrat: ['Montserrat', 'sans-serif'],
         },

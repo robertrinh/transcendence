@@ -1,28 +1,15 @@
-//* Option A: simple GIF
-// import React from 'react';
-
-// const ShowcasePanel: React.FC = () => {
-// 	return (
-// 		<div className="w-full h-full">
-// 			<img
-// 				src="/vintage.gif"
-// 				alt="Pong gameplay"
-// 				className="w-full h-full object-cover"
-// 				/>
-// 		</div>
-// 	);
-// };
-
-//* Option B: Marquee Effect (+ Game of life background)
+//* Marquee Effect (+ Game of life background)
 import React, { useRef, useEffect, useCallback } from 'react'; //* for the marquee effect
 
 const COLORS = [
-	'#00FFFF', //* Cyan
-	'#FF00FF', //* Magenta
-	'#00FF00', //* Lime
-	'#FF6B6B', //* Coral
-	'#9D4EDD', //* Purple
-	'#FFE66D', //* Yellow
+	'#00FFFF', // Cyan
+	'#FF6600', // Orange
+	'#FF00FF', // Magenta
+	'#00FF80', // Acid green
+	'#FFFF00', // Electric yellow
+	'#9D00FF', // Purple
+	'#FF1493', // Hot pink
+	'#00FFCC', // Mint / cyan-green
 ];
 
 //* Game of Life grid

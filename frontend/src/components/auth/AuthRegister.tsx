@@ -95,7 +95,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
                                     placeholder="Choose a username"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
-                                    className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                                    className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-acidGreen focus:border-brand-acidGreen transition-all"
                                     required
                                     minLength={3}
                                 />
@@ -109,7 +109,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
                                     placeholder="Enter your email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                                    className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-acidGreen focus:border-brand-acidGreen transition-all"
                                     required
                                 />
                             </div>
@@ -122,7 +122,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
                                     placeholder="Min 6 characters"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                                    className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-acidGreen focus:border-brand-acidGreen transition-all"
                                     required
                                     minLength={6}
                                 />
@@ -130,7 +130,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-gradient-to-r from-green-600 to-green-500 text-white p-3 rounded-lg hover:from-green-500 hover:to-green-400 disabled:opacity-50 transition-all font-medium shadow-lg shadow-green-500/25"
+                                className="w-full bg-brand-acidGreen text-black p-3 rounded-lg hover:opacity-90 disabled:opacity-50 transition-all font-medium shadow-lg shadow-brand-acidGreen/25"
                             >
                                 {loading ? 'Creating account...' : 'Register'}
                             </button>
@@ -146,7 +146,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
                             Already have an account?{' '}
                             <button
                                 onClick={onSwitchToLogin}
-                                className="text-blue-400 hover:text-blue-300 hover:underline transition-colors"
+                                className="text-brand-acidGreen hover:opacity-90 hover:underline transition-colors"
                             >
                                 Login here
                             </button>
@@ -157,7 +157,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
                             <button
                                 type="button"
                                 onClick={() => setShowPrivacyModal(true)}
-                                className="text-blue-400 hover:text-blue-300 hover:underline transition-colors"
+                                className="text-brand-acidGreen hover:opacity-90 hover:underline transition-colors"
                             >
                                 Privacy Policy
                             </button>
@@ -190,7 +190,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
                 )}
 
                 {success && (
-                    <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+                    <div className="bg-brand-acidGreen/10 border border-brand-acidGreen/40 text-brand-acidGreen px-4 py-3 rounded mb-4">
                         {success}
                     </div>
                 )}
@@ -202,7 +202,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
                             type="text"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-acidGreen focus:border-brand-acidGreen"
                             required
                             minLength={3}
                         />
@@ -214,7 +214,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-acidGreen focus:border-brand-acidGreen"
                             required
                         />
                     </div>
@@ -225,7 +225,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-acidGreen focus:border-brand-acidGreen"
                             required
                             minLength={6}
                         />
@@ -234,7 +234,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 disabled:opacity-50"
+                        className="w-full bg-brand-acidGreen text-black py-2 px-4 rounded-lg hover:opacity-90 disabled:opacity-50 font-medium"
                     >
                         {loading ? 'Registering...' : 'Register'}
                     </button>
@@ -243,7 +243,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
                 <div className="mt-4 text-center">
                     <button
                         onClick={onSwitchToLogin}
-                        className="text-blue-500 hover:text-blue-600"
+                        className="text-brand-acidGreen hover:opacity-90 hover:underline font-medium"
                     >
                         Already have an account? Login here
                     </button>
@@ -254,7 +254,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
                     <button
                         type="button"
                         onClick={() => setShowPrivacyModal(true)}
-                        className="text-blue-500 hover:text-blue-600 hover:underline"
+                        className="text-brand-acidGreen hover:opacity-90 hover:underline"
                     >
                         Privacy Policy
                     </button>
