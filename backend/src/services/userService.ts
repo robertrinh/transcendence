@@ -21,6 +21,7 @@ export const userService = {
         `).all()
     },
 
+    //we are not using all these rows, should be cleaned up.
     fetchUser: (id: number) => {
         return db.prepare(`
             SELECT 
