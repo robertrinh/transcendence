@@ -48,7 +48,7 @@ export default function MainMenu({ onModeSelect }: MainMenuProps) {
             >
               <div className="text-5xl mb-3">🤖</div>
               <h2 className="text-2xl font-black text-cyan-300 mb-2 uppercase" style={{fontFamily: 'monospace'}}>
-                Single
+                Local
               </h2>
               <p className="text-cyan-200 text-sm font-bold uppercase" style={{fontFamily: 'monospace'}}>
                 vs AI
@@ -68,7 +68,7 @@ export default function MainMenu({ onModeSelect }: MainMenuProps) {
             >
               <div className="text-5xl mb-3">👥</div>
               <h2 className="text-2xl font-black text-red-300 mb-2 uppercase" style={{fontFamily: 'monospace'}}>
-                Multi
+                Online
               </h2>
               <p className="text-red-200 text-sm font-bold uppercase" style={{fontFamily: 'monospace'}}>
                 2 Players
