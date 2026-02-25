@@ -4,11 +4,10 @@ import { User } from '../util/profileUtils';
 interface TwoFactorVerifyProps {
 	user: User;
 	token: string;
-	onVerifySuccess: () => void;
+	onVerifySuccess: (token: string, user: User) => void;
 	onCancel: () => void;
 }
 
-//TODO change _user and _token to user and token after implementing 2fa verification logic
 function TwoFactorVerify({ token, onVerifySuccess, onCancel }: TwoFactorVerifyProps) {
 	const [code, setCode] = useState('');
 	const [error, setError] = useState('');
@@ -32,7 +31,7 @@ function TwoFactorVerify({ token, onVerifySuccess, onCancel }: TwoFactorVerifyPr
             const data = await response.json();
 
             if (response.ok && data.success) {
-                onVerifySuccess();
+                onVerifySuccess(data.token, data.user);
             } else {
                 setError(data.error || 'Invalid verification code');
             }

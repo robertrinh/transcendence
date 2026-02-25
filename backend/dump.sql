@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
     created_at DATETIME DEFAULT (datetime('now')),
     avatar_id INTEGER,
     email TEXT,
-    status TEXT CHECK (status IN ('idle', 'searching', 'matched', 'playing')) DEFAULT 'idle',
+    status TEXT CHECK (status IN ('idle', 'searching', 'playing')) DEFAULT 'idle',
     last_login DATETIME,
     two_factor_secret TEXT,              -- 2FA TOTP secret key
     two_factor_enabled BOOLEAN DEFAULT 0, -- to check if 2FA is enabled
@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS game_queue (
 
 CREATE TABLE IF NOT EXISTS games (
     id INTEGER PRIMARY KEY,
+    lobby_id TEXT,
     player1_id INTEGER, --NULL for tournament placeholder games
     player2_id INTEGER, --NULL for tournament placeholder games
 	score_player1 INTEGER DEFAULT 0,
@@ -95,6 +96,34 @@ CREATE TABLE IF NOT EXISTS chat_users (
     is_online BOOLEAN DEFAULT 0,
     last_seen DATETIME DEFAULT (datetime('now')),
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS friends (
+    user_id INTEGER NOT NULL,
+    friend_id INTEGER NOT NULL,
+    CHECK (user_id != friend_id),
+    UNIQUE(user_id, friend_id),
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY (friend_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS friend_request (
+    requester_id INTEGER NOT NULL,
+    requested_id INTEGER NOT NULL,
+    created_at DATETIME DEFAULT (datetime('now')),
+    CHECK (requester_id != requested_id),
+    UNIQUE(requester_id, requested_id),
+    FOREIGN KEY (requester_id) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY (requested_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS blocked (
+    user_id INTEGER NOT NULL,
+    blocked_id INTEGER NOT NULL,
+    CHECK (user_id != blocked_id),
+    UNIQUE(user_id, blocked_id),
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY (blocked_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS tournament_participants (

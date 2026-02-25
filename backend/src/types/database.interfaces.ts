@@ -40,7 +40,7 @@ export interface DatabaseRunResult {
 
 export interface Player {
 	id: number;
-	status: 'searching' | 'matched' | 'playing';
+	status: 'searching' | 'playing';
 }
 
 export interface Queue {
@@ -48,4 +48,21 @@ export interface Queue {
 	joined_at: number;
 	lobby_id: string;
 	private: boolean;
+}
+
+export interface LeaderBoard {
+	username: string;
+	wins: number;
+	losses: number;
+}
+
+export interface GameHistoryItem {
+    id: number;
+	username_own?: string | null;
+    username_opponent?: string | null;
+	username_winner: string | null;
+    score_own: number | null;
+    score_opponent: number | null;
+    created_at: string;
+    finished_at?: string | null;
 }

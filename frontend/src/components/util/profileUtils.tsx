@@ -1,5 +1,17 @@
 import { fetchWithAuth, notifyAuthFailure } from '../../config/api';
 
+/** Game history item returned by GET /api/games/user */
+export interface GameHistoryItem {
+    id: number;
+	username_own?: string | null;
+    username_opponent?: string | null;
+	username_winner: string | null;
+    score_own: number | null;
+    score_opponent: number | null;
+    created_at: string;
+    finished_at?: string | null;
+}
+
 export interface User {
     id: string;
     username: string;
@@ -36,6 +48,22 @@ export const fetchUserProfile = async (): Promise<User | null> => {
     }
 };
 
+/** Returns all games the user participated in (GET /api/games/user). Stored as array as the API returns a list of matches. */
+export const fetchUserGameHistory = async (): Promise<GameHistoryItem[]> => {
+    try {
+        const response = await fetchWithAuth('/api/games/user');
+        if (response.ok) {
+            const data = await response.json();
+            const list = data.result ?? [];
+            return Array.isArray(list) ? list : [];
+        }
+        return [];
+    } catch (error) {
+        console.error('Failed to fetch game history:', error);
+        return [];
+    }
+};
+
 export const getAvatarUrl = (avatarPath?: string): string | undefined => {
     if (!avatarPath) return undefined;
     
@@ -51,4 +79,10 @@ export const getAvatarUrl = (avatarPath?: string): string | undefined => {
     }
     
     return `/api/avatars/${avatarPath}`;
+};
+
+export const calculateWinRate = (wins: number, totalGames: number): string => {
+    return totalGames > 0
+        ? `${((wins / totalGames) * 100).toFixed(1)}%`
+        : '0%';
 };

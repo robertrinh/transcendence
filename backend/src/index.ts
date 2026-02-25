@@ -14,6 +14,7 @@ import { dbCleanUpJob } from './error/backupCleanup.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import twofaRoutes from './routes/2fa.js';
+import friendsRoutes from './routes/friends.js';
 
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -99,12 +100,18 @@ server.register(
     }
 )
 
+server.register(
+    friendsRoutes, {
+        prefix: '/api/friends'
+    }
+)
+
 const start = async () => {
     try {
         await server.listen({ port: 3000, host: '0.0.0.0' });
         const devBackendURL = `http://${process.env.HOST}:${process.env.BACKEND_PORT}`
         const devFrontendURL = `http://${process.env.HOST}:${process.env.FRONTEND_PORT}`
-        const prodURL = `https://${process.env.HOST}`
+        const prodURL = `https://${process.env.HOST}:${process.env.NGINX_PORT}`
         console.log(
             `Development access points:\n` + 
             `\t - 🚀 Backend server running on ${devBackendURL}\n` +

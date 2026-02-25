@@ -27,14 +27,14 @@ export const tournamentController = {
 	//add a alternative in frontend when clicking join tournament for how many participants. 2 4 8 or 16 so its fixed size tournament
 	//returns the id of the tournament to be used when polling from the frontend to check if tournament is starting
 	createTournament: async (req: FastifyRequest, reply: FastifyReply) => {
-		const user_id = req.user!.userId;
-		const {name, description, max_participants } = req.body as {name: string, description: string, max_participants: number };
-		const result = tournamentService.createTournament(name, description, max_participants);
-		if (result.changes == 0)
-			throw new ApiError(404, 'something went wrong creating tournament');
-		tournamentService.joinTournament(result.lastInsertRowid as number, user_id); 
-		return {success: true, data: result.lastInsertRowid, message: 'Tournament successfully cerated and creator joined!'};
-	},
+        const user_id = req.user!.userId;
+        const {name, description, max_participants } = req.body as {name: string, description: string, max_participants: number };
+        const result = tournamentService.createTournament(name, description, max_participants);
+        if (result.changes == 0)
+            throw new ApiError(404, 'something went wrong creating tournament');
+        tournamentService.joinTournament(result.lastInsertRowid as number, user_id); 
+        return {success: true, data: { id: result.lastInsertRowid, max_participants }, message: 'Tournament successfully created and creator joined!'};
+    },
 
 	//player clicks "join tournament" and an open tournament exists --> player will be added AND start Tournament if full
 	joinTournament: async (req: FastifyRequest, reply: FastifyReply) => {
@@ -59,14 +59,13 @@ export const tournamentController = {
 
 	//only GAMESERVER ALLOWED --> add auth token!
 	updateTournament: async (req: FastifyRequest, reply: FastifyReply) => {
-		const { id } = req.params as { id: number };
-		const { status, game_id, score_player1, score_player2, winner_id } = req.body as { status: string, game_id: number, score_player1: number, score_player2: number, winner_id: number }
-		if (status === 'ongoing') //when would rutger send a different status? and what should happen then : CHECK
-		{
-			const result = tournamentService.recordResult(id, game_id, score_player1, score_player2, winner_id);
-			return {success: true, nextGame: result?.nextGame, tournamentFinished: result.tournamentFinished}
-		}
-	},
+        const { id } = req.params as { id: number };
+        const tournament = tournamentService.getTournamentByID(id) as Tournament;
+        if (!tournament)
+            throw new ApiError(404, 'Tournament not found');
+
+        return { success: true, message: `Tournament ${id} status: ${tournament.status}` }
+    },
 
 	deleteTournament: async (req: FastifyRequest, reply: FastifyReply) => {
 		const { id } = req.params as { id: number };

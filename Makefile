@@ -31,6 +31,7 @@ down:
 clean:
 	@docker-compose -f docker-compose.dev.yaml down -v --rmi all
 	@docker-compose -f docker-compose.yaml down -v --rmi all
+	rm -rf frontend/nginx frontend/.env backend/.env server-side-pong/.env
 
 re: clean all
 

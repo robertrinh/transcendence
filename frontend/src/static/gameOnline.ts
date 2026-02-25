@@ -1,6 +1,6 @@
 import { Ball } from './ball'
 import { playerOne, playerTwo, ball, clientTick, drawPlayerScores,
-    intervals } from './lib'
+    intervals, heartbeatFrequencyMS, resetState } from './lib'
 
 interface MoveTS {
     type: string,
@@ -10,7 +10,9 @@ interface MoveTS {
 export async function gameOnlineLobby(canvas: HTMLCanvasElement, 
         ctx: CanvasRenderingContext2D, drawCanvas: HTMLCanvasElement,
         drawCtx: CanvasRenderingContext2D, websocket: WebSocket) {
-  const serverTick = 1000 / 66
+    const serverTick = 1000 / 66
+    let firstStateReceived = false
+    let lastHearbeatSent = 0
 
     let p1Score = 0
     let p2Score = 0
@@ -99,16 +101,14 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
         playerTwo.paddle.y += interpVelocityEnemy.y * updateDelta
     }
 
-    let deltaTimeMS: number, now: number, then: number
+    let deltaTimeMS: number, now: number, then: number | undefined
+    let gameRunning = true
 
-	/**
-	 * Update the world state
-	 */
-	function update() {
-		now = performance.now()
-		if (then === undefined) {
-			then = now
-		}
+    function update() {
+        now = performance.now()
+        if (then === undefined) {
+            then = now
+        }
         deltaTimeMS = now - then
         if (deltaTimeMS > clientTick) {
             processMovement()
@@ -116,19 +116,27 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
             then = now - (deltaTimeMS % clientTick)
             moveBall(ball)
         }
-	}
+        const dateNow = Date.now()
+        if (lastHearbeatSent === 0 || dateNow - lastHearbeatSent > heartbeatFrequencyMS) {
+            websocket.send(JSON.stringify(
+                {'type': 'HEARTBEAT', 'timestamp': dateNow}
+            ))
+            lastHearbeatSent = dateNow
+        }
+    }
 
     function draw() {
+        if (!gameRunning) return
         requestAnimationFrame(draw)
         ctx.clearRect(0, 0, canvas.width, canvas.height)
-		drawCtx.clearRect(0, 0, canvas.width, canvas.height)
+        drawCtx.clearRect(0, 0, canvas.width, canvas.height)
         drawCtx.fillStyle = "white"
         drawCtx.fillRect(0, 0, canvas.width, canvas.height)
-		ball.draw(drawCtx)
-		playerOne.paddle.draw(drawCtx)
-		playerTwo.paddle.draw(drawCtx)
-		drawPlayerScores(canvas, drawCtx, 48, "#36454f", "sans-serif",
-		p2Score, p1Score)
+        ball.draw(drawCtx)
+        playerOne.paddle.draw(drawCtx)
+        playerTwo.paddle.draw(drawCtx)
+        drawPlayerScores(canvas, drawCtx, 48, "#36454f", "sans-serif",
+        p2Score, p1Score)
         ctx.drawImage(drawCanvas, 0, 0)
     }
 
@@ -157,9 +165,32 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
         pendingMoves.splice(0, i)
     }
 
-    let playerID = 0 // playerID given by server
+    let playerID = 0
     let scoreReceived = false
     let scoreCounter = 0
+
+    function cleanup() {
+        resetState()
+        interpVelocityBall.x = 0
+        interpVelocityBall.y = 0
+        interpVelocityEnemy.x = 0
+        interpVelocityEnemy.y = 0
+        playerID = 0
+        scoreReceived = false
+        gameRunning = false
+        pendingMoves = new Array<MoveTS>()
+        firstStateReceived = false
+        lastHearbeatSent = 0
+        p1Score = 0
+        p2Score = 0
+        deltaTimeMS = 0
+        now = 0
+        then = undefined
+        scoreCounter = 0
+
+        canvas.removeEventListener("keydown", handleKeyDown)
+        canvas.removeEventListener("keyup", handleKeyUp)
+    }
 
     async function gameSockOnMessage(event: MessageEvent) {
         const JSONObject = JSON.parse(event.data)
@@ -168,6 +199,11 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
         const ballServer = JSONObject.ball
         switch (JSONObject.type) {
             case "STATE":
+                if (!firstStateReceived) {
+                    canvas.addEventListener("keydown", handleKeyDown)
+                    canvas.addEventListener("keyup", handleKeyUp)
+                    firstStateReceived = true
+                }
                 interpVelocityBall = pointSubtract(new Point(ballServer.x, ballServer.y), new Point(ball.x, ball.y))
                 interpVelocityBall.x /= serverTick
                 interpVelocityBall.y /= serverTick
@@ -207,7 +243,6 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
                 break
             case "ID":
                 playerID = JSONObject.player_id as number
-                // move paddle to the right side
                 if (playerID === 2) {
                     const p1Color = playerOne.paddle.color
                     playerOne.paddle.x = canvas.width-playerOne.paddle.width
@@ -218,7 +253,6 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
                     playerTwo.paddle.color = p1Color
                 }
                 console.log(`You are player ${playerID}`)
-                websocket.send(JSON.stringify({type: 'READY'}))
                 break
             case "SCORE":
                 scoreReceived = true
@@ -231,35 +265,51 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
                         break
                 }
                 break
-            case "WHOAREYOU":
-                try {
-                    const { fetchWithAuth } = await import('../config/api');
-                    const response = await fetchWithAuth("/api/users/profile/me");
-                    if (!response.ok) {
-                        throw Error("Failed to process message 'WHOAREYOU'; backend error")
+            case "GAME_END":
+                console.log(`🏁 Game ended! Winner: ${JSONObject.winner_id}, Score: ${JSONObject.score_player1}-${JSONObject.score_player2}`)
+                cleanup()
+                window.dispatchEvent(new CustomEvent('game-over', {
+                    detail: {
+                        winnerId: JSONObject.winner_id,
+                        scorePlayer1: JSONObject.score_player1,
+                        scorePlayer2: JSONObject.score_player2
                     }
-                    const parsed = await response.json()
-                    websocket.send(JSON.stringify(
-                        {
-                            'type': 'ID',
-                            'id': parsed.profile.id
-                        }
-                    ))
-                }
-                catch (error) {
-                    console.log(error)
-                }
+                }))
+                break
+            case "OPPONENT_DISCONNECT":
+                console.log('❌ Opponent disconnected')
+                cleanup()
+                window.dispatchEvent(new CustomEvent('game-over', {
+                    detail: {
+                        winnerId: null,
+                        disconnect: true
+                    }
+                }))
+                break
+            case "ERROR":
+                console.error('🚨 Game error:', JSONObject.message)
+                cleanup()
+                window.dispatchEvent(new CustomEvent('game-over', {
+                    detail: { error: JSONObject.message }
+                }))
                 break
             default:
                 console.log(`Unrecognized message type: ${JSONObject.type}`)
         }
     }
-
+    removeEventListener("keydown", handleKeyDown)
+    removeEventListener("keyup", handleKeyUp)
     websocket.onmessage = gameSockOnMessage
-    canvas.addEventListener("keydown", handleKeyDown)
-    canvas.addEventListener("keyup", handleKeyUp)
+    const buffered = (websocket as any).__bufferedMessages as MessageEvent[] | undefined
+    if (buffered && buffered.length > 0) {
+        console.log(`🔄 Replaying ${buffered.length} buffered messages`)
+        for (const msg of buffered) {
+            await gameSockOnMessage(msg)
+        }
+        buffered.length = 0
+    }
     ball.x = canvas.width / 2
     ball.y = canvas.height / 2
     requestAnimationFrame(draw)
-	intervals.gameOnlineUpdate = setInterval(update, clientTick)
+    intervals.gameOnlineUpdate = setInterval(update, clientTick)
 }

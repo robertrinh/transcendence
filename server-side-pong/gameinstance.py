@@ -4,12 +4,14 @@ import random as rand
 import requests
 import sys
 from websockets import ServerConnection, broadcast
+from player import Player
 from ball import Ball
 from lib import Vector2, Rect
 from player_paddle import PlayerPaddle
 from datetime import datetime
 from base64 import b64encode
 from os import getenv
+from time import time_ns
 
 HTTP_PASSWD = getenv('HTTP_PASSWD')
 BACKEND_PORT = getenv('BACKEND_PORT')
@@ -38,6 +40,10 @@ PADDLE_SPEED_PER_TICK = 0.5
 BALL_SPEED = BALL_SPEED_PER_TICK * TICK
 PADDLE_SPEED = PADDLE_SPEED_PER_TICK * TICK
 
+# networking
+HEARTBEAT_GRACE_MS = 100
+HEARTBEAT_FREQUENCY_MS = 3000
+
 
 class Point:
     x: float
@@ -49,9 +55,8 @@ class Point:
 
 
 class GameInstance:
-    lobby_id: str  # for private lobbies
-    is_private = False
-    players: [ServerConnection]
+    players: list[Player]
+    connections: list[ServerConnection]
     game_running = False
     is_done = False
 
@@ -72,9 +77,7 @@ class GameInstance:
     db_p1_id: int
     db_p2_id: int
 
-    def __init__(
-            self, db_game_id: int, db_p1_id: int, db_p2_id: int, lobby_id=None
-    ):
+    def __init__(self, db_game_id: int, db_p1_id: int, db_p2_id: int):
         self.ball = Ball(
             BALL_SPEED, BALL_SPEED * 2, BALL_RADIUS)
         self.ball.set_start(ARENA_HEIGHT, ARENA_WIDTH, random_ball_vec())
@@ -88,7 +91,7 @@ class GameInstance:
         )
         self.set_game_start()
         self.players = list()
-        self.lobby_id = lobby_id
+        self.connections = list()
         self.db_game_id = db_game_id
         self.db_p1_id = db_p1_id
         self.db_p2_id = db_p2_id
@@ -107,9 +110,6 @@ class GameInstance:
         self.p2_paddle.shape.y = 0
         self.p2_score = 0
 
-    def set_is_private(self):
-        self.is_private = True
-
     def kill(self):
         self.set_game_start()
         self.players.clear()
@@ -120,26 +120,18 @@ class GameInstance:
         self.game_running = False
         self.is_done = True
 
-    async def add_player(self, connection: ServerConnection, db_user_id=None):
-        if self.is_private:
-            if db_user_id is None:
-                self.players.append(connection)
-                return
-            # this means the player is already in the instance but we just
-            # received their db_id
-            if self.db_p1_id == -1:
-                self.db_p1_id = db_user_id
-        is_p1 = self.db_p1_id == db_user_id or self.db_p1_id == -1
-        if connection not in self.players:
-            self.players.append(connection)
+    def log(self, message: str):
+        print(f"lobby {self.db_game_id}: {message}")
+
+    async def add_player(self, player: Player):
+        is_p1 = self.db_p1_id == player.user_id
         game_player_id = 1 if is_p1 else 2
-        await connection.send(json.dumps(
+        self.players.append(player)
+        self.connections.append(player.connection)
+        self.log(f"player \"{player.username}\" added")
+        await player.connection.send(json.dumps(
             {'type': 'ID', 'player_id': game_player_id}
         ))
-        print(
-            f"lobby {self.lobby_id}: connection {connection} added with"
-            f" database id: {db_user_id}"
-        )
 
     def has_player_conn(self, connection: ServerConnection):
         return connection in self.players
@@ -156,18 +148,36 @@ class GameInstance:
         sec_pause = 5
         while not self.lobby_full() and sec_passed < lobby_timeout_sec:
             message = {'type': 'LOBBY_WAIT'}
-            broadcast(self.players, json.dumps(message))
+            broadcast(self.connections, json.dumps(message))
             sec_passed += sec_pause
             await asyncio.sleep(sec_pause)
         if not self.lobby_full():
             message = {'type': 'ERROR', 'message': 'Lobby timed out'}
-            broadcast(self.players, json.dumps(message))
-            raise Exception(f"Lobby {self.lobby_id} timed out")
+            broadcast(self.connections, json.dumps(message))
+            raise Exception(f"lobby {self.db_game_id} timed out")
         self.game_running = True
-        print(f"lobby {self.lobby_id}: all players connected, starting...")
+        self.log("all players connected, starting...")
         while self.game_running:
-            broadcast(self.players, json.dumps(game_loop(self)))
+            broadcast(self.connections, json.dumps(await game_loop(self)))
             await asyncio.sleep(TICK/1000)
+
+    async def on_client_disconnect(self, player):
+        # the player that is left gets a default win
+        was_p1 = player.user_id == self.db_p1_id
+        player_left = None
+        for p in self.players:
+            if p is not player:
+                player_left = p
+                break
+        if player_left is None:
+            return
+        if was_p1:
+            self.p2_score = ROUND_MAX
+        else:
+            self.p1_score = ROUND_MAX
+        await player_left.connection.send(json.dumps(
+            {'type': 'OPPONENT_DISCONNECT'}))
+        handle_score(self)
 
 
 def line_line_intersect(
@@ -290,11 +300,10 @@ def handle_score(game: GameInstance):
         scored = True
         scored_by = "p1"
         game.p1_score += 1
-    if not scored:
-        return
-    message = {'type': 'SCORE', 'scored_by': scored_by}
-    broadcast(game.players, json.dumps(message))
-    game.ball.set_start(ARENA_HEIGHT, ARENA_WIDTH, random_ball_vec())
+    if scored:
+        message = {'type': 'SCORE', 'scored_by': scored_by}
+        broadcast(game.connections, json.dumps(message))
+        game.ball.set_start(ARENA_HEIGHT, ARENA_WIDTH, random_ball_vec())
     # game is finished, we need to upload the results to the database
     if game.p1_score == ROUND_MAX or game.p2_score == ROUND_MAX:
         winner_id = 0
@@ -302,7 +311,15 @@ def handle_score(game: GameInstance):
             winner_id = game.db_p1_id
         else:
             winner_id = game.db_p2_id
-        print(f"lobby {game.lobby_id}: game finished, uploading results...")
+        # Send GAME_END to all clients before killing
+        game_end_message = {
+            'type': 'GAME_END',
+            'winner_id': winner_id,
+            'score_player1': game.p1_score,
+            'score_player2': game.p2_score
+        }
+        broadcast(game.connections, json.dumps(game_end_message))
+        game.log("game finished, uploading results...")
         try:
             timestamp = '{:%Y-%m-%d %H:%M:%S}'.format(datetime.now())
             auth_header = "Basic " + b64encode(
@@ -317,11 +334,9 @@ def handle_score(game: GameInstance):
                     "finished_at": timestamp
                 }
             )
-            print(
-                f"lobby {game.lobby_id}: upload response status code "
-                f"{response.status_code}")
+            game.log(f"upload response code {response.status_code}")
         except requests.ConnectionError as e:
-            print(f"lobby {game.lobby_id}: {repr(e)}")
+            game.log(f"{repr(e)}")
         game.kill()
 
 
@@ -383,13 +398,26 @@ def random_ball_vec() -> Vector2:
     return Vector2(x, y)
 
 
-def update(game: GameInstance):
+async def check_heartbeat(game: GameInstance):
+    now = time_ns() // 1_000_000
+    i = 0
+    while i < 2:
+        player: Player = game.players[i]
+        if now - player.last_hearbeat > HEARTBEAT_FREQUENCY_MS + HEARTBEAT_GRACE_MS:
+            game.log(f"\"{player.username}\" timed out...")
+            await game.on_client_disconnect(player)
+            return
+        i += 1
+
+
+async def update(game: GameInstance):
+    await check_heartbeat(game)
     move_ball(game.ball, game.p1_paddle, game.p2_paddle)
     process_input(game)
     handle_score(game)
 
 
-def game_loop(game: GameInstance):
+async def game_loop(game: GameInstance):
     game_state = {
         'type': 'STATE',
         'ball': {
@@ -407,7 +435,7 @@ def game_loop(game: GameInstance):
             'last_ts': game.p2_last_ts
         }
     }
-    update(game)
+    await update(game)
     return game_state
 
 

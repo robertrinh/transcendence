@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { User, fetchUserProfile, getAvatarUrl, fetchUserGameHistory,
+    GameHistoryItem, calculateWinRate } from '../components/util/profileUtils';
 import { Navigate } from 'react-router-dom';
-import { User, fetchUserProfile, getAvatarUrl } from '../components/util/profileUtils';
 
 interface ProfileProps {
     user: User | null;
@@ -8,10 +9,18 @@ interface ProfileProps {
 const Profile: React.FC<ProfileProps> = ({ user }) => {
     const [profileData, setProfileData] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [gameHistory, setGameHistory] = useState<GameHistoryItem[]>([]);
+    const [gamesLoading, setGamesLoading] = useState(true);
 
     useEffect(() => {
         if (user && !user.is_guest) {
             loadProfile();
+        }
+    }, [user]);
+
+    useEffect(() => {
+        if (user) {
+            loadGameHistory();
         }
     }, [user]);
 
@@ -25,6 +34,12 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
         setLoading(false);
     };
 
+    const loadGameHistory = async () => {
+        setGamesLoading(true);
+        const history = await fetchUserGameHistory();
+        setGameHistory(history);
+        setGamesLoading(false);
+    };
     if (user?.is_guest) {
         return <Navigate to="/" replace />;
     }
@@ -46,6 +61,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
     if (!displayUser) {
         return <div className="p-6 text-center text-slate-400">No user data available</div>;
     }
+    const winRate = calculateWinRate(displayUser.wins || 0, displayUser.total_games || 0);
     const avatarUrl = getAvatarUrl(displayUser.avatar_url);
 
     return (
@@ -96,10 +112,13 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
                             <span className="text-slate-300 font-medium">Total Games</span>
                             <span className="text-brand-hotPink font-bold text-xl">{displayUser.total_games || 0}</span>
                         </div>
-                        <div className="flex justify-between items-center p-3 bg-slate-700/60 rounded-lg border border-slate-600/50">
-                            <span className="text-slate-300 font-medium">Win Rate</span>
-                            <span className="text-brand-purple font-bold text-xl">{displayUser.winRate || '0%'}</span>
+                        <div className="flex justify-between items-center p-3 bg-purple-50 rounded">
+                            <span className="text-gray-700 font-medium">Win Rate</span>
+                            <span className="text-purple-600 font-bold text-xl">{winRate || '0%'}</span>
                         </div>
+						    <p className="text-xs text-gray-500 mt-4 pt-3 border-t border-gray-100">
+                    			Game statistics consists of completed online games only.
+                			</p>
                     </div>
                     {(displayUser.total_games || 0) === 0 && (
                         <p className="text-center text-slate-500 mt-4 text-sm">No games played yet</p>
@@ -138,6 +157,60 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
                         )}
                     </div>
                 </div>
+            </div>
+
+            {/* Match History */}
+            <div className="mt-6 bg-white p-6 rounded-lg shadow border border-gray-200">
+                <h3 className="text-xl font-semibold mb-4 text-gray-900">Match History</h3>
+                {gamesLoading ? (
+                    <div className="animate-pulse space-y-3">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="h-12 bg-gray-100 rounded" />
+                        ))}
+                    </div>
+                ) : gameHistory.length === 0 ? (
+                    <p className="text-gray-500 text-center py-4">No games played yet</p>
+                ) : (
+                    <ul className="divide-y divide-gray-200">
+                        {gameHistory.map((game: GameHistoryItem) => {
+                            const isWinner = game.username_winner === displayUser.username;
+                            const displayScoreOwn = game.score_own ?? '?'; //* ?? means if score_player1 is null, use '-'
+                            const diplayScoreOpp = game.score_opponent ?? '?';
+                            const dateStr = game.finished_at
+                                ? new Date(game.finished_at).toLocaleDateString(undefined, { dateStyle: 'medium' })
+                                : game.created_at
+                                    ? new Date(game.created_at).toLocaleDateString(undefined, { dateStyle: 'medium' })
+                                    : '—';
+                            return (
+                                <li key={game.id} className="py-3 flex items-center justify-between gap-4">
+                                    <div className="flex-1 min-w-0">
+                                        <span className="font-medium text-gray-900 truncate block">
+                                            vs {game.username_opponent ?? 'Unknown'}
+                                        </span>
+                                        <span className="text-sm text-gray-500">{dateStr}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 shrink-0">
+                                        <span className="text-gray-700 font-mono">
+                                            {displayScoreOwn} – {diplayScoreOpp}
+                                        </span>
+                                        {(
+                                            <span
+                                                className={`px-2 py-0.5 rounded text-sm font-medium ${
+                                                    isWinner ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                                }`}
+                                            >
+                                                {isWinner ? 'Win' : 'Loss'}
+                                            </span>
+                                        )}
+                                    </div>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                )}
+                <p className="text-xs text-gray-500 mt-4 pt-3 border-t border-gray-100">
+                    Match history consists of completed online games only.
+                </p>
             </div>
         </div>
     );

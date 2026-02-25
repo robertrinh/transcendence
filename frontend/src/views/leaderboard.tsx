@@ -1,14 +1,42 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { fetchLeaderBoard, LeaderBoard } from '../components/util/leaderBoardUtils'
 
 export const Leaderboard: React.FC = () => {
-    const samplePlayers = [
-        { id: 1, username: 'Player1', wins: 15, losses: 3, rank: 1 },
-        { id: 2, username: 'Player2', wins: 12, losses: 5, rank: 2 },
-        { id: 3, username: 'Player3', wins: 10, losses: 7, rank: 3 },
-        { id: 4, username: 'Player4', wins: 8, losses: 9, rank: 4 },
-        { id: 5, username: 'Player5', wins: 6, losses: 11, rank: 5 },
-    ];
 
+    const [leaderboardData, setLeaderBoard] = useState<LeaderBoard[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        loadLeaderBoard()
+    }, [])
+
+    const loadLeaderBoard = async () => {
+        setLoading(true);
+        const leaderBoard = await fetchLeaderBoard(); 
+        if (leaderBoard === null)
+            throw Error('very bad')
+        console.log('leaderboard response:', leaderBoard);
+        if (leaderBoard) {
+            setLeaderBoard(leaderBoard);
+        }
+        setLoading(false);
+    };
+
+    if (loading && !leaderboardData) {
+        return (
+            <div className="p-6 text-center">
+                <div className="animate-pulse">
+                    <div className="bg-gray-200 h-8 w-48 mx-auto mb-4 rounded"></div>
+                    <div className="bg-gray-200 h-20 w-20 mx-auto mb-4 rounded-full"></div>
+                    <div className="bg-gray-200 h-4 w-32 mx-auto mb-2 rounded"></div>
+                </div>
+                <p className="text-gray-500 mt-4">Loading Leaderboard...</p>
+            </div>
+        );
+    }
+    if (!leaderboardData) {
+        return <div className="p-6 text-center text-gray-500">Leaderboard is not available</div>;
+    }
     return (
         <div className="p-6">
             <h1 className="text-4xl font-bold text-center mb-8 text-brand-acidGreen">Leaderboard</h1>
@@ -29,15 +57,15 @@ export const Leaderboard: React.FC = () => {
                                     <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Win Rate</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-600/50">
-                                {samplePlayers.map((player) => (
-                                    <tr key={player.id} className="hover:bg-slate-700/50 transition-colors">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-200">#{player.rank}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-200">{player.username}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-brand-acidGreen">{player.wins}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-brand-red">{player.losses}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-200">
-                                            {((player.wins / (player.wins + player.losses)) * 100).toFixed(1)}%
+                            <tbody className="divide-y divide-white/20">
+                                {leaderboardData.map((player, index) => (
+                                    <tr key={player.username} className="hover:bg-white/20 backdrop-blur-sm">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{index + 1}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{player.username}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">{player.wins}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">{player.losses}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {player.wins + player.losses == 0 ? '0.0' : ((player.wins / (player.wins + player.losses)) * 100).toFixed(1)}%
                                         </td>
                                     </tr>
                                 ))}
