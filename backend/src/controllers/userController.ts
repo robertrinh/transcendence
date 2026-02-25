@@ -1,5 +1,6 @@
 import { ApiError } from '../error/errors.js';
-import { userService } from '../services/userService.js'
+import { userService } from '../services/userService.js';
+import { SYSTEM_USERNAME } from '../databaseInit.js';
 import { FastifyRequest, FastifyReply } from 'fastify';
 import bcrypt from 'bcrypt'
 import { createWriteStream, existsSync, mkdirSync } from 'fs'
@@ -25,10 +26,13 @@ export const userController = {
     },
 
     createUser: async (req: FastifyRequest, reply: FastifyReply) => {
-        const { username, password } = req.body as { username: string, password: string}
-        const hashedPassword = await bcrypt.hash(password, 10)
+        const { username, password } = req.body as { username: string, password: string};
+        if (username?.trim().toLowerCase() === SYSTEM_USERNAME.toLowerCase()) {
+            throw new ApiError(400, 'This username is cannot be used');
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
         userService.addUser(username, hashedPassword);
-        return {success: true, message: 'User created, welcome to the game!'};
+        return { success: true, message: 'User created, welcome to the game!' };
     },
 
     // GET OWN PROFILE - Always full data

@@ -27,6 +27,9 @@ console.log('Initializing database at:', dbPath);
 // Create database connection
 export const db = new Database(dbPath);
 
+// Reserved for system messages (chat join/leave, etc.)
+export const SYSTEM_USERNAME = 'System';
+
 // Enable foreign keys and WAL mode for better performance
 db.pragma('foreign_keys = ON');
 db.pragma('journal_mode = WAL');
@@ -62,6 +65,12 @@ export const initializeDatabase = () => {
                 const inserttester = db.prepare('INSERT INTO users (username, password, email) VALUES (?, ?, ?)');
                 inserttester.run('tester', testerPassword, 'tester@transcendence.local');
                 console.log('✅ Default tester user created (username: tester, password: tester123)');
+            }
+            // System user: reserved for chat/tournament system messages;
+            const systemCheck = db.prepare('SELECT COUNT(*) as count FROM users WHERE username = ?').get(SYSTEM_USERNAME) as { count: number };
+            if (systemCheck.count === 0) {
+                db.prepare('INSERT INTO users (username, is_guest) VALUES (?, 1)').run(SYSTEM_USERNAME);
+                console.log('✅ System user created (reserved for system messages)');
             }
         });
 
