@@ -59,15 +59,22 @@ export default async function chatRoutes (
             connectedAt: new Date()
         });
 
+        // Build online users and guest usernames (frontend shows "(guest)" and disables send request for these)
+        const connections = getAllConnections().filter(conn => conn.username);
+        const onlineUsers = connections.map(conn => conn.username);
+        const guestIds = new Set(
+            (db.prepare('SELECT id FROM users WHERE is_guest = 1').all() as { id: number }[]).map(r => r.id)
+        );
+        const guestUsernames = connections.filter(conn => guestIds.has(conn.userId)).map(conn => conn.username);
+
         // Send initial connection success
         reply.raw.write(`data: ${JSON.stringify({
             type: 'connected',
             connectionId,
             userId: payload.userId,
             username: payload.username,
-            onlineUsers: getAllConnections()
-                .filter(conn => conn.username)
-                .map(conn => conn.username),
+            onlineUsers,
+            guestUsernames,
             timestamp: new Date().toISOString()
         })}\n\n`);
 
@@ -140,11 +147,14 @@ fastify.post('/join', {
 
         connection.userId = payload.userId;
         connection.username = payload.username;
+        const guestRow = db.prepare('SELECT is_guest FROM users WHERE id = ?').get(payload.userId) as { is_guest?: number } | undefined;
+        const isGuest = guestRow?.is_guest === 1;
         console.log(`[Chat] Joined: ${payload.username} (id=${payload.userId})`);
         sseBroadcast({
             type: 'user_joined',
             userId: payload.userId,
             username: payload.username,
+            isGuest,
             message: `${payload.username} joined the chat`,
             timestamp: new Date().toISOString()
         }, connectionId);

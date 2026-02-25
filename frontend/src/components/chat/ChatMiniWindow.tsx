@@ -79,6 +79,7 @@ if (user.is_anonymous) {
     const [outgoingRequests, setOutgoingRequests] = useState<FriendRequest[]>([]);
     const [blockedUsers, setBlockedUsers] = useState<string[]>([]);
     const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+    const [guestUsernames, setGuestUsernames] = useState<string[]>([]);
 
     const [confirmation, setConfirmation] = useState<{
         action: 'remove' | 'block' | null;
@@ -151,6 +152,13 @@ if (user.is_anonymous) {
         };
     }, [user]);
 
+    //* when viewing as guest, don't stay on Friends tab
+    useEffect(() => {
+        if (user.is_guest && activeTab === 'friends') {
+            setActiveTab('chat');
+        }
+    }, [user.is_guest, activeTab]);
+
     //* Refetch friends + requests when switching to Friends tab
     useEffect(() => {
         if (activeTab === 'friends' && !user.is_guest) {
@@ -210,7 +218,9 @@ if (user.is_anonymous) {
                             setConnectionId(data.connectionId);
                             joinChat(data.connectionId);
                             if (data.onlineUsers)
-                                    setOnlineUsers(data.onlineUsers);
+                                setOnlineUsers(data.onlineUsers);
+                            if (Array.isArray(data.guestUsernames))
+                                setGuestUsernames(data.guestUsernames);
                             break;
 
                         case 'history':
@@ -250,14 +260,14 @@ if (user.is_anonymous) {
                                 message: data.message,
                                 timestamp: new Date(data.timestamp)
                             }]);
-                            // NEW: Add user to online list
-                           if (data.username && data.username.trim() !== '') {
+                            if (data.username && data.username.trim() !== '') {
                                 setOnlineUsers(prev => {
-                                    if (prev.includes(data.username)) {
-                                        return prev; // Already exists, don't add
-                                    }
+                                    if (prev.includes(data.username)) return prev;
                                     return [...prev, data.username];
                                 });
+                                if (data.isGuest) {
+                                    setGuestUsernames(prev => prev.includes(data.username) ? prev : [...prev, data.username]);
+                                }
                             }
                             break;
                         case 'user_left':
@@ -270,6 +280,7 @@ if (user.is_anonymous) {
                             }]);
                             if (data.username && data.username.trim() !== '') {
                                 setOnlineUsers(prev => prev.filter(u => u !== data.username));
+                                setGuestUsernames(prev => prev.filter(u => u !== data.username));
                             }
                             break;
 
@@ -617,7 +628,7 @@ if (user.is_anonymous) {
                 </div>
             )}
 
-            {/* Tab Navigation - Chat / Friends / Blocked */}
+            {/* Tab Navigation - Chat / Friends (hidden for guests) / Blocked */}
             <div className="flex border-b border-slate-600/70 bg-slate-700/80 flex-shrink-0">
                 <button
                     onClick={() => setActiveTab('chat')}
@@ -629,16 +640,18 @@ if (user.is_anonymous) {
                 >
                     Lobby
                 </button>
-                <button
-                    onClick={() => setActiveTab('friends')}
-                    className={`flex-1 py-2 px-3 text-xs font-medium transition-colors rounded-lg ${
-                        activeTab === 'friends'
-                            ? 'bg-brand-orange/80 text-black'
-                            : 'text-slate-300 hover:text-white hover:bg-slate-600/80'
-                    }`}
-                >
-                    Friends ({friends.filter((f) => f.username?.trim()).length})
-                </button>
+	                 {!user.is_guest && (
+                    <button
+                        onClick={() => setActiveTab('friends')}
+                        className={`flex-1 py-2 px-3 text-xs font-medium transition-colors rounded-lg ${
+                            activeTab === 'friends'
+                                ? 'bg-brand-orange/80 text-black'
+                                : 'text-slate-300 hover:text-white hover:bg-slate-600/80'
+                        }`}
+                    >
+                        Friends ({friends.filter((f) => f.username?.trim()).length})
+                    </button>
+                )}
                 <button
                     onClick={() => setActiveTab('blocked')}
                     className={`flex-1 py-2 px-3 text-xs font-medium transition-colors rounded-lg ${
@@ -800,8 +813,8 @@ if (user.is_anonymous) {
                 </>
             )}
 
-            {/* Friends Tab */}
-            {activeTab === 'friends' && (
+            {/* Friends Tab (hidden for guests) */}
+            {activeTab === 'friends' && !user.is_guest && (
                 <div className="flex-1 min-h-0 overflow-y-auto p-3 bg-slate-800/50 font-mono text-xs flex flex-col gap-4">
                     {/* Pending: Incoming friend requests */}
                     {incomingRequests.length > 0 && (
@@ -919,7 +932,7 @@ if (user.is_anonymous) {
                         )}
                     </div>
 
-                    {/* Send request: Quick add from recent users */}
+                    {/* Send request: Quick add from recent users (guests shown but not sendable) */}
                     <div className="space-y-0.5 border-t border-slate-600/40 pt-2">
                         <div className="text-slate-400 font-medium pb-1 border-b border-slate-600/40 mb-1.5">Send request to recent users:</div>
                         {getUniqueUsernames()
@@ -927,16 +940,23 @@ if (user.is_anonymous) {
                             .filter(username => !outgoingRequests.some(r => r.username === username))
                             .filter(username => !blockedUsers.includes(username))
                             .slice(0, 5)
-                            .map(username => (
-                                <button
-                                    key={username}
-                                    type="button"
-                                    onClick={() => sendFriendRequest(username)}
-                                    className="block w-full text-left text-brand-orange hover:text-brand-mint hover:underline py-1"
-                                >
-                                    + Send request to {username}
-                                </button>
-                            ))}
+                            .map(username => {
+                                const isGuest = guestUsernames.includes(username);
+                                return isGuest ? (
+                                    <div key={username} className="py-1 text-slate-500 text-sm">
+                                        {username} <span className="text-slate-600">(guest)</span>
+                                    </div>
+                                ) : (
+                                    <button
+                                        key={username}
+                                        type="button"
+                                        onClick={() => sendFriendRequest(username)}
+                                        className="block w-full text-left text-brand-orange hover:text-brand-mint hover:underline py-1"
+                                    >
+                                        + Send request to {username}
+                                    </button>
+                                );
+                            })}
                     </div>
                 </div>
             )}

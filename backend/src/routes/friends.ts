@@ -75,11 +75,14 @@ export default async function friendsRoutes(
 				return reply.status(400).send({ error: 'Cannot add yourself as a friend' });
 			}
 
-			const target = db.prepare('SELECT id FROM users WHERE username = ?').get(toUsername) as { id: number } | undefined;
+			const target = db.prepare('SELECT id, is_guest FROM users WHERE username = ?').get(toUsername) as { id: number; is_guest?: number } | undefined;
 			if (!target) {
 				return reply.status(400).send({ error: 'User not found' });
 			}
 			const requestedId = target.id;
+			if (target.is_guest) {
+				return reply.status(400).send({ error: 'Cannot send friend request to a guest' });
+			}
 
 			const alreadyFriends = db.prepare('SELECT 1 FROM friends WHERE user_id = ? AND friend_id = ?').get(userId, requestedId) as { 1?: number } | undefined;
 			if (alreadyFriends) {
