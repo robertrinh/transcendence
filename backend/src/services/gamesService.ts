@@ -111,33 +111,43 @@ export const gamesService = {
 	},
 
 	getLeaderboard: () => {
-		return db.prepare(`WITH player_games AS (
-			SELECT 
-				player1_id AS player_id,
-				winner_id
-			FROM games WHERE status = 'finished'
-			UNION ALL
-			SELECT 
-				player2_id AS player_id,
-				winner_id 
-			FROM games WHERE status = 'finished'
+		return db.prepare(`
+			WITH player_games AS (
+				SELECT 
+					player1_id AS player_id,
+					winner_id
+				FROM games WHERE status = 'finished'
+				UNION ALL
+				SELECT 
+					player2_id AS player_id,
+					winner_id 
+				FROM games WHERE status = 'finished'
 			)
 			SELECT 
-				users.username,
-				SUM (CASE player_id
-					WHEN winner_id
-						THEN 1
-					ELSE 0
-				END) as wins, 
-				SUM (CASE player_id
-					WHEN winner_id
-						THEN 0
-					ELSE 1
-				END) as losses 
+				CASE users.is_anonymous
+					WHEN 1
+						THEN 'Anonymous'
+					ELSE users.username
+				END as username,
+				SUM (
+					CASE player_id
+						WHEN winner_id
+							THEN 1
+						ELSE 0
+					END
+				) as wins, 
+				SUM (
+					CASE player_id
+						WHEN winner_id
+							THEN 0
+						ELSE 1
+					END
+				) as losses 
 			FROM player_games 
 			JOIN users ON player_id = users.id
 			GROUP BY player_id
-			ORDER BY wins DESC`).all() as LeaderBoard[]
+			ORDER BY wins DESC`
+		).all() as LeaderBoard[]
 	},
 	
 	getGameByUserID: (player_id: number) => {
