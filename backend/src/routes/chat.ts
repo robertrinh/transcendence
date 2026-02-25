@@ -3,9 +3,9 @@ import { verifyToken } from '../auth/utils.js';  // NEW: Import token verificati
 import { db } from '../databaseInit.js'
 import { userService } from '../services/userService.js';
 import { authenticate } from '../auth/middleware.js';
+import { register as sseRegister, unregister as sseUnregister, get as sseGet, getConnectionCount, getAllConnections, sendToConnections, broadcast as sseBroadcast, getConnectionIdsForUser } from '../sseNotify.js';
 
-// Store active SSE connections and messages
-const sseConnections = new Map<string, any>();
+//* in-memory chat message history (SSE connections now in sseNotify.js)
 const chatMessages: any[] = [];
 
 //  SSE endpoint - get token from query parameter
@@ -40,7 +40,7 @@ export default async function chatRoutes (
         }
 
         const connectionId = Date.now().toString() + Math.random().toString();
-        console.log(`[SSE] Connected: ${payload.username} (id=${payload.userId}), connection=${connectionId}, connections=${sseConnections.size + 1}`);
+        console.log(`[SSE] Connected: ${payload.username} (id=${payload.userId}), connection=${connectionId}, connections=${getConnectionCount() + 1}`);
 
         // Set SSE headers
         reply.raw.writeHead(200, {
@@ -52,7 +52,7 @@ export default async function chatRoutes (
         });
 
         // Store connection with user info from token
-        sseConnections.set(connectionId, {
+        sseRegister(connectionId, {
             response: reply.raw,
             userId: payload.userId,
             username: payload.username,
@@ -65,7 +65,7 @@ export default async function chatRoutes (
             connectionId,
             userId: payload.userId,
             username: payload.username,
-            onlineUsers: Array.from(sseConnections.values())
+            onlineUsers: getAllConnections()
                 .filter(conn => conn.username)
                 .map(conn => conn.username),
             timestamp: new Date().toISOString()
@@ -82,9 +82,9 @@ export default async function chatRoutes (
 
         // Handle client disconnect
         request.raw.on('close', () => {
-            const connection = sseConnections.get(connectionId);
+            const connection = sseGet(connectionId);
             if (connection && connection.username) {
-                broadcastSSE({
+                sseBroadcast({
                     type: 'user_left',
                     userId: connection.userId,
                     username: connection.username,
@@ -92,13 +92,13 @@ export default async function chatRoutes (
                     timestamp: new Date().toISOString()
                 }, connectionId);
             }
-            sseConnections.delete(connectionId);
-            console.log(`[SSE] Closed: ${connectionId}, connections=${sseConnections.size}`);
+            sseUnregister(connectionId);
+            console.log(`[SSE] Closed: ${connectionId}, connections=${getConnectionCount()}`);
         });
 
         request.raw.on('error', (error: any) => {
             console.error(`[SSE] Error ${connectionId}:`, error?.message ?? error);
-            sseConnections.delete(connectionId);
+            sseUnregister(connectionId);
         });
 
         return reply.hijack();
@@ -130,7 +130,7 @@ fastify.post('/join', {
 
         const { connectionId } = request.body as any;
         
-        const connection = sseConnections.get(connectionId);
+        const connection = sseGet(connectionId);
         if (!connection) {
             return reply.status(400).send({ error: 'Invalid connection' });
         }
@@ -141,7 +141,7 @@ fastify.post('/join', {
         connection.userId = payload.userId;
         connection.username = payload.username;
         console.log(`[Chat] Joined: ${payload.username} (id=${payload.userId})`);
-        broadcastSSE({
+        sseBroadcast({
             type: 'user_joined',
             userId: payload.userId,
             username: payload.username,
@@ -185,7 +185,7 @@ fastify.post('/send', {
 			return reply.status(400).send({ error: 'Message cannot be longer than 1000 characters' });
 		}
 
-        const connection = sseConnections.get(connectionId);
+        const connection = sseGet(connectionId);
         if (!connection) {
             console.warn(`[Chat] Invalid connection: ${connectionId}`);
             return reply.status(400).send({ error: 'Invalid connection' });
@@ -236,13 +236,16 @@ fastify.post('/send', {
                 return reply.status(500).send({ error: 'Failed to save message' });
             }
 
-            //* send only to sender and recipient(s)
-            const recipientConnectionIds: string[] = [];
-            for (const [cid, conn] of sseConnections) {
-                if (conn.userId === targetUserId) recipientConnectionIds.push(cid);
+            //* send to sender and recipient(s); only deliver to recipient if they still have sender as friend (no delivery if they unfriended)
+            let recipientConnectionIds: string[] = [];
+            const recipientHasSenderAsFriend = db.prepare(
+                'SELECT 1 FROM friends WHERE user_id = ? AND friend_id = ?'
+            ).get(targetUserId, payload.userId) as { 1?: number } | undefined;
+            if (recipientHasSenderAsFriend) {
+                recipientConnectionIds = getConnectionIdsForUser(targetUserId);
             }
             const connectionIdsToSend = [connectionId, ...recipientConnectionIds];
-            sendSSEToConnections(connectionIdsToSend, messageData);
+            sendToConnections(connectionIdsToSend, messageData);
 
             return { success: true, messageId: messageData.id };
         }
@@ -272,7 +275,7 @@ fastify.post('/send', {
         }
 
         chatMessages.push(messageData);
-        broadcastSSE(messageData);
+        sseBroadcast(messageData);
 
         return { success: true, messageId: messageData.id };
     } catch (error) {
@@ -280,47 +283,4 @@ fastify.post('/send', {
         return reply.status(500).send({ error: 'Failed to send message' });
     }
 });
-
-//* send SSE event only to the given connection ids (e.g. for private messages)
-function sendSSEToConnections(connectionIds: string[], message: any) {
-    const messageString = `data: ${JSON.stringify(message)}\n\n`;
-    const idSet = new Set(connectionIds);
-    for (const [connectionid, connection] of sseConnections) {
-        if (!idSet.has(connectionid)) continue;
-        try {
-            if (!connection.response.destroyed) {
-                connection.response.write(messageString);
-            } else {
-                sseConnections.delete(connectionid);
-            }
-        } catch (error) {
-            console.error(`Error sending to ${connectionid}:`, error);
-            sseConnections.delete(connectionid);
-        }
-    }
-}
-
-// Function to broadcast messages via SSE
-function broadcastSSE(message: any, excludeConnectionId?: string) {
-    const messageString = `data: ${JSON.stringify(message)}\n\n`;
-    let broadcastCount = 0;
-    
-    for (const [connectionId, connection] of sseConnections) {
-        if (excludeConnectionId && connectionId === excludeConnectionId) {
-            continue;
-        }
-        
-        try {
-            if (!connection.response.destroyed) {
-                connection.response.write(messageString);
-                broadcastCount++;
-            } else {
-                sseConnections.delete(connectionId);
-            }
-        } catch (error) {
-            console.error(`Error broadcasting to ${connectionId}:`, error);
-            sseConnections.delete(connectionId);
-        }
-    }
-}
 }

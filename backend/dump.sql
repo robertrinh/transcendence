@@ -98,6 +98,34 @@ CREATE TABLE IF NOT EXISTS chat_users (
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS friends (
+    user_id INTEGER NOT NULL,
+    friend_id INTEGER NOT NULL,
+    CHECK (user_id != friend_id),
+    UNIQUE(user_id, friend_id),
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY (friend_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS friend_request (
+    requester_id INTEGER NOT NULL,
+    requested_id INTEGER NOT NULL,
+    created_at DATETIME DEFAULT (datetime('now')),
+    CHECK (requester_id != requested_id),
+    UNIQUE(requester_id, requested_id),
+    FOREIGN KEY (requester_id) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY (requested_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS blocked (
+    user_id INTEGER NOT NULL,
+    blocked_id INTEGER NOT NULL,
+    CHECK (user_id != blocked_id),
+    UNIQUE(user_id, blocked_id),
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY (blocked_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS tournament_participants (
 	id INTEGER PRIMARY KEY AUTOINCREMENT, --what is this? 
 	tournament_id INTEGER NOT NULL,
