@@ -107,6 +107,16 @@ CREATE TABLE IF NOT EXISTS friends (
     FOREIGN KEY (friend_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS friend_request (
+    requester_id INTEGER NOT NULL,
+    requested_id INTEGER NOT NULL,
+    created_at DATETIME DEFAULT (datetime('now')),
+    CHECK (requester_id != requested_id),
+    UNIQUE(requester_id, requested_id),
+    FOREIGN KEY (requester_id) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY (requested_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS blocked (
     user_id INTEGER NOT NULL,
     blocked_id INTEGER NOT NULL,

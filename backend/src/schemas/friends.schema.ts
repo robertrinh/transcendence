@@ -22,3 +22,11 @@ export const blockedItemSchema = S.object()
 
 export const blockedListResponseSchema = S.object()
 	.prop('blocked', S.array().items(blockedItemSchema));
+
+export const friendRequestItemSchema = S.object()
+	.prop('id', S.number())
+	.prop('username', S.string())
+	.prop('created_at', S.string());
+
+export const friendRequestListResponseSchema = S.object()
+	.prop('requests', S.array().items(friendRequestItemSchema));

@@ -1,12 +1,14 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { db } from '../databaseInit.js';
 import { authenticate, requireNonGuest } from '../auth/middleware.js';
+import { sendToUser } from '../sseNotify.js';
 import {
 	friendUsernameBody,
 	friendsListResponseSchema,
 	friendSuccessResponseSchema,
 	friendErrorResponseSchema,
 	blockedListResponseSchema,
+	friendRequestListResponseSchema,
 } from '../schemas/friends.schema.js';
 
 export default async function friendsRoutes(
@@ -44,11 +46,12 @@ export default async function friendsRoutes(
 		}
 	});
 
+	//* send friend request (reject if already friends or request exists in either direction)
 	fastify.post('/add', {
 		schema: {
 			security: [{ bearerAuth: [] }],
 			tags: ['friends'],
-			summary: 'Add friend',
+			summary: 'Send friend request',
 			body: friendUsernameBody,
 			response: {
 				200: friendSuccessResponseSchema,
@@ -76,21 +79,233 @@ export default async function friendsRoutes(
 			if (!target) {
 				return reply.status(400).send({ error: 'User not found' });
 			}
-			const friendId = target.id;
+			const requestedId = target.id;
 
-			const existing = db.prepare('SELECT 1 FROM friends WHERE user_id = ? AND friend_id = ?').get(userId, friendId) as { 1?: number } | undefined;
-			if (existing) {
+			const alreadyFriends = db.prepare('SELECT 1 FROM friends WHERE user_id = ? AND friend_id = ?').get(userId, requestedId) as { 1?: number } | undefined;
+			if (alreadyFriends) {
 				return reply.status(400).send({ error: 'Already friends' });
 			}
 
-			const insert = db.prepare('INSERT INTO friends (user_id, friend_id) VALUES (?, ?)');
-			insert.run(userId, friendId);
-			insert.run(friendId, userId);
+			const requestExists = db.prepare(`
+				SELECT 1 FROM friend_request
+				WHERE (requester_id = ? AND requested_id = ?) OR (requester_id = ? AND requested_id = ?)
+			`).get(userId, requestedId, requestedId, userId) as { 1?: number } | undefined;
+			if (requestExists) {
+				return reply.status(400).send({ error: 'Friend request already exists' });
+			}
+
+			const iBlocked = db.prepare('SELECT 1 FROM blocked WHERE user_id = ? AND blocked_id = ?').get(userId, requestedId) as { 1?: number } | undefined;
+			const theyBlocked = db.prepare('SELECT 1 FROM blocked WHERE user_id = ? AND blocked_id = ?').get(requestedId, userId) as { 1?: number } | undefined;
+			if (iBlocked || theyBlocked) {
+				return reply.status(400).send({ error: 'Cannot send request (blocked)' });
+			}
+
+			db.prepare('INSERT INTO friend_request (requester_id, requested_id) VALUES (?, ?)').run(userId, requestedId);
+
+			sendToUser(requestedId, {
+				type: 'friend_request',
+				fromUsername: payload.username,
+				message: `${payload.username} wants to be your friend!`,
+				timestamp: new Date().toISOString()
+			});
+			return reply.status(200).send({ success: true });
+		} catch (error) {
+			console.error('Send friend request error:', error);
+			return reply.status(500).send({ error: 'Failed to send friend request' });
+		}
+	});
+
+	//* Requested_id = "me"
+	fastify.get('/requests/incoming', {
+		schema: {
+			security: [{ bearerAuth: [] }],
+			tags: ['friends'],
+			summary: 'List incoming friend requests',
+			response: {
+				200: friendRequestListResponseSchema,
+				500: friendErrorResponseSchema
+			}
+		},
+		preHandler: [authenticate, requireNonGuest]
+	}, async (request, reply) => {
+		try {
+			const payload = request.user!;
+			const userId = payload.userId;
+
+			const rows = db.prepare(`
+				SELECT u.id, u.username, fr.created_at
+				FROM friend_request fr
+				JOIN users u ON u.id = fr.requester_id
+				WHERE fr.requested_id = ?
+			`).all(userId) as { id: number; username: string; created_at: string }[];
+
+			return reply.status(200).send({
+				requests: rows.map(r => ({ id: r.id, username: r.username, created_at: r.created_at }))
+			});
+		} catch (error) {
+			console.error('List incoming requests error:', error);
+			return reply.status(500).send({ error: 'Failed to list incoming requests' });
+		}
+	});
+
+	//* Requested_id = "me"
+	fastify.get('/requests/outgoing', {
+		schema: {
+			security: [{ bearerAuth: [] }],
+			tags: ['friends'],
+			summary: 'List outgoing friend requests',
+			response: {
+				200: friendRequestListResponseSchema,
+				500: friendErrorResponseSchema
+			}
+		},
+		preHandler: [authenticate, requireNonGuest]
+	}, async (request, reply) => {
+		try {
+			const payload = request.user!;
+			const userId = payload.userId;
+
+			const rows = db.prepare(`
+				SELECT u.id, u.username, fr.created_at
+				FROM friend_request fr
+				JOIN users u ON u.id = fr.requested_id
+				WHERE fr.requester_id = ?
+			`).all(userId) as { id: number; username: string; created_at: string }[];
+
+			return reply.status(200).send({
+				requests: rows.map(r => ({ id: r.id, username: r.username, created_at: r.created_at }))
+			});
+		} catch (error) {
+			console.error('List outgoing requests error:', error);
+			return reply.status(500).send({ error: 'Failed to list outgoing requests' });
+		}
+	});
+
+	//* requested_id = me; requester is in body
+	fastify.post('/requests/accept', {
+		schema: {
+			security: [{ bearerAuth: [] }],
+			tags: ['friends'],
+			summary: 'Accept friend request',
+			body: friendUsernameBody,
+			response: {
+				200: friendSuccessResponseSchema,
+				400: friendErrorResponseSchema,
+				500: friendErrorResponseSchema
+			}
+		},
+		preHandler: [authenticate, requireNonGuest]
+	}, async (request, reply) => {
+		try {
+			const payload = request.user!;
+			const userId = payload.userId;
+			const { username } = request.body as { username: string };
+
+			if (!username || !String(username).trim()) {
+				return reply.status(400).send({ error: 'Username is required' });
+			}
+			const fromUsername = String(username).trim();
+
+			const requester = db.prepare('SELECT id FROM users WHERE username = ?').get(fromUsername) as { id: number } | undefined;
+			if (!requester) {
+				return reply.status(400).send({ error: 'User not found' });
+			}
+			const requesterId = requester.id;
+
+			const row = db.prepare(`
+				SELECT 1 FROM friend_request WHERE requester_id = ? AND requested_id = ?
+			`).get(requesterId, userId) as { 1?: number } | undefined;
+			if (!row) {
+				return reply.status(400).send({ error: 'No such incoming request' });
+			}
+
+			const insertFriend = db.prepare('INSERT INTO friends (user_id, friend_id) VALUES (?, ?)');
+			insertFriend.run(userId, requesterId);
+			insertFriend.run(requesterId, userId);
+			db.prepare('DELETE FROM friend_request WHERE requester_id = ? AND requested_id = ?').run(requesterId, userId);
 
 			return reply.status(200).send({ success: true });
 		} catch (error) {
-			console.error('Add friend error:', error);
-			return reply.status(500).send({ error: 'Failed to add friend' });
+			console.error('Accept friend request error:', error);
+			return reply.status(500).send({ error: 'Failed to accept friend request' });
+		}
+	});
+
+	//* requested_id = me
+	fastify.post('/requests/decline', {
+		schema: {
+			security: [{ bearerAuth: [] }],
+			tags: ['friends'],
+			summary: 'Decline friend request',
+			body: friendUsernameBody,
+			response: {
+				200: friendSuccessResponseSchema,
+				400: friendErrorResponseSchema,
+				500: friendErrorResponseSchema
+			}
+		},
+		preHandler: [authenticate, requireNonGuest]
+	}, async (request, reply) => {
+		try {
+			const payload = request.user!;
+			const userId = payload.userId;
+			const { username } = request.body as { username: string };
+
+			if (!username || !String(username).trim()) {
+				return reply.status(400).send({ error: 'Username is required' });
+			}
+			const fromUsername = String(username).trim();
+
+			const requester = db.prepare('SELECT id FROM users WHERE username = ?').get(fromUsername) as { id: number } | undefined;
+			if (!requester) {
+				return reply.status(400).send({ error: 'User not found' });
+			}
+			const requesterId = requester.id;
+
+			db.prepare('DELETE FROM friend_request WHERE requester_id = ? AND requested_id = ?').run(requesterId, userId);
+			return reply.status(200).send({ success: true });
+		} catch (error) {
+			console.error('Decline friend request error:', error);
+			return reply.status(500).send({ error: 'Failed to decline friend request' });
+		}
+	});
+
+	//* requester_id = me
+	fastify.post('/requests/cancel', {
+		schema: {
+			security: [{ bearerAuth: [] }],
+			tags: ['friends'],
+			summary: 'Cancel outgoing friend request',
+			body: friendUsernameBody,
+			response: {
+				200: friendSuccessResponseSchema,
+				400: friendErrorResponseSchema,
+				500: friendErrorResponseSchema
+			}
+		},
+		preHandler: [authenticate, requireNonGuest]
+	}, async (request, reply) => {
+		try {
+			const payload = request.user!;
+			const userId = payload.userId;
+			const { username } = request.body as { username: string };
+
+			if (!username || !String(username).trim()) {
+				return reply.status(400).send({ error: 'Username is required' });
+			}
+			const toUsername = String(username).trim();
+
+			const requested = db.prepare('SELECT id FROM users WHERE username = ?').get(toUsername) as { id: number } | undefined;
+			if (!requested) {
+				return reply.status(400).send({ error: 'User not found' });
+			}
+			const requestedId = requested.id;
+
+			db.prepare('DELETE FROM friend_request WHERE requester_id = ? AND requested_id = ?').run(userId, requestedId);
+			return reply.status(200).send({ success: true });
+		} catch (error) {
+			console.error('Cancel friend request error:', error);
+			return reply.status(500).send({ error: 'Failed to cancel friend request' });
 		}
 	});
 
