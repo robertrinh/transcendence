@@ -17,6 +17,12 @@ interface Friend {
     isOnline: boolean;
 }
 
+interface FriendRequest {
+    id: number;
+    username: string;
+    created_at: string;
+}
+
 interface ChatMiniWindowProps {
     user: User;
     navigateToUserProfile?: (username: string) => void; //new
@@ -69,6 +75,8 @@ if (user.is_anonymous) {
     const [chatMode, setChatMode] = useState<ChatMode>('public');
     const [privateChatWith, setPrivateChatWith] = useState<string>('');
     const [friends, setFriends] = useState<Friend[]>([]);
+    const [incomingRequests, setIncomingRequests] = useState<FriendRequest[]>([]);
+    const [outgoingRequests, setOutgoingRequests] = useState<FriendRequest[]>([]);
     const [blockedUsers, setBlockedUsers] = useState<string[]>([]);
     const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
 
@@ -90,8 +98,10 @@ if (user.is_anonymous) {
                 }
                 return;
             }
-            const [friendsRes, blockedRes] = await Promise.all([
+            const [friendsRes, incomingRes, outgoingRes, blockedRes] = await Promise.all([
                 fetchWithAuth('/api/friends'),
+                fetchWithAuth('/api/friends/requests/incoming'),
+                fetchWithAuth('/api/friends/requests/outgoing'),
                 fetchWithAuth('/api/friends/blocked')
             ]);
             if (friendsRes.ok) {
@@ -102,6 +112,18 @@ if (user.is_anonymous) {
                         username: friend.username,
                         isOnline: onlineUsers.includes(friend.username)
                     })));
+                }
+            }
+            if (incomingRes.ok) {
+                const data = await incomingRes.json();
+                if (data?.requests) {
+                    setIncomingRequests(data.requests);
+                }
+            }
+            if (outgoingRes.ok) {
+                const data = await outgoingRes.json();
+                if (data?.requests) {
+                    setOutgoingRequests(data.requests);
                 }
             }
             if (blockedRes.ok) {
@@ -125,6 +147,24 @@ if (user.is_anonymous) {
             }
         };
     }, [user]);
+
+    //* Refetch friends + requests when switching to Friends tab
+    useEffect(() => {
+        if (activeTab === 'friends' && !user.is_guest) {
+            loadFriendsAndBlocked();
+        }
+    }, [activeTab]);
+
+	//* Checks status of friend request with a poll	
+    const FRIENDS_POLL_MS = 5000; // 5 seconds
+    useEffect(() => {
+        if (activeTab !== 'friends' || user.is_guest) 
+			return;
+        const interval = setInterval(() => {
+            loadFriendsAndBlocked();
+        }, FRIENDS_POLL_MS);
+        return () => clearInterval(interval);
+    }, [activeTab, user.is_guest]);
 
     // NEW: Helper to connect to SSE stream
     const connectSSE = () => {
@@ -228,6 +268,18 @@ if (user.is_anonymous) {
                             if (data.username && data.username.trim() !== '') {
                                 setOnlineUsers(prev => prev.filter(u => u !== data.username));
                             }
+                            break;
+
+						//* System message
+                        case 'friend_request':
+                            console.log('Friend request received:', data);
+                            setMessages(prev => [...prev, {
+                                id: Date.now().toString(),
+                                username: SYSTEM_USERNAME,
+                                message: data.message || `${data.fromUsername || 'Someone'} wants to be your friend!`,
+                                timestamp: new Date(data.timestamp || Date.now())
+                            }]);
+                            loadFriendsAndBlocked();
                             break;
 
                         default:
@@ -395,23 +447,85 @@ if (user.is_anonymous) {
         }
     };
 
-    const addFriend = async (username: string) => {
-        if (!friends.some(friend => friend.username === username) && username !== user.username) {
-            try {
-                const res = await fetchWithAuth('/api/friends/add', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username })
-                });
-                if (res.ok) 
-					loadFriendsAndBlocked();
-                else {
-                    const errorData = await res.json() as { error?: string };
-                    showToast(errorData?.error || 'Failed to add friend');
+    const sendFriendRequest = async (username: string) => {
+        if (friends.some(friend => friend.username === username) || username === user.username) 
+			return;
+        if (outgoingRequests.some(r => r.username === username)) 
+			return;
+        try {
+            const res = await fetchWithAuth('/api/friends/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username })
+            });
+            if (res.ok) {
+                loadFriendsAndBlocked();
+                showToast('Friend request sent');
+            } else {
+                const errorData = await res.json() as { error?: string };
+                const msg = errorData?.error || 'Failed to send request';
+                showToast(msg);
+                if (msg === 'Already friends' || msg === 'Friend request already exists') {
+                    loadFriendsAndBlocked();
                 }
-            } catch {
-                showToast('Failed to add friend');
             }
+        } catch {
+            showToast('Failed to send friend request');
+        }
+    };
+
+    const acceptRequest = async (username: string) => {
+        try {
+            const res = await fetchWithAuth('/api/friends/requests/accept', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username })
+            });
+            if (res.ok) {
+                loadFriendsAndBlocked();
+                showToast('Friend added');
+            } else {
+                const errorData = await res.json() as { error?: string };
+                showToast(errorData?.error || 'Failed to accept');
+            }
+        } catch {
+            showToast('Failed to accept request');
+        }
+    };
+
+    const declineRequest = async (username: string) => {
+        try {
+            const res = await fetchWithAuth('/api/friends/requests/decline', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username })
+            });
+            if (res.ok) {
+                loadFriendsAndBlocked();
+            } else {
+                const errorData = await res.json() as { error?: string };
+                showToast(errorData?.error || 'Failed to decline');
+            }
+        } catch {
+            showToast('Failed to decline request');
+        }
+    };
+
+    const cancelRequest = async (username: string) => {
+        try {
+            const res = await fetchWithAuth('/api/friends/requests/cancel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username })
+            });
+            if (res.ok) {
+                loadFriendsAndBlocked();
+            } else {
+                const errorData = await res.json() as { error?: string };
+                showToast(errorData?.error || 'Failed to cancel');
+            }
+        } catch {
+            showToast('Failed to cancel request');
         }
     };
 
@@ -603,11 +717,11 @@ if (user.is_anonymous) {
                                                 {/* User Actions (show on hover, exclude system messages) */}
                                                 {message.username !== user.username && message.username !== SYSTEM_USERNAME && (
                                                     <div className="opacity-0 group-hover:opacity-100 flex items-center space-x-1">
-                                                        {!friends.some(f => f.username === message.username) && (
+                                                        {!friends.some(f => f.username === message.username) && !outgoingRequests.some(r => r.username === message.username) && (
                                                             <button
-                                                                onClick={() => addFriend(message.username)}
+                                                                onClick={() => sendFriendRequest(message.username)}
                                                                 className="text-green-600 hover:text-green-800 text-xs bg-white/50 rounded px-1"
-                                                                title="Add friend"
+                                                                title="Send friend request"
                                                             >
                                                                 +
                                                             </button>
@@ -680,56 +794,114 @@ if (user.is_anonymous) {
             {/* Friends Tab */}
             {activeTab === 'friends' && (
                 <div className="flex-1 min-h-0 overflow-y-auto p-3">
-                    <div className="space-y-2">
-                        {friends.filter((f) => f.username?.trim()).length === 0 ? (
-                            <div className="text-center text-gray-700 text-sm py-4">
-                                No friends yet. Add friends from chat messages!
-                            </div>
-                        ) : (
-                            friends.filter((f) => f.username?.trim()).map((friend) => (
-                                <div key={friend.id} className="flex items-center justify-between p-2 bg-white/30 backdrop-blur-sm border border-white/20 rounded">
-                                    <div className="flex items-center space-x-2">
-                                        <div className={`w-2 h-2 rounded-full ${onlineUsers.includes(friend.username) ? 'bg-green-500' : 'bg-gray-400'}`} title={onlineUsers.includes(friend.username) ? 'Online' : 'Offline'}></div>
-                                        <span className="text-sm font-medium text-gray-900">{friend.username}</span>
-                                    </div>
-                                    <div className="flex items-center space-x-1">
-                                        <button
-                                            onClick={() => startPrivateChat(friend.username)}
-                                            className="text-purple-600 hover:text-purple-800 text-sm bg-white/50 rounded px-2 py-1"
-                                            title="Private chat"
-                                        >
-                                            💬
-                                        </button>
-                                        <button
-                                            onClick={() => confirmAction('remove', friend.username)}
-                                            className="text-red-600 hover:text-red-800 text-sm bg-white/50 rounded px-2 py-1"
-                                            title="Remove friend"
-                                        >
-                                            🗑️
-                                        </button>
-                                    </div>
+                    <div className="space-y-4">
+                        {/* Pending: Incoming friend requests */}
+                        {incomingRequests.length > 0 && (
+                            <div>
+                                <div className="text-xs font-medium text-gray-700 mb-2">Pending friend requests</div>
+                                <div className="space-y-2">
+                                    {incomingRequests.map((req) => (
+                                        <div key={`in-${req.id}-${req.username}`} className="flex items-center justify-between p-2 bg-amber-50/80 border border-amber-200/80 rounded">
+                                            <span className="text-sm font-medium text-gray-900">{req.username}</span>
+                                            <div className="flex items-center space-x-1">
+                                                <button
+                                                    onClick={() => acceptRequest(req.username)}
+                                                    className="text-green-600 hover:text-green-800 text-sm bg-white/80 rounded px-2 py-1"
+                                                    title="Accept"
+                                                >
+                                                    Accept
+                                                </button>
+                                                <button
+                                                    onClick={() => declineRequest(req.username)}
+                                                    className="text-red-600 hover:text-red-800 text-sm bg-white/80 rounded px-2 py-1"
+                                                    title="Decline"
+                                                >
+                                                    Decline
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))
+                            </div>
                         )}
-                    </div>
 
-                    {/* Add Friend Section */}
-                    <div className="mt-4 pt-3 border-t border-white/20">
-                        <div className="text-xs text-gray-700 mb-2">Quick add from recent users:</div>
-                        <div className="space-y-1">
-                            {getUniqueUsernames()
-                                .filter(username => !friends.some(f => f.username === username))
-                                .filter(username => !blockedUsers.includes(username))
-                                .slice(0, 3)
-                                .map(username => (
-                                    <button
-                                        key={username}
-                                        onClick={() => addFriend(username)}
-                                        className="block w-full text-left text-sm text-blue-700 hover:text-blue-900 hover:bg-white/30 px-2 py-1 rounded bg-white/20"
-                                    >
-                                        + Add {username}
-                                    </button>
-                                ))}
+                        {/* Outgoing: Friend request sent to ... */}
+                        {outgoingRequests.length > 0 && (
+                            <div>
+                                <div className="text-xs font-medium text-gray-700 mb-2">Friend request sent to</div>
+                                <div className="space-y-2">
+                                    {outgoingRequests.map((req) => (
+                                        <div key={`out-${req.id}-${req.username}`} className="flex items-center justify-between p-2 bg-blue-50/80 border border-blue-200/80 rounded">
+                                            <span className="text-sm font-medium text-gray-900">{req.username}</span>
+                                            <button
+                                                onClick={() => cancelRequest(req.username)}
+                                                className="text-gray-600 hover:text-gray-800 text-sm bg-white/80 rounded px-2 py-1"
+                                                title="Cancel request"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Friends list */}
+                        <div>
+                            <div className="text-xs font-medium text-gray-700 mb-2">Friends</div>
+                            {friends.filter((f) => f.username?.trim()).length === 0 ? (
+                                <div className="text-center text-gray-600 text-sm py-3">
+                                    No friends yet. Send a request or accept one from the sections above!
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    {friends.filter((f) => f.username?.trim()).map((friend) => (
+                                        <div key={friend.id} className="flex items-center justify-between p-2 bg-white/30 backdrop-blur-sm border border-white/20 rounded">
+                                            <div className="flex items-center space-x-2">
+                                                <div className={`w-2 h-2 rounded-full ${onlineUsers.includes(friend.username) ? 'bg-green-500' : 'bg-gray-400'}`} title={onlineUsers.includes(friend.username) ? 'Online' : 'Offline'}></div>
+                                                <span className="text-sm font-medium text-gray-900">{friend.username}</span>
+                                            </div>
+                                            <div className="flex items-center space-x-1">
+                                                <button
+                                                    onClick={() => startPrivateChat(friend.username)}
+                                                    className="text-purple-600 hover:text-purple-800 text-sm bg-white/50 rounded px-2 py-1"
+                                                    title="Private chat"
+                                                >
+                                                    💬
+                                                </button>
+                                                <button
+                                                    onClick={() => confirmAction('remove', friend.username)}
+                                                    className="text-red-600 hover:text-red-800 text-sm bg-white/50 rounded px-2 py-1"
+                                                    title="Remove friend"
+                                                >
+                                                    🗑️
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Send request: Quick add from recent users */}
+                        <div className="pt-3 border-t border-white/20">
+                            <div className="text-xs text-gray-700 mb-2">Send request to recent users:</div>
+                            <div className="space-y-1">
+                                {getUniqueUsernames()
+                                    .filter(username => !friends.some(f => f.username === username))
+                                    .filter(username => !outgoingRequests.some(r => r.username === username))
+                                    .filter(username => !blockedUsers.includes(username))
+                                    .slice(0, 5)
+                                    .map(username => (
+                                        <button
+                                            key={username}
+                                            onClick={() => sendFriendRequest(username)}
+                                            className="block w-full text-left text-sm text-blue-700 hover:text-blue-900 hover:bg-white/30 px-2 py-1 rounded bg-white/20"
+                                        >
+                                            + Send request to {username}
+                                        </button>
+                                    ))}
+                            </div>
                         </div>
                     </div>
                 </div>
