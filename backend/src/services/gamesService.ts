@@ -134,7 +134,7 @@ export const gamesService = {
 						ELSE games.score_player2
 					END score_opp
 				FROM games
-				WHERE games.player1_id = @player_id OR games.player2_id = @player_id
+				WHERE (games.player1_id = @player_id OR games.player2_id = @player_id) AND games.status = 'finished'
 			),
 			view_winner AS (
 				SELECT
