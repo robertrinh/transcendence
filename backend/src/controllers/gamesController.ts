@@ -98,5 +98,10 @@ export const gamesController = {
 			success: true,
 			message: 'Game finished'
 		}
+	},
+	
+	getLeaderboard: async () => {
+		const leaderboard = gamesService.getLeaderboard();
+		return {success: true, data: leaderboard }
 	}
 }

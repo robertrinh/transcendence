@@ -68,4 +68,10 @@ export default async function gamesRoutes (
 			params: IDSchema,
 			body: finishGameSchema,
 		}}, gamesController.finishGame);
+
+	fastify.get('/leaderboard', {
+		schema: {
+			tags: ['games'],
+			summary: 'Get the leaderboard',
+		}}, gamesController.getLeaderboard);
 }

@@ -1,7 +1,7 @@
 import { db } from '../databaseInit.js'
 import { dbError } from '../error/dbErrors.js'
 import { ApiError } from '../error/errors.js';
-import { Player, Queue, Game } from '../types/database.interfaces.js'
+import { Player, Queue, Game, LeaderBoard } from '../types/database.interfaces.js'
 
 const TIMEOUT_MATCHMAKING = 30000 //in millisec
 
@@ -108,7 +108,39 @@ export const gamesService = {
 		catch (err:any) {
 			dbError(err);
 		}
+	},
+
+	getLeaderboard: () => {
+
+		return db.prepare(`WITH player_games AS (
+			SELECT 
+				player1_id AS player_id,
+				winner_id
+			FROM games WHERE status = 'finished'
+			UNION ALL
+			SELECT 
+				player2_id AS player_id,
+				winner_id 
+			FROM games WHERE status = 'finished'
+			)
+			SELECT 
+				users.username,
+				SUM (CASE player_id
+					WHEN winner_id
+						THEN 1
+					ELSE 0
+				END) as wins, 
+				SUM (CASE player_id
+					WHEN winner_id
+						THEN 0
+					ELSE 1
+				END) as losses 
+			FROM player_games 
+			JOIN users ON player_id = users.id
+			GROUP BY player_id
+			ORDER BY wins DESC`).all() as LeaderBoard[]
 	}
+
 }
 
 function generateLobbyId(): string {
