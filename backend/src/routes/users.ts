@@ -69,6 +69,14 @@ export default async function usersRoutes (
         }, preHandler: [authenticate, requireNonGuest]
     }, userController.updateProfile);
 
+    fastify.get('/username/:id', {
+        schema: {
+            security: [{ bearerAuth: [] }],
+            tags: ['users'],
+            summary: "Get the username from a user by id or 'Anonymous' if the user is anonymized"
+        }, preHandler: [authenticate]
+    }, userController.getUserNameByID)
+
     fastify.delete('/me', {
         schema: {
             security: [{ bearerAuth: [] }],

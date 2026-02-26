@@ -57,6 +57,12 @@ export const userController = {
         return { success: true, profile: user };
     },
 
+    getUserNameByID: async (req: FastifyRequest, reply: FastifyReply) => {
+        const { id } = req.params as { id: number };
+        const userName = userService.fetchUserName(id)
+        return { success: true, username: userName}
+    },
+
     //ANONYMIZE PROFILE
     anonymizeProfile: async (req: FastifyRequest, reply: FastifyReply) => {
         const userId = req.user!.userId;
