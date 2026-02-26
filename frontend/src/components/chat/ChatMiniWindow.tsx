@@ -141,7 +141,6 @@ if (user.is_anonymous) {
         }
     };
 
-    //* connect to SSE on component mount + load friends/blocked
     useEffect(() => {
         connectSSE();
         loadFriendsAndBlocked();
@@ -152,7 +151,6 @@ if (user.is_anonymous) {
         };
     }, [user]);
 
-    //* when viewing as guest, don't stay on Friends tab
     useEffect(() => {
         if (user.is_guest && activeTab === 'friends') {
             setActiveTab('chat');
@@ -166,8 +164,8 @@ if (user.is_anonymous) {
         }
     }, [activeTab]);
 
-	//* Checks status of friend request with a poll	
-    const FRIENDS_POLL_MS = 5000; // 5 seconds
+	//* Checks status of friend request with a poll
+    const FRIENDS_POLL_MS = 5000; //* 5 seconds
     useEffect(() => {
         if (activeTab !== 'friends' || user.is_guest) 
 			return;
@@ -177,7 +175,6 @@ if (user.is_anonymous) {
         return () => clearInterval(interval);
     }, [activeTab, user.is_guest]);
 
-    // NEW: Helper to connect to SSE stream
     const connectSSE = () => {
         try {
             if (user.is_anonymous) {
@@ -194,7 +191,6 @@ if (user.is_anonymous) {
             }
 
             console.log('🔗 Connecting to SSE with token...');
-            //  Pass token as query parameter
             const sseUrl = `/api/chat/stream?token=${token}`;
             console.log('📡 SSE URL:', sseUrl);
             

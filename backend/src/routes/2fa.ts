@@ -8,7 +8,6 @@ import { generateToken } from "../auth/utils.js";
 export default async function twofaRoutes(
 	fastify: FastifyInstance
 ) {
-	//* Generate QR code
 	fastify.post('/auth/2fa/setup', {
 		schema: {
 			tags: ['auth', '2fa'],
@@ -18,7 +17,6 @@ export default async function twofaRoutes(
 	}, async (request, reply) => {
 		const { userId, username } = request.user! as { userId: number, username: string };
 
-		//* check if 2FA is already enabled
 		const user = db.prepare('SELECT two_factor_enabled FROM users WHERE id = ?').get(userId) as { two_factor_enabled: number } | undefined
 		if (user?.two_factor_enabled === 1) {
 			return reply.code(400).send({
