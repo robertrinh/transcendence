@@ -147,9 +147,7 @@ export default function GameUI({
         case 'ready-room':
             return <ReadyRoom
                         gameData={gameData}
-                        websocket={websocket}
                         gameMode={gameMode}
-                        lobbyId={lobbyId}
                         currentUser={currentUser}
                         onBothReady={() => setScreen('countdown')}
                         onBack={() => { setScreen('online'); resetPlayerStatus() }}

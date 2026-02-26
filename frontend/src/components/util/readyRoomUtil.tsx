@@ -3,9 +3,7 @@ import { fetchWithAuth } from '../../config/api'
 
 interface ReadyRoomProps {
   gameData: any
-  websocket: React.RefObject<WebSocket | null>
   gameMode: string
-  lobbyId: string
   currentUser: any
   onBothReady: () => void
   onBack: () => void
