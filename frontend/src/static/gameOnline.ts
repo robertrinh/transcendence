@@ -279,12 +279,6 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
             case "OPPONENT_DISCONNECT":
                 console.log('❌ Opponent disconnected')
                 cleanup()
-                window.dispatchEvent(new CustomEvent('game-over', {
-                    detail: {
-                        winnerId: null,
-                        disconnect: true
-                    }
-                }))
                 break
             case "ERROR":
                 console.error('🚨 Game error:', JSONObject.message)

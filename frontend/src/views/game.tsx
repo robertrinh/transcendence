@@ -145,16 +145,6 @@ export default function Game() {
           player1Label: detail.player1Label,
           player2Label: detail.player2Label,
         })
-      } else if (detail.disconnect) {
-        // Online game — opponent disconnected
-        setGameResult({
-          gameMode: 'online',
-          winnerLabel: 'YOU WIN!',
-          scorePlayer1: 0,
-          scorePlayer2: 0,
-          player1Label: 'OPPONENT',
-          player2Label: 'YOU',
-        })
       } else if (detail.error) {
         // Error
         setGameResult({
