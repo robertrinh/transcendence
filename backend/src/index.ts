@@ -13,17 +13,17 @@ const start = async () => {
         const prodURL = `https://${process.env.HOST}:${process.env.NGINX_PORT}`
         console.log(
             `Development access points:\n` + 
-            `\t - 🚀 Backend server running on ${devBackendURL}\n` +
-            `\t - 📝 API Documentation available at ${devBackendURL}/api/docs\n` +
-            `\t - 🌐 Frontend should be accessible at ${devFrontendURL}\n` +
-            `\t - 📡 SSE Chat endpoint: ${devBackendURL}/api/chat/stream?token=YOUR_JWT_TOKEN\n` + 
+            `\t - Backend server running on ${devBackendURL}\n` +
+            `\t - API Documentation available at ${devBackendURL}/api/docs\n` +
+            `\t - Frontend should be accessible at ${devFrontendURL}\n` +
+            `\t - SSE Chat endpoint: ${devBackendURL}/api/chat/stream?token=YOUR_JWT_TOKEN\n` + 
             `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
         )
         console.log(
             `Production access points:\n` + 
-            `\t - 📝 API Documentation available at ${prodURL}/api/docs\n` +
-            `\t - 🌐 Frontend should be accessible at ${prodURL}\n` +
-            `\t - 📡 SSE Chat endpoint: ${prodURL}/api/chat/stream?token=YOUR_JWT_TOKEN\n` + 
+            `\t - API Documentation available at ${prodURL}/api/docs\n` +
+            `\t - Frontend should be accessible at ${prodURL}\n` +
+            `\t - SSE Chat endpoint: ${prodURL}/api/chat/stream?token=YOUR_JWT_TOKEN\n` + 
             `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
         )
         dbCleanUpJob();

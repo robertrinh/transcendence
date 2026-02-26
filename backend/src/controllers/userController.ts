@@ -189,14 +189,14 @@ export const userController = {
 
             // Delete user and related data
             const deleteResult = userService.deleteUser(userId);
-            console.log('✅ User deleted:', userId, deleteResult);
+            console.log('User deleted:', userId, deleteResult);
 
             return reply.status(200).send({
                 success: true,
                 message: 'Account deleted successfully'
             });
         } catch (error: any) {
-            console.error('❌ Error deleting user:', error.message, error.stack);
+            console.error('Error deleting user:', error.message, error.stack);
             return reply.status(500).send({
                 error: 'Failed to delete account',
                 details: error.message
