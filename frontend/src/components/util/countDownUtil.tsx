@@ -16,7 +16,6 @@ export default function CountdownScreen({
   currentUserId,
 }: CountdownScreenProps) {
   const [count, setCount] = useState(3)
-  const [wsReady, setWsReady] = useState(false)
 
   const getModeLabel = () => {
     switch (gameMode) {
@@ -29,60 +28,25 @@ export default function CountdownScreen({
 
   // Connect WebSocket for online games
   useEffect(() => {
+    if (!websocket.current) {
+      throw Error("Missing WebSocket connection in CountdownScreen component")
+    }
     if (gameMode !== 'online' || !gameData?.id) {
-      setWsReady(true)
       return
     }
-
-    const token = localStorage.getItem('token')
-    if (!token) {
-      console.error('❌ No token for WebSocket connection')
-      return
-    }
-
-    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
-    const host = window.location.hostname
-    const port = window.location.port
-    const wsUrl = `${protocol}://${host}:${port}/ws/${token}`
-    
-    console.log('🔌 Connecting to game server:', wsUrl)
-    
-    const ws = new WebSocket(wsUrl)
-
     // Buffer any messages received during countdown so GameCanvas can replay them
     const bufferedMessages: MessageEvent[] = []
-    ws.onmessage = (event) => {
-      console.log('📩 Buffered message during countdown:', event.data)
+    websocket.current.onmessage = (event) => {
       bufferedMessages.push(event)
     }
     // Attach buffer to websocket so GameCanvas can access it
-    ;(ws as any).__bufferedMessages = bufferedMessages
-    
-    ws.onopen = () => {
-      console.log('✅ WebSocket connected to game server')
-      ws.send(JSON.stringify({
-        type: 'START_GAME',
-        game_id: gameData.id,
-        player1_id: gameData.player1_id,
-        player2_id: gameData.player2_id
-      }))
-      console.log('📤 Sent START_GAME:', {
-        game_id: gameData.id,
-        player1_id: gameData.player1_id,
-        player2_id: gameData.player2_id
-      })
-      websocket.current = ws
-      setWsReady(true)
-    }
-
-    ws.onerror = (err) => {
-      console.error('❌ WebSocket error:', err)
-    }
-
-    ws.onclose = () => {
-      console.log('🔌 WebSocket closed')
-    }
-
+    (websocket.current as any).__bufferedMessages = bufferedMessages
+    websocket.current!.send(JSON.stringify({
+      type: 'START_GAME',
+      game_id: gameData.id,
+      player1_id: gameData.player1_id,
+      player2_id: gameData.player2_id
+    }))
     return () => {
       // Don't close — GameCanvas needs it
     }
@@ -90,8 +54,6 @@ export default function CountdownScreen({
 
   // Countdown timer
   useEffect(() => {
-    if (!wsReady) return
-    
     if (count <= 0) {
       const goTimer = setTimeout(() => {
         onCountdownComplete()
@@ -104,7 +66,7 @@ export default function CountdownScreen({
     }, 1000)
 
     return () => clearTimeout(timer)
-  }, [count, onCountdownComplete, wsReady])
+  }, [count, onCountdownComplete])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black p-4" style={{

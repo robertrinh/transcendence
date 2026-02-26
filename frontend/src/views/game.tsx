@@ -26,6 +26,55 @@ export default function Game() {
   const isTournamentMatchRef = useRef(false)
   const [gameResult, setGameResult] = useState<GameResult | null>(null)
   const gameModeRef = useRef<GameMode>("none")
+  const [websocketState, setWebsocketState] = useState<number>(WebSocket.CONNECTING)
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      throw Error('Missing JWT token')
+    }
+    const host = window.location.hostname
+    const port = window.location.port
+    const wsUrl = `wss://${host}:${port}/ws/${token}`
+    websocket.current = new WebSocket(wsUrl)
+    websocket.current.onopen = () => {
+      setWebsocketState(WebSocket.OPEN)
+    }
+    websocket.current.onerror = () => {
+      setWebsocketState(WebSocket.CLOSED)
+    }
+    websocket.current.onclose = (event: CloseEvent) => {
+      if (event.reason.length > 0) {
+        setError(event.reason)
+      }
+      setWebsocketState(WebSocket.CLOSED)
+    }
+    return () => {
+      if (!websocket.current) {
+        return
+      }
+      websocket.current.close()
+    }
+  }, [])
+
+  useEffect(() => {
+    switch (websocketState) {
+      case WebSocket.CLOSED:
+        if (error) {
+          setScreen('error')
+        }
+        else {
+          setScreen('websocket-closed')
+        }
+        break
+      case WebSocket.CONNECTING:
+        setScreen('websocket-connecting')
+        break
+      case WebSocket.OPEN:
+        setScreen('main')
+        break
+    }
+  }, [websocketState])
 
   // Keep refs in sync
   useEffect(() => {
@@ -58,17 +107,7 @@ export default function Game() {
       const detail = (event as CustomEvent).detail
       console.log('🏁 Game over event received:', detail)
       console.log('🏆 isTournamentMatch (ref):', isTournamentMatchRef.current)
-      
-      // Close websocket before state changes to prevent disconnect events
-      if (websocket.current) {
-        const ws = websocket.current
-        ws.onmessage = null
-        ws.onclose = null
-        ws.onerror = null
-        ws.close()
-        websocket.current = null
-      }
-
+ 
       if (isTournamentMatchRef.current) {
         console.log('🏆 Returning to tournament bracket...')
         setScreen('tournament-bracket')
@@ -306,13 +345,6 @@ export default function Game() {
   }, [])
 
   const handleTournamentFinished = useCallback(() => {
-    console.log('🏆 Tournament finished!')
-    if (websocket.current) {
-      websocket.current.onmessage = null
-      websocket.current.onclose = null
-      websocket.current.close()
-      websocket.current = null
-    }
     setTournamentId(null)
     isTournamentMatchRef.current = false
     setGameMode('none')
