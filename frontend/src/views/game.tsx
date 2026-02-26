@@ -156,24 +156,15 @@ export default function Game() {
           player1Label: '-',
           player2Label: '-',
         })
-      } else if (detail.winnerId !== undefined) {
+      } else if (detail.winnerId !== undefined && gameData) {
         // Online game — normal finish
         const myId = currentUserRef.current?.id
         const iWon = Number(detail.winnerId) === Number(myId)
-        let scoreMe, scoreOpponent, labelMe, labelOpponent;
-        // Make sure player1Id/player2Id are present in detail
-        if (Number(detail.player1Id) === Number(myId)) {
-          scoreMe = detail.scorePlayer1 ?? 0;
-          scoreOpponent = detail.scorePlayer2 ?? 0;
-          labelMe = 'YOU';
-          labelOpponent = oppUserName;
-        } else {
-          scoreMe = detail.scorePlayer2 ?? 0;
-          scoreOpponent = detail.scorePlayer1 ?? 0;
-          labelMe = 'YOU';
-          labelOpponent = oppUserName;
-        }
-        setGameResult({
+        const scoreMe = gameData.player1_id === myId ? detail.scorePlayer1: detail.scorePlayer2
+        const scoreOpponent = gameData.player1_id === myId ? detail.scorePlayer2: detail.scorePlayer1
+        const labelMe = 'YOU'
+        const labelOpponent = oppUserName;
+       setGameResult({
           gameMode: 'online',
           winnerLabel: iWon ? 'YOU WIN!' : 'YOU LOST!',
           scorePlayer1: scoreOpponent,
