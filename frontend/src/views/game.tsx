@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react"
 import GameUI from "../components/game/gameUI.tsx"
 import { fetchWithAuth } from '../config/api'
 import type { GameMode, Screen } from "../components/game/types.ts"
+import { type Game, type User } from "../types/database.interfaces.ts"
 
 interface GameResult {
   gameMode: string
@@ -17,12 +18,12 @@ export default function Game() {
   const [screen, setScreen] = useState<Screen>("main")
   const [lobbyId, setLobbyId] = useState<string>("")
   const [error, setError] = useState<string | null>(null)
-  const [gameData, setGameData] = useState<any>(null)
+  const [gameData, setGameData] = useState<Game | null>(null)
   const websocket = useRef<WebSocket | null>(null)
   const [tournamentId, setTournamentId] = useState<number | null>(null)
   const [selectedBracketSize, setSelectedBracketSize] = useState<number>(4)
-  const [currentUser, setCurrentUser] = useState<any>(null)
-  const currentUserRef = useRef<any>(null)
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
+  const currentUserRef = useRef<User | null>(null)
   const isTournamentMatchRef = useRef(false)
   const [gameResult, setGameResult] = useState<GameResult | null>(null)
   const gameModeRef = useRef<GameMode>("none")

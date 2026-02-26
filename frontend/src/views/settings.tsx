@@ -4,18 +4,7 @@ import { fetchWithAuth } from '../config/api';
 import { getAvatarUrl } from '../components/util/profileUtils';
 import TwoFactorSetup from '../components/auth/TwoFactorSetup';
 import PrivacyPolicy from './privacy';
-
-interface User {
-    id: string;
-    username: string;
-    email?: string;
-    nickname?: string;
-    display_name?: string;
-    avatar_url?: string;
-    two_factor_enabled?: boolean;
-    is_anonymous?: boolean;
-    is_guest?: boolean;
-}
+import { type User } from '../types/database.interfaces';
 
 interface SettingsProps {
     user: User | null;

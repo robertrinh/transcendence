@@ -1,23 +1,12 @@
 import { useState, useEffect } from 'react'
 import { fetchWithAuth } from '../../config/api'
+import { type TournamentParticipant, type Game } from '../../types/database.interfaces'
 
 interface TournamentBracketProps {
     tournamentId: number | null
     onPlayMatch: (gameId: number) => void
     onTournamentFinished: (winnerId: number) => void
     currentUserId?: number
-}
-
-interface Game {
-    id: number
-    tournament_id: number
-    round: number
-    player1_id: number | null
-    player2_id: number | null
-    winner_id: number | null
-    status: string
-    score_player1: number | null
-    score_player2: number | null
 }
 
 export default function TournamentBracket({

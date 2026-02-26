@@ -1,10 +1,5 @@
 import React from 'react';
-
-interface User {
-    id: string;
-    username: string;
-    email?: string;
-}
+import { type User } from '../types/database.interfaces';
 
 interface TournamentsProps {
     user: User | null;
