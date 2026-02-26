@@ -15,6 +15,30 @@ export default function Game() {
   const [currentUser, setCurrentUser] = useState<any>(null)
   const isTournamentMatchRef = useRef(false)
 
+  const stateKiller = () => {
+      if (websocket.current) {
+        const ws = websocket.current
+        ws.onmessage = null
+        ws.onclose = null
+        ws.onerror = null
+        ws.close()
+        websocket.current = null
+      }
+      setScreen('main')
+      setGameMode('none')
+      setGameData(null)
+      setError(null)
+  }
+
+  useEffect(() => {
+    return () => {
+      stateKiller(); 
+      if (screen != 'game' && screen != 'countdown') {
+        resetPlayerStatus()
+      }
+    }
+  }, [])
+
   // Fetch current user on mount
   useEffect(() => {
     const fetchUser = async () => {
