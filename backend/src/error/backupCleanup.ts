@@ -31,7 +31,7 @@ export function  dbCleanUpJob () {
 
         const result = db.prepare(`
         UPDATE users SET status = 'idle'
-        WHERE status IN ('playing', 'matched')
+        WHERE status IN ('playing')
         AND id NOT IN (
             SELECT player1_id FROM games WHERE status = 'ready'
             UNION

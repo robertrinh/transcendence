@@ -33,11 +33,6 @@ export interface Game {
 	finished_at?: string;
 }
 
-export interface DatabaseRunResult {
-	changes: number;
-	lastInsertRowid: number | bigint;
-}
-
 export interface Player {
 	id: number;
 	status: 'searching' | 'playing';
