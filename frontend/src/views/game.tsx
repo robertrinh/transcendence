@@ -26,6 +26,7 @@ export default function Game() {
   const isTournamentMatchRef = useRef(false)
   const [gameResult, setGameResult] = useState<GameResult | null>(null)
   const gameModeRef = useRef<GameMode>("none")
+  const [oppUserName, setOppUserName] = useState<string>('UNKNOWN')
   const [websocketState, setWebsocketState] = useState<number>(WebSocket.CONNECTING)
 
   useEffect(() => {
@@ -100,6 +101,23 @@ export default function Game() {
     }
     fetchUser()
   }, [])
+  
+  useEffect(() => {
+    if (!gameData || !currentUser) {
+      return
+    }
+    const getOppUserName = async () => {
+      const oppID = currentUser.id === gameData.player1_id ? gameData.player2_id: gameData.player1_id
+      const response = await fetchWithAuth(`/api/users/username/${oppID}`)
+      if (!response.ok) {
+        return
+      }
+      const data = await response.json()
+      const oppUsername = data.username
+      setOppUserName(oppUsername)
+    }
+    getOppUserName()
+  }, [gameData, currentUser])
 
   // Listen for game-over events from the pong game
   useEffect(() => {
@@ -157,12 +175,12 @@ export default function Game() {
           scoreMe = detail.scorePlayer1 ?? 0;
           scoreOpponent = detail.scorePlayer2 ?? 0;
           labelMe = 'YOU';
-          labelOpponent = 'OPPONENT';
+          labelOpponent = oppUserName;
         } else {
           scoreMe = detail.scorePlayer2 ?? 0;
           scoreOpponent = detail.scorePlayer1 ?? 0;
           labelMe = 'YOU';
-          labelOpponent = 'OPPONENT';
+          labelOpponent = oppUserName;
         }
         setGameResult({
           gameMode: 'online',
@@ -189,7 +207,7 @@ export default function Game() {
     return () => {
       window.removeEventListener('game-over', handleGameOver)
     }
-  }, [])
+  }, [gameData, oppUserName])
 
   useEffect(() => {
     const handleOnBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -366,6 +384,7 @@ export default function Game() {
           currentUser={currentUser}
           isTournamentMatch={isTournamentMatchRef.current}
           gameResult={gameResult}
+          oppUserName={oppUserName}
           handleBackToMenu={handleBackToMenu}
 
           setScreen={setScreen}
