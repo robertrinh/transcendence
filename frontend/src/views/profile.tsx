@@ -61,7 +61,10 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
     if (!displayUser) {
         return <div className="p-6 text-center text-slate-400">No user data available</div>;
     }
-    const winRate = calculateWinRate(displayUser.wins || 0, displayUser.total_games || 0);
+    const wins = displayUser.wins ?? 0;
+    const losses = displayUser.losses ?? 0;
+    const totalGames = displayUser.total_games ?? wins + losses;
+    const winRate = calculateWinRate(wins, totalGames);
     const avatarUrl = getAvatarUrl(displayUser.avatar_url);
 
     return (
