@@ -81,27 +81,16 @@ export default function CountdownScreen({
         }}>
           {getModeLabel()}
         </p>
-
-        {!wsReady && gameMode === 'online' ? (
-          <div className="text-yellow-300 text-3xl font-bold animate-pulse" style={{
-            fontFamily: 'monospace',
-            textShadow: '0 0 10px #ffff00'
-          }}>
-            CONNECTING TO SERVER...
-          </div>
-        ) : (
-          <div className="text-9xl font-black mb-8" style={{
-            color: count === 1 ? '#ff0000' : count === 0 ? '#00ffff' : '#00ff00',
-            textShadow: count === 1 
-              ? '0 0 30px #ff0000, 0 0 60px #ff0000' 
-              : '0 0 30px #00ff00, 0 0 60px #00ff00',
-            fontFamily: 'monospace',
-            animation: count === 0 ? 'none' : 'pulse 1s infinite'
-          }}>
-            {count > 0 ? count : 'GO!'}
-          </div>
-        )}
-
+        <div className="text-9xl font-black mb-8" style={{
+          color: count === 1 ? '#ff0000' : count === 0 ? '#00ffff' : '#00ff00',
+          textShadow: count === 1 
+            ? '0 0 30px #ff0000, 0 0 60px #ff0000' 
+            : '0 0 30px #00ff00, 0 0 60px #00ff00',
+          fontFamily: 'monospace',
+          animation: count === 0 ? 'none' : 'pulse 1s infinite'
+        }}>
+          {count > 0 ? count : 'GO!'}
+        </div>
         <style>{`
           @keyframes pulse {
             0%, 100% { transform: scale(1); }
