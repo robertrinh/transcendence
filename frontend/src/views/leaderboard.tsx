@@ -77,11 +77,11 @@ export const Leaderboard: React.FC = () => {
                             <tbody className="divide-y divide-white/20">
                                 {leaderboardData.map((player, index) => (
                                     <tr key={player.username} className="hover:bg-white/20 backdrop-blur-sm">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{index + 1}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{player.username}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">{player.wins}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">{player.losses}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">#{index + 1}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{player.username}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-acidGreen">{player.wins}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-red">{player.losses}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-brand-purple">
                                             {player.wins + player.losses == 0 ? '0.0' : ((player.wins / (player.wins + player.losses)) * 100).toFixed(1)}%
                                         </td>
                                     </tr>
