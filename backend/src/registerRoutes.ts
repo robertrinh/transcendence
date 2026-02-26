@@ -19,7 +19,6 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 
-// Register multipart
 export async function registerRoutes() {
 
 	await server.register(multipart, {
@@ -43,7 +42,7 @@ export async function registerRoutes() {
 			}
 		}
 		},
-		security: [{ bearerAuth: [] }] // Apply globally to all routes
+		security: [{ bearerAuth: [] }]
 	}
 	})
 	
@@ -51,7 +50,6 @@ export async function registerRoutes() {
 	routePrefix: '/api/docs'
 	})
 	
-	//* User logic routes
 	server.register(
 	usersRoutes, {
 		prefix: '/api/users'
@@ -63,20 +61,18 @@ export async function registerRoutes() {
 		prefix: '/api/avatars/',
 	});
 	
-	// Auth routes
 	server.register(
 		authRoutes, {
 			prefix: "/api"
 		}
 	);
 	
-	//* 2FA routes
 	server.register(
 		twofaRoutes, {
 			prefix: "/api"
 		}
 	)
-	// Register database routes
+
 	server.register(
 		databaseRoutes, {
 			prefix: '/api/db'
