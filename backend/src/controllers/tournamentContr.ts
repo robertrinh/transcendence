@@ -49,7 +49,6 @@ export const tournamentController = {
 			throw new ApiError(400, 'tournament full');
 		tournamentService.joinTournament(id, user_id);
 
-		//(HOW DOES THIS WORK WITH COMMUNICATING with THE FRONTEND that it is starting?) : CHECK
 		if (participants.length + 1 === tournament.max_participants) {
 			const allParticipants = tournamentService.getTournamentParticipants(id) as TournamentParticipant[];
 			tournamentService.startTournament(id, allParticipants);
@@ -57,16 +56,6 @@ export const tournamentController = {
 		}
 		return {success: true, message: 'Player joined tournament!'}
 	},
-
-	//only GAMESERVER ALLOWED --> add auth token!
-	updateTournament: async (req: FastifyRequest, reply: FastifyReply) => {
-        const { id } = req.params as { id: number };
-        const tournament = tournamentService.getTournamentByID(id) as Tournament;
-        if (!tournament)
-            throw new ApiError(404, 'Tournament not found');
-
-        return { success: true, message: `Tournament ${id} status: ${tournament.status}` }
-    },
 
 	deleteTournament: async (req: FastifyRequest, reply: FastifyReply) => {
 		const { id } = req.params as { id: number };
@@ -76,8 +65,6 @@ export const tournamentController = {
 		return {success: true, message: 'Tournament deleted'}
 	},
 
-	//can a player leave when tournament.status === 'ongoing' ? --> what happens then - maybe it means immediate win for the opponent? 
-	//or only allow when tournament.status === 'open'?
 	leaveTournament: async (req: FastifyRequest, reply: FastifyReply) => {
 		const { id } = req.params as {id: number};
 		const user_id = req.user!.userId;
@@ -85,7 +72,6 @@ export const tournamentController = {
 		return {success: true, message: 'Player left tournament!'}
 	},
 
-	//make the errors explicit.
 	getTournamentParticipants: async (req: FastifyRequest, reply: FastifyReply) => {
 		const { id } = req.params as { id: number };
 		const participants = tournamentService.getTournamentParticipants(id);

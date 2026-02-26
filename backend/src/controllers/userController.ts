@@ -19,11 +19,6 @@ try {
 
 export const userController = {
 
-    getAllUsers: async () => {
-        const users = userService.fetchAllUsers();
-        return {success: true, users }
-    },
-
     createUser: async (req: FastifyRequest, reply: FastifyReply) => {
         const { username, password } = req.body as { username: string, password: string};
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -57,21 +52,16 @@ export const userController = {
         return { success: true, profile: user };
     },
 
-    //ANONYMIZE PROFILE
     anonymizeProfile: async (req: FastifyRequest, reply: FastifyReply) => {
         const userId = req.user!.userId;
-        
-        // Check if already anonymous
         if (userService.isUserAnonymous(userId)) {
             throw new ApiError(400, 'Profile is already anonymized', 'ALREADY_ANONYMOUS');
         }
 
         const result = userService.anonymizeProfile(userId);
-        
         if (!result) {
             throw new ApiError(500, 'Failed to anonymize profile', 'ANONYMIZE_FAILED');
         }
-
         return {
             success: true,
             message: 'Profile anonymized successfully.',
@@ -199,14 +189,14 @@ export const userController = {
 
             // Delete user and related data
             const deleteResult = userService.deleteUser(userId);
-            console.log('✅ User deleted:', userId, deleteResult);
+            console.log('User deleted:', userId, deleteResult);
 
             return reply.status(200).send({
                 success: true,
                 message: 'Account deleted successfully'
             });
         } catch (error: any) {
-            console.error('❌ Error deleting user:', error.message, error.stack);
+            console.error('Error deleting user:', error.message, error.stack);
             return reply.status(500).send({
                 error: 'Failed to delete account',
                 details: error.message

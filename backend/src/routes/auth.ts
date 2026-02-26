@@ -1,7 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyReply } from 'fastify'
 import { db } from '../databaseInit.js'
 import bcrypt from 'bcrypt'
-import { authenticate } from '../auth/middleware.js'
 import { generateToken, verifyToken } from '../auth/utils.js'
 
 async function registerGuest(
