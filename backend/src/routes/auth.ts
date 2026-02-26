@@ -14,7 +14,7 @@ async function registerGuest(
 	return reply.code(200).send({
 		success: true,
 		token: token,
-		user: { id: result.lastInsertRowid, username: username },
+		user: { id: result.lastInsertRowid, username: username, is_guest: true },
 		message: 'Guest registration successful for ' + username
 	})
 }

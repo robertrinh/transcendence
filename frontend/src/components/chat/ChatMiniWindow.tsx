@@ -92,7 +92,7 @@ if (user.is_anonymous) {
     //* load friends and blocked from API (guests only get blocked list)
     const loadFriendsAndBlocked = async () => {
         try {
-            if (user.is_guest) {
+            if (user.is_guest !== false) {
                 const blockedRes = await fetchWithAuth('/api/friends/blocked');
                 if (blockedRes.ok) {
                     const data = await blockedRes.json();
