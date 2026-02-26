@@ -37,6 +37,23 @@ export const Leaderboard: React.FC = () => {
     if (!leaderboardData) {
         return <div className="p-6 text-center text-gray-500">Leaderboard is not available</div>;
     }
+    if (leaderboardData.length === 0) {
+        return (
+            <div className="p-6">
+                <h1 className="text-4xl font-bold text-center mb-8 text-brand-acidGreen">Leaderboard</h1>
+                <div className="max-w-4xl mx-auto">
+                    <div className="bg-slate-800 rounded-lg overflow-hidden border border-slate-600/70 shadow-lg">
+                        <div className="bg-slate-700/80 px-6 py-4 border-b border-slate-600/70">
+                            <h2 className="text-xl font-semibold text-white">Top Players</h2>
+                        </div>
+                        <div className="px-6 py-12 text-center">
+                            <p className="text-slate-300 text-lg">No players in the leaderboard yet. Go battle!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
     return (
         <div className="p-6">
             <h1 className="text-4xl font-bold text-center mb-8 text-brand-acidGreen">Leaderboard</h1>
