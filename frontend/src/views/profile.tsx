@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
-import { User, fetchUserProfile, getAvatarUrl, fetchUserGameHistory,
-    GameHistoryItem, calculateWinRate } from '../components/util/profileUtils';
 import { Navigate } from 'react-router-dom';
+import { User, fetchUserProfile, getAvatarUrl, fetchUserGameHistory,
+    GameHistoryItem, calculateWinRate, sortGameHistoryChronological } from '../components/util/profileUtils';
+import {
+    PieChart, Pie, ResponsiveContainer, LineChart, Line,
+	XAxis, YAxis, Tooltip, CartesianGrid, } from 'recharts';
 
 interface ProfileProps {
     user: User | null;
@@ -175,57 +178,142 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
                                 {totalGames === 0 && (
                                     <p className="text-center text-slate-500 mt-3 text-sm">No games played yet</p>
                                 )}
-            </div>
+                            </div>
                         )}
                         {statsTab === 'history' && (
                             <>
-                {gamesLoading ? (
-                    <div className="animate-pulse space-y-3">
-                        {[1, 2, 3].map((i) => (
-                            <div key={i} className="h-12 bg-slate-700/60 rounded-lg" />
-                        ))}
-                    </div>
-                ) : gameHistory.length === 0 ? (
-                    <p className="text-slate-500 text-center py-4">No games played yet</p>
-                ) : (
-                    <ul className="divide-y divide-slate-600/50">
-                        {gameHistory.map((game: GameHistoryItem) => {
-                            const isWinner = game.username_winner === displayUser.username;
-                                            const displayScoreOwn = game.score_own ?? '?';
-                            const diplayScoreOpp = game.score_opponent ?? '?';
-                            const dateStr = game.finished_at
-                                ? new Date(game.finished_at).toLocaleDateString(undefined, { dateStyle: 'medium' })
-                                : game.created_at
-                                    ? new Date(game.created_at).toLocaleDateString(undefined, { dateStyle: 'medium' })
-                                    : '—';
-                            return (
-                                                <li key={game.id} className="py-3 flex items-center justify-between gap-2">
-                                    <div className="flex-1 min-w-0">
-                                                        <span className="font-medium text-slate-200 truncate block text-sm">
-                                            vs {game.username_opponent ?? 'Unknown'}
-                                        </span>
-                                                        <span className="text-xs text-slate-500">{dateStr}</span>
+                                {gamesLoading ? (
+                                    <div className="animate-pulse space-y-3">
+                                        {[1, 2, 3].map((i) => (
+                                            <div key={i} className="h-12 bg-slate-700/60 rounded-lg" />
+                                        ))}
                                     </div>
+                                ) : gameHistory.length === 0 ? (
+                                    <p className="text-slate-500 text-center py-4">No games played yet</p>
+                                ) : (
+                                    <ul className="divide-y divide-slate-600/50">
+                                        {gameHistory.map((game: GameHistoryItem) => {
+                                            const isWinner = game.username_winner === displayUser.username;
+                                            const displayScoreOwn = game.score_own ?? '?';
+                                            const diplayScoreOpp = game.score_opponent ?? '?';
+                                            const dateStr = game.finished_at
+                                                ? new Date(game.finished_at).toLocaleDateString(undefined, { dateStyle: 'medium' })
+                                                : game.created_at
+                                                    ? new Date(game.created_at).toLocaleDateString(undefined, { dateStyle: 'medium' })
+                                                    : '—';
+                                            return (
+                                                <li key={game.id} className="py-3 flex items-center justify-between gap-2">
+                                                    <div className="flex-1 min-w-0">
+                                                        <span className="font-medium text-slate-200 truncate block text-sm">
+                                                            vs {game.username_opponent ?? 'Unknown'}
+                                                        </span>
+                                                        <span className="text-xs text-slate-500">{dateStr}</span>
+                                                    </div>
                                                     <div className="flex items-center gap-2 shrink-0">
                                                         <span className="text-slate-300 font-mono text-sm">
-                                            {displayScoreOwn} – {diplayScoreOpp}
-                                        </span>
-                                        <span
+                                                            {displayScoreOwn} – {diplayScoreOpp}
+                                                        </span>
+                                                        <span
                                                             className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                                isWinner ? 'bg-brand-acidGreen/20 text-brand-acidGreen' : 'bg-brand-red/20 text-brand-red'
-                                            }`}
-                                        >
-                                            {isWinner ? 'Win' : 'Loss'}
-                                        </span>
+                                                                isWinner ? 'bg-brand-acidGreen/20 text-brand-acidGreen' : 'bg-brand-red/20 text-brand-red'
+                                                            }`}
+                                                        >
+                                                            {isWinner ? 'Win' : 'Loss'}
+                                                        </span>
+                                                    </div>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                )}
+                                <p className="text-xs text-slate-500 mt-4 pt-3 border-t border-slate-600/50">
+                                    Match history consists of completed online games only.
+                                </p>
+                            </>
+                        )}
+                        {statsTab === 'graphs' && (() => {
+                            const pieData = [
+                                { name: 'Wins', value: wins, fill: '#00FF80' },
+                                { name: 'Losses', value: losses, fill: '#FF0040' },
+                            ].filter((data) => data.value > 0);
+                            const sortedHistory = sortGameHistoryChronological(gameHistory);
+                            const winRateOverGames = sortedHistory.map((_, i) => {
+                                const gamesPlayed = i + 1;
+                                const cumulativeWins = sortedHistory
+                                    .slice(0, i + 1)
+                                    .filter((game) => game.username_winner === displayUser.username).length;
+                                const winRate = (cumulativeWins / gamesPlayed) * 100;
+                                return { gamesPlayed, winRate: Math.round(winRate * 10) / 10, cumulativeWins };
+                            });
+                            if (totalGames === 0 && gameHistory.length === 0) {
+                                return (
+                                    <div className="py-6 text-center text-slate-500 text-sm">
+                                        No games played yet. Play some matches to see your stats here.
                                     </div>
-                                </li>
+                                );
+                            }
+                            return (
+                                <div className="space-y-6">
+                                    <div>
+                                        <h4 className="text-sm font-medium text-slate-300 mb-2">Wins vs losses</h4>
+                                        {totalGames === 0 ? (
+                                            <p className="text-slate-500 text-sm">No completed games yet</p>
+                                        ) : (
+                                            <div className="relative w-full" style={{ height: 200 }}>
+                                                <ResponsiveContainer width="100%" height={200}>
+                                                    <PieChart margin={{ top: 28, right: 28, bottom: 28, left: 28 }}>
+                                                        <Pie
+                                                            data={pieData}
+                                                            dataKey="value"
+                                                            nameKey="name"
+                                                            cx="50%"
+                                                            cy="50%"
+                                                            innerRadius={48}
+                                                            outerRadius={68}
+                                                            paddingAngle={2}
+                                                            label={({ name, value }) => `${name} ${value}`}
+                                                        />
+                                                    </PieChart>
+                                                </ResponsiveContainer>
+                                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                    <div className="text-center">
+                                                        <span className="text-2xl font-bold text-white tabular-nums">{totalGames}</span>
+                                                        <span className="block text-xs text-slate-400">games</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    {gameHistory.length > 0 && (
+                                        <div>
+                                            <h4 className="text-sm font-medium text-slate-300 mb-2">Win rate over games</h4>
+                                            <ResponsiveContainer width="100%" height={180}>
+                                                <LineChart data={winRateOverGames} margin={{ top: 8, right: 8, left: 4, bottom: 4 }}>
+                                                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                                                    <XAxis dataKey="gamesPlayed" tick={{ fill: '#94a3b8', fontSize: 10 }} />
+                                                    <YAxis domain={[0, 100]} tick={{ fill: '#94a3b8', fontSize: 10 }} tickFormatter={(value) => `${value}%`} />
+                                                    <Tooltip
+                                                        content={({ active, payload }) => {
+                                                            if (!active || !payload?.[0]) return null;
+                                                            const { gamesPlayed, winRate, cumulativeWins } = payload[0].payload;
+                                                            const losses = gamesPlayed - cumulativeWins;
+                                                            return (
+                                                                <span className="bg-slate-700 text-slate-200 text-xs px-2 py-1 rounded">
+                                                                    Total played: {gamesPlayed} · {winRate}% ({cumulativeWins}W–{losses}L)
+                                                                </span>
+                                                            );
+                                                        }}
+                                                    />
+                                                    <Line type="monotone" dataKey="winRate" stroke="#9D00FF" strokeWidth={2} dot={{ fill: '#9D00FF', r: 4 }} activeDot={{ r: 6 }} />
+                                                </LineChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    )}
+                                </div>
                             );
-                        })}
-                    </ul>
-                )}
-                <p className="text-xs text-slate-500 mt-4 pt-3 border-t border-slate-600/50">
-                    Match history consists of completed online games only.
-                </p>
+                        })()}
+                    </div>
+                </div>
             </div>
         </div>
     );
