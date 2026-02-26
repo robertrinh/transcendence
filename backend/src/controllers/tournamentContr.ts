@@ -65,8 +65,6 @@ export const tournamentController = {
 		return {success: true, message: 'Tournament deleted'}
 	},
 
-	//can a player leave when tournament.status === 'ongoing' ? --> what happens then - maybe it means immediate win for the opponent? 
-	//or only allow when tournament.status === 'open'?
 	leaveTournament: async (req: FastifyRequest, reply: FastifyReply) => {
 		const { id } = req.params as {id: number};
 		const user_id = req.user!.userId;
@@ -74,7 +72,6 @@ export const tournamentController = {
 		return {success: true, message: 'Player left tournament!'}
 	},
 
-	//make the errors explicit.
 	getTournamentParticipants: async (req: FastifyRequest, reply: FastifyReply) => {
 		const { id } = req.params as { id: number };
 		const participants = tournamentService.getTournamentParticipants(id);

@@ -57,21 +57,16 @@ export const userController = {
         return { success: true, profile: user };
     },
 
-    //ANONYMIZE PROFILE
     anonymizeProfile: async (req: FastifyRequest, reply: FastifyReply) => {
         const userId = req.user!.userId;
-        
-        // Check if already anonymous
         if (userService.isUserAnonymous(userId)) {
             throw new ApiError(400, 'Profile is already anonymized', 'ALREADY_ANONYMOUS');
         }
 
         const result = userService.anonymizeProfile(userId);
-        
         if (!result) {
             throw new ApiError(500, 'Failed to anonymize profile', 'ANONYMIZE_FAILED');
         }
-
         return {
             success: true,
             message: 'Profile anonymized successfully.',

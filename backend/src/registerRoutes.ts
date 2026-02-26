@@ -54,7 +54,6 @@ export async function registerRoutes() {
 		prefix: '/api/users'
 	})
 	
-	// Register static file serving for avatars
 	await server.register(fastifyStatic, {
 		root: path.join(__dirname, '..', 'uploads', 'avatars'),
 		prefix: '/api/avatars/',

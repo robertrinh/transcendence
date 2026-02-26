@@ -14,7 +14,6 @@ export function registerErrorHandler(server: FastifyInstance) {
       }
     });
 	
-	//send accurate error response based on the custom error classes
 	if (error instanceof ApiError) {
       return reply.code(error.statusCode).send({
         statusCode: error.statusCode,
@@ -41,5 +40,3 @@ export function registerErrorHandler(server: FastifyInstance) {
     });
 })
 }
-
-//handle 404 (route not found), with setNotFoundHandler
