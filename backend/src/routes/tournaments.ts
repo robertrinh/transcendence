@@ -31,16 +31,6 @@ export default async function tournamentsRoutes (
 		}
 	}, tournamentController.getTournamentByID)
 
-	//add handler for auth token! how to indentify the gameserver? 
-    fastify.put('/:id', {
-		schema: {
-			tags: ['tournaments'],
-			summary: 'Update a tournament by ID',
-			params: IDSchema,
-			body: tournamentResultSchema
-		}
-	}, tournamentController.updateTournament)
-
     fastify.delete('/:id', {
 		schema: {
 			tags: ['tournaments'],
