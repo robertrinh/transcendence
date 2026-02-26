@@ -17,6 +17,7 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
     const [gameHistory, setGameHistory] = useState<GameHistoryItem[]>([]);
     const [gamesLoading, setGamesLoading] = useState(true);
     const [statsTab, setStatsTab] = useState<StatsTab>('stats');
+    const [avatarError, setAvatarError] = useState(false);
 
     useEffect(() => {
         if (user && !user.is_guest) {
@@ -29,6 +30,10 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
             loadGameHistory();
         }
     }, [user]);
+
+    useEffect(() => {
+        setAvatarError(false);
+    }, [profileData?.avatar_url, user?.avatar_url]);
 
     const loadProfile = async () => {
         setLoading(true);
@@ -80,8 +85,13 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
                 <div className="flex items-center gap-6">
                     <div className="flex-shrink-0">
                         <div className="w-24 h-24 bg-gradient-to-br from-brand-magenta to-brand-hotPink rounded-full flex items-center justify-center overflow-hidden border-2 border-brand-hotPink/60">
-                            {avatarUrl ? (
-                                <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                            {avatarUrl && !avatarError ? (
+                                <img
+                                    src={avatarUrl}
+                                    alt="Avatar"
+                                    className="w-full h-full object-cover"
+                                    onError={() => setAvatarError(true)}
+                                />
                             ) : (
                                 <span className="text-white text-3xl font-bold">
                                     {displayUser.username.charAt(0).toUpperCase()}
