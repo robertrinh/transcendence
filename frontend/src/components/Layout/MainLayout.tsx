@@ -91,9 +91,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                 }`}
                             >
                                 🎮 GAME
-                                {currentView === 'game' && (
-                                    <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5 rounded-full bg-brand-hotPink" />
-                                )}
                             </button>
                             <button
                                 onClick={() => setCurrentView('leaderboard')}
@@ -104,9 +101,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                 }`}
                             >
                                 🏆 LEADERBOARD
-                                {currentView === 'leaderboard' && (
-                                    <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5 rounded-full bg-brand-hotPink" />
-                                )}
                             </button>
                         </div>
 
