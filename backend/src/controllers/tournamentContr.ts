@@ -2,7 +2,7 @@ import { ApiError } from '../error/errors.js';
 import { tournamentService } from '../services/tournamentService.js'
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { Tournament, TournamentParticipant } from '../types/database.interfaces.js';
-
+import { systemBroadcast } from '../sseNotify.js';
 
 export const tournamentController = {
 	getAllTournaments: async (req: FastifyRequest, reply: FastifyReply) => {
@@ -32,6 +32,7 @@ export const tournamentController = {
         const result = tournamentService.createTournament(name, description, max_participants);
         if (result.changes == 0)
             throw new ApiError(404, 'something went wrong creating tournament');
+		systemBroadcast(`Tournament "${name}" opened!`)
         tournamentService.joinTournament(result.lastInsertRowid as number, user_id); 
         return {success: true, data: { id: result.lastInsertRowid, max_participants }, message: 'Tournament successfully created and creator joined!'};
     },
