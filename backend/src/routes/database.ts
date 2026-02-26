@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import { db, initializeDatabase } from '../databaseInit.js'
+import { db } from '../databaseInit.js'
 
 
 //MAYBE REMOVE THIS FOR PRODUCTION? 
