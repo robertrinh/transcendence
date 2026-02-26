@@ -19,11 +19,6 @@ try {
 
 export const userController = {
 
-    getAllUsers: async () => {
-        const users = userService.fetchAllUsers();
-        return {success: true, users }
-    },
-
     createUser: async (req: FastifyRequest, reply: FastifyReply) => {
         const { username, password } = req.body as { username: string, password: string};
         const hashedPassword = await bcrypt.hash(password, 10);

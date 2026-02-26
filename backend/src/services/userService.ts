@@ -3,24 +3,6 @@ import { dbError } from '../error/dbErrors.js'
 
 export const userService = {
 
-    fetchAllUsers: () => {
-        return db.prepare(`
-            SELECT 
-                u.id,
-                u.status,
-                u.username, 
-                u.nickname,
-                u.display_name,
-                u.is_anonymous,
-                a.path as avatar_url,
-                u.created_at
-            FROM users u 
-            LEFT JOIN avatars a ON u.avatar_id = a.id
-            WHERE u.is_anonymous = 0
-            ORDER BY u.created_at DESC
-        `).all()
-    },
-
     fetchUser: (id: number) => {
         return db.prepare(`
             SELECT
