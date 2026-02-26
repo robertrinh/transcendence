@@ -1,5 +1,4 @@
 import { server } from './index.js';
-import databaseRoutes from './routes/database.js';
 import usersRoutes from './routes/users.js';
 import chatRoutes from './routes/chat.js';
 import gamesRoutes from './routes/games.js';
@@ -72,11 +71,6 @@ export async function registerRoutes() {
 			prefix: "/api"
 		}
 	)
-
-	server.register(
-		databaseRoutes, {
-			prefix: '/api/db'
-	});
 	
 	server.register(
 		chatRoutes, {
