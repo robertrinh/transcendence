@@ -54,10 +54,18 @@ export default function ReadyRoom({
   }
 
   useEffect(() => {
+    const onPageHide = () => {
+      cancelGame()
+	}
+	window.addEventListener('pagehide', onPageHide)
+	return () => window.removeEventListener('pagehide', onPageHide)
+  }, [])
+
+  useEffect(() => {
 	return () => {
 		cancelGame();
 	}
-	}, [])
+  }, [])
 
   // Send ready to backend
   const handleReady = async () => {
