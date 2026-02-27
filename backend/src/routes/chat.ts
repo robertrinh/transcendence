@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import { verifyToken } from '../auth/utils.js';  // NEW: Import token verification
+import { verifyToken } from '../auth/utils.js';
 import { db } from '../databaseInit.js'
 import { userService } from '../services/userService.js';
 import { authenticate } from '../auth/middleware.js';

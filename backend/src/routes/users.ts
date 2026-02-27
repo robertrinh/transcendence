@@ -10,13 +10,6 @@ export default async function usersRoutes (
     options: FastifyPluginOptions
 ) {
 
-    //willl we use it?? for leaderboard maybe? otherwise delete!
-    fastify.get('/', {
-        schema: {
-            tags: ['users'],
-            summary: 'Get all users',
-        }}, userController.getAllUsers);
-
     fastify.post('/anonymize', {
         schema: {
             security: [{ bearerAuth: [] }],

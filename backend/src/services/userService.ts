@@ -3,45 +3,12 @@ import { dbError } from '../error/dbErrors.js'
 
 export const userService = {
 
-    fetchAllUsers: () => {
-        return db.prepare(`
-            SELECT 
-                u.id,
-                u.status,
-                u.username, 
-                u.nickname,
-                u.display_name,
-                u.is_anonymous,
-                a.path as avatar_url,
-                u.created_at
-            FROM users u 
-            LEFT JOIN avatars a ON u.avatar_id = a.id
-            WHERE u.is_anonymous = 0
-            ORDER BY u.created_at DESC
-        `).all()
-    },
-
-    //we are not using all these rows, should be cleaned up.
     fetchUser: (id: number) => {
         return db.prepare(`
-            SELECT 
-                u.id, 
-                u.status,
-                u.username, 
-                u.password,
-                u.nickname,
-                u.display_name,
-                u.email,
-                u.created_at,
-                u.is_anonymous,
-                u.anonymized_at,
-                a.path as avatar_url,
-                (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND winner_id = u.id) as wins,
-                (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND winner_id != u.id AND winner_id IS NOT NULL) as losses,
-                (SELECT COUNT(*) FROM games WHERE (player1_id = u.id OR player2_id = u.id) AND status = 'finished') as total_games
-            FROM users u 
-            LEFT JOIN avatars a ON u.avatar_id = a.id 
-            WHERE u.id = ?
+            SELECT
+				id,
+				status
+			FROM users WHERE id = ?
         `).get(id)
     },
 
