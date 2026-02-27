@@ -142,6 +142,38 @@ export async function gameOfflineLobby(
         ActiveRound
     }
 
+    function endGame() {
+        const p1Won = playerOne.roundScore > playerTwo.roundScore
+        let detail: any
+        switch (gameMode) {
+            case 'singleplayer':
+                detail = {
+                    gameMode: gameMode,
+                    winnerLabel: p1Won ? 'YOU WIN!' : 'YOU LOST!',
+                    resultLabel: p1Won ? 'win' : 'loss',
+                    scorePlayer1: playerOne.roundScore,
+                    scorePlayer2: playerTwo.roundScore,
+                    player1Label: 'YOU',
+                    player2Label: 'BOT',
+                }
+                break
+            case 'multiplayer':
+                detail = {
+                    gameMode: gameMode,
+                    winnerLabel: p1Won ? `${p1Name} WINS!` : `${p2Name} WINS!`,
+                    resultLabel: 'win',
+                    scorePlayer1: playerOne.roundScore,
+                    scorePlayer2: playerTwo.roundScore,
+                    player1Label: p1Name,
+                    player2Label: p2Name,
+                }
+                break
+        }
+        window.dispatchEvent(new CustomEvent('game-over', {
+            detail
+        }));
+    }
+
     function update() {
         now = performance.now()
         if (then === undefined) {
@@ -179,6 +211,7 @@ export async function gameOfflineLobby(
                 // we could upload the game results here (if we want to track
                 // offline games too)
                 app.state = gameState.RoundEnd
+                endGame()
             }
         }
     }
