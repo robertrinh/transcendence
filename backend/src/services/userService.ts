@@ -149,17 +149,18 @@ export const userService = {
     },
 
    deleteUser: (id: number) => {
-        try {
             // Delete related data first (cascading)
+        const deleteData = db.transaction(() => {
             db.prepare('DELETE FROM chat_messages WHERE user_id = ?').run(id);
             db.prepare('DELETE FROM user_sessions WHERE user_id = ?').run(id);
             db.prepare('DELETE FROM tournament_participants WHERE user_id = ?').run(id);
             db.prepare('DELETE FROM games WHERE player1_id = ? OR player2_id = ? OR winner_id = ?').run(id, id, id);
-            
             // Delete the user
             const result = db.prepare('DELETE FROM users WHERE id = ?').run(id);
-            
             return result;
+        })
+        try {
+            return deleteData();
         } catch (err: any) {
             dbError(err);
             throw err;
