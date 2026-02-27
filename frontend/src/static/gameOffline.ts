@@ -13,7 +13,6 @@ export async function gameOfflineLobby(
 ) {
     let deltaTimeMS: number
     let then: number, now: number
-    let spacePressed = false
 
     function handleKeyDown(key: KeyboardEvent) {
         switch (key.key) {
@@ -38,12 +37,6 @@ export async function gameOfflineLobby(
                 else {
                     playerTwo.paddle.upPressed = true
                 }
-                break
-            case " ":
-                if (app.state !== gameState.RoundEnd) {
-                    break
-                }
-                spacePressed = true
                 break
         }
         key.preventDefault()
@@ -73,11 +66,6 @@ export async function gameOfflineLobby(
                     playerTwo.paddle.upPressed = false
                 }
                 break
-            case " ":
-                if (app.state !== gameState.RoundEnd) {
-                    break
-                }
-                spacePressed = false
         }
         key.preventDefault()
     }
@@ -161,16 +149,7 @@ export async function gameOfflineLobby(
         if (deltaTimeMS > clientTick) {
             then = now - (deltaTimeMS % clientTick)
             if (app.state === gameState.RoundEnd) {
-                if (spacePressed) {
-                    app.state = gameState.ActiveRound
-                    playerOne.roundScore = 0
-                    playerTwo.roundScore = 0
-                    ball.movementSpeed = 5
-                    spacePressed = false
-                }
-                else {
-                    return
-                }
+                return
             }
             moveBall(ball, playerOne.paddle, playerTwo.paddle)
             playerOne.paddle.update()
@@ -221,11 +200,6 @@ export async function gameOfflineLobby(
         if (gameMode === 'multiplayer') {
             drawPlayerScores(canvas, drawCtx, 48, textColor, "sans-serif",
             playerOne.roundScore, playerTwo.roundScore, 'P1', 'P2')
-        }
-        if (app.state === gameState.RoundEnd) {
-            drawCtx.textAlign = "center"
-            printText(drawCtx, 48, arenaWidth/2, arenaHeight * 0.8,
-                textColor, "sans-serif", Array("Press spacebar to continue..."))
         }
         ctx.drawImage(drawCanvas, 0, 0)
     }
