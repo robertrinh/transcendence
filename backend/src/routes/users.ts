@@ -70,6 +70,14 @@ export default async function usersRoutes (
         }, preHandler: [authenticate]
     }, userController.getUserNameByID)
 
+    fastify.get('/avatar/:id', {
+        schema: {
+            security: [{ bearerAuth: [] }],
+            tags: ['users'],
+            summary: "Get the username and avatar from a user by id"
+        }, preHandler: [authenticate]
+    }, userController.getUserAvatar)
+
     fastify.delete('/me', {
         schema: {
             security: [{ bearerAuth: [] }],

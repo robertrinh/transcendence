@@ -19,6 +19,20 @@ export const userService = {
         return db.prepare(`SELECT username FROM users WHERE id = @id`).pluck().get({id: id})
     },
 
+    fetchUserNameAndAvatar: (id: number) => {
+        if (userService.isUserAnonymous(id)) {
+            return { username: 'Anonymous', avatar_url: null }
+        }
+        const user = db.prepare(`
+            SELECT u.username, a.path as avatar_url
+            FROM users u
+            LEFT JOIN avatars a ON u.avatar_id = a.id
+            WHERE u.id = ?
+        `).get(id) as any
+        if (!user) return { username: 'Unknown', avatar_url: null }
+        return { username: user.username, avatar_url: user.avatar_url || null }
+    },
+
     fetchOwnProfile: (id:number) => {
         return db.prepare(`
            SELECT 

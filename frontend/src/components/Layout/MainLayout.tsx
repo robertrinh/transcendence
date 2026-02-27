@@ -123,7 +123,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                             <img 
                                                 src={getAvatarUrl(user.avatar_url)}
                                                 alt="Avatar"
-                                                className="w-full h-full object-cover"
+                                                className="w-20 h-15 object-cover"
                                                 onError={(e) => {
                                                     e.currentTarget.style.display = 'none';
                                                     e.currentTarget.parentElement!.textContent = user.username.charAt(0).toUpperCase();

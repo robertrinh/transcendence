@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react"
 import GameUI from "../components/game/gameUI.tsx"
 import { fetchWithAuth } from '../config/api'
 import type { GameMode, Screen } from "../components/game/types.ts"
+import { getAvatarUrl } from "../components/util/profileUtils.tsx"
 
 interface GameResult {
   gameMode: string
@@ -27,6 +28,7 @@ export default function Game() {
   const [gameResult, setGameResult] = useState<GameResult | null>(null)
   const gameModeRef = useRef<GameMode>("none")
   const [oppName, setOppName] = useState<string>('UNKNOWN')
+  const [oppAvatar, setOppAvatar] = useState<string | undefined>(undefined)
   const [websocketState, setWebsocketState] = useState<number>(WebSocket.CONNECTING)
 
   useEffect(() => {
@@ -108,12 +110,13 @@ export default function Game() {
     }
     const getOppUserName = async () => {
       const oppID = currentUser.id === gameData.player1_id ? gameData.player2_id: gameData.player1_id
-      const response = await fetchWithAuth(`/api/users/username/${oppID}`)
+      const response = await fetchWithAuth(`/api/users/avatar/${oppID}`)
       if (!response.ok) {
         return
       }
       const data = await response.json()
       setOppName(data.username)
+      setOppAvatar(getAvatarUrl(data.avatar_url))
     }
     getOppUserName()
   }, [gameData, currentUser])
@@ -376,7 +379,9 @@ export default function Game() {
           isTournamentMatch={isTournamentMatchRef.current}
           gameResult={gameResult}
           oppName={oppName}
+          oppAvatar={oppAvatar}
           ownName={currentUser ? currentUser.username : 'UNKNOWN'}
+          ownAvatar={getAvatarUrl(currentUser?.avatar_url)}
           handleBackToMenu={handleBackToMenu}
 
           setScreen={setScreen}
