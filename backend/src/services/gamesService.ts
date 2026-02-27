@@ -126,7 +126,7 @@ export const gamesService = {
         };
     },
 
-    getReadyStatus: (game_id: number) => {
+     getReadyStatus: (game_id: number) => {
         const game = db.prepare('SELECT * FROM games WHERE id = ?').get(game_id) as Game | undefined;
         if (!game)
             throw new ApiError(404, 'Game not found');
@@ -141,6 +141,8 @@ export const gamesService = {
             player2_ready: readySet.has(game.player2_id!),
             all_ready: readySet.has(game.player1_id!) && readySet.has(game.player2_id!),
             cancelled: cancelledGames.has(game_id) || game.status === 'cancelled',
+            winner_id: game.winner_id || null,
+            is_tournament: !!game.tournament_id,
         };
     },
 
@@ -148,6 +150,7 @@ export const gamesService = {
         const game = db.prepare('SELECT * FROM games WHERE id = ?').get(game_id) as Game | undefined;
         if (!game)
             throw new ApiError(404, 'Game not found');
+
         if (game.player1_id !== player_id && game.player2_id !== player_id)
             throw new ApiError(403, 'Player not in this game');
 
@@ -157,8 +160,34 @@ export const gamesService = {
         // Clean up ready state
         readyPlayers.delete(game_id);
 
-        // Update DB: set game status to cancelled
-        db.prepare('UPDATE games SET status = ? WHERE id = ?').run('cancelled', game_id);
+        // Determine the winner (the player who did NOT leave)
+        const winner_id = game.player1_id === player_id ? game.player2_id : game.player1_id;
+
+        if (game.tournament_id) {
+            // Tournament game — award forfeit win and advance bracket
+            const score_winner = 3;
+            const score_loser = 0;
+            db.prepare(`
+                UPDATE games 
+                SET status = 'finished', 
+                    winner_id = ?, 
+                    score_player1 = ?, 
+                    score_player2 = ?, 
+                    finished_at = datetime('now') 
+                WHERE id = ?
+            `).run(
+                winner_id,
+                game.player1_id === player_id ? score_loser : score_winner,
+                game.player2_id === player_id ? score_loser : score_winner,
+                game_id
+            );
+
+            // Advance the winner in the tournament bracket
+            tournamentService.advanceWinner(game_id);
+        } else {
+            // Regular game — just cancel
+            db.prepare('UPDATE games SET status = ? WHERE id = ?').run('cancelled', game_id);
+        }
 
         // Reset both players to idle
         if (game.player1_id)
@@ -166,7 +195,7 @@ export const gamesService = {
         if (game.player2_id)
             db.prepare('UPDATE users SET status = ? WHERE id = ?').run('idle', game.player2_id);
 
-        return { game_id, cancelled: true };
+        return { game_id, cancelled: true, winner_id, is_tournament: !!game.tournament_id };
     },
 
     finishGame: (id: number, score_player1: number, score_player2: number, winner_id: number, finished_at: string) => {

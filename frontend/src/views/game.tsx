@@ -282,6 +282,17 @@ export default function Game() {
       console.log('Matchmaking cancelled')
     }).catch(err => {
       console.error('Cancel matchmaking failed:', err)
+    }).finally(() => {
+      // Refresh currentUser so the frontend has the updated status ('idle')
+      fetchWithAuth('/api/users/me')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setCurrentUser(data.data)
+            console.log('🔄 User status refreshed:', data.data.status)
+          }
+        })
+        .catch(err => console.error('Failed to refresh user:', err))
     })
   }
 

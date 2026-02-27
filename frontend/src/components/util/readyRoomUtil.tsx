@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { fetchWithAuth } from '../../config/api'
 
 interface ReadyRoomProps {
@@ -8,6 +8,7 @@ interface ReadyRoomProps {
   oppUserName: string
   onBothReady: () => void
   onBack: () => void
+  onForfeitWin?: () => void
 }
 
 export default function ReadyRoom({
@@ -16,12 +17,18 @@ export default function ReadyRoom({
   currentUser,
   oppUserName,
   onBothReady,
-  onBack
+  onBack,
+  onForfeitWin
 }: ReadyRoomProps) {
   const [myReady, setMyReady] = useState(false)
   const [opponentReady, setOpponentReady] = useState(false)
   const [bothReady, setBothReady] = useState(false)
   const [opponentLeft, setOpponentLeft] = useState(false)
+  const [forfeitWin, setForfeitWin] = useState(false)
+
+  // Use refs to avoid re-creating the polling interval when state changes
+  const myReadyRef = useRef(myReady)
+  useEffect(() => { myReadyRef.current = myReady }, [myReady])
 
   const isPlayer1 = Number(currentUser?.id) === Number(gameData?.player1_id)
   const myName = currentUser?.username || currentUser?.display_name || (isPlayer1 ? 'Player 1' : 'Player 2')
@@ -97,17 +104,22 @@ export default function ReadyRoom({
         console.log('🔄 Ready/status poll:', data)
 
         if (data.success && data.data) {
-          const { player1_ready, player2_ready, all_ready, cancelled } = data.data
+          const { player1_ready, player2_ready, all_ready, cancelled, winner_id, is_tournament } = data.data
 
-          // Check if opponent left / game was cancelled
           if (cancelled) {
             console.log('❌ Opponent left the ready room!')
             setOpponentLeft(true)
+
+            if (is_tournament && winner_id === Number(currentUser?.id)) {
+              setForfeitWin(true)
+            }
+
             clearInterval(interval)
             return
           }
 
-          if (myReady) {
+          // Use ref to read current myReady without re-triggering this effect
+          if (myReadyRef.current) {
             if (isPlayer1) {
               setOpponentReady(player2_ready)
             } else {
@@ -124,10 +136,11 @@ export default function ReadyRoom({
         console.error('Ready/status poll error:', err)
       }
     }, 1500)
-  return () => clearInterval(interval)
-  }, [myReady, bothReady, opponentLeft, gameData, isPlayer1, isLocalGame])
 
-  // When both ready, proceed to countdown
+    return () => clearInterval(interval)
+  }, [bothReady, opponentLeft, gameData?.id, isPlayer1, isLocalGame, currentUser?.id])
+
+  // When both ready, proceed to game
   useEffect(() => {
     if (bothReady) {
       const timer = setTimeout(() => {
@@ -138,18 +151,24 @@ export default function ReadyRoom({
   }, [bothReady, onBothReady])
 
   // Auto-redirect after opponent leaves + time to read the message
+  // if tournament: player gets redirected to the brackets view
+  // if normal game: back to main menu
   useEffect(() => {
     if (opponentLeft) {
       const timer = setTimeout(() => {
-        onBack()
+        if (forfeitWin && onForfeitWin) {
+          onForfeitWin()
+        } else {
+          onBack()
+        }
       }, 3000)
       return () => clearTimeout(timer)
     }
-  }, [opponentLeft, onBack])
+  }, [opponentLeft, forfeitWin, onBack, onForfeitWin])
 
   if (isLocalGame) return null
 
-   return (
+  return (
     <div className="min-h-screen flex items-center justify-center bg-black p-4" style={{
       backgroundImage: 'linear-gradient(45deg, #1a1a2e 25%, transparent 25%, transparent 75%, #1a1a2e 75%, #1a1a2e), linear-gradient(45deg, #1a1a2e 25%, transparent 25%, transparent 75%, #1a1a2e 75%, #1a1a2e)',
       backgroundSize: '40px 40px',
@@ -267,8 +286,16 @@ export default function ReadyRoom({
               }}>
                 💨 OPPONENT LEFT
               </p>
+              {forfeitWin ? (
+                <p className="text-green-400 text-lg font-bold mb-2" style={{
+                  fontFamily: 'monospace',
+                  textShadow: '0 0 10px #4ade80'
+                }}>
+                  🏆 YOU WIN BY FORFEIT!
+                </p>
+              ) : null}
               <p className="text-gray-400 text-sm" style={{ fontFamily: 'monospace' }}>
-                Returning to lobby...
+                {forfeitWin ? 'Returning to tournament...' : 'Returning to lobby...'}
               </p>
             </div>
           )}

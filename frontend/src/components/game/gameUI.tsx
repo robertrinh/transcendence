@@ -148,12 +148,24 @@ export default function GameUI({
                     />
         case 'ready-room':
             return <ReadyRoom
-                        gameData={gameData}
+                         gameData={gameData}
                         gameMode={gameMode}
                         currentUser={currentUser}
                         oppUserName={oppName}
                         onBothReady={() => setScreen('countdown')}
-                        onBack={() => { setScreen('online'); resetPlayerStatus() }}
+                        onBack={() => {
+                            if (gameData?.tournament_id) {
+                                // Tournament game — go back to bracket, not online menu
+                                setScreen('tournament-bracket')
+                            } else {
+                                setScreen('online')
+                            }
+                            resetPlayerStatus()
+                        }}
+                        onForfeitWin={() => {
+                            setScreen('tournament-bracket')
+                            resetPlayerStatus()
+                        }}
                     />
         case 'tournament':
             return <TournamentJoin
