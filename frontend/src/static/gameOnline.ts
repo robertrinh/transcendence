@@ -147,8 +147,8 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
         ctx.drawImage(drawCanvas, 0, 0)
     }
 
-    let interpVelocityBall: Point
-    let interpVelocityEnemy: Point
+    let interpVelocityBall: Point  = { x: 0, y: 0 }
+    let interpVelocityEnemy: Point  = { x: 0, y: 0 }
     let pendingMoves = new Array<MoveTS>()
 
     function updatePendingMoves(lastServerTime: number) {
