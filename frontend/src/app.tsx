@@ -16,7 +16,6 @@ import Profile from './views/profile';
 import Settings from './views/settings';
 import NotFound from './views/notfound';
 
-//* Route needed for user profile view
 function UserProfileRoute() {
 	const { username } = useParams<{ username: string }>();
 	if (!username) {
@@ -25,8 +24,6 @@ function UserProfileRoute() {
 	return <UserProfile username={username} />;
 }
 
-//* AppLayout component needed for main layout and navigation
-//* uses old logic from MainLayout component to avoid dependencies
 function AppLayout({
 	user: user,
 	onLogout: onLogout,
@@ -60,7 +57,6 @@ function AppLayout({
 		return 'home';
 	}
 
-	//* updates current view in URL without reloading the page
 	const handleSetCurrentView = (view: string) => {
 		if (view === 'home') {
 			navigate('/');

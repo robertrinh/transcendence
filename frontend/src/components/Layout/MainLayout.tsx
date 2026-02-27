@@ -20,6 +20,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     children
 }) => {
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [avatarError, setAvatarError] = useState(false);
     const userMenuRef = useRef<HTMLDivElement>(null);
     const userButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -43,6 +44,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
             };
         }
     }, [showUserMenu]);
+
+    useEffect(() => {
+        setAvatarError(false);
+    }, [user?.avatar_url]);
 
     // Close panel when pressing Escape
     useEffect(() => {
@@ -91,9 +96,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                 }`}
                             >
                                 🎮 GAME
-                                {currentView === 'game' && (
-                                    <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5 rounded-full bg-brand-hotPink" />
-                                )}
                             </button>
                             <button
                                 onClick={() => setCurrentView('leaderboard')}
@@ -104,9 +106,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                 }`}
                             >
                                 🏆 LEADERBOARD
-                                {currentView === 'leaderboard' && (
-                                    <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5 rounded-full bg-brand-hotPink" />
-                                )}
                             </button>
                         </div>
 
@@ -119,15 +118,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                                         onClick={() => setShowUserMenu(!showUserMenu)}
                                         className="w-20 h-15 rounded-full bg-gradient-to-br from-brand-magenta to-brand-hotPink flex items-center justify-center text-white font-semibold overflow-hidden border-2 border-brand-hotPink/60 hover:border-brand-hotPink hover:shadow-[0_0_16px_rgba(255,20,147,0.4)] transition-all shadow-md hover:shadow-lg cursor-pointer"
                                     >
-                                        {user.avatar_url ? (
-                                            <img 
+                                        {user.avatar_url && !avatarError ? (
+                                            <img
                                                 src={getAvatarUrl(user.avatar_url)}
                                                 alt="Avatar"
                                                 className="w-full h-full object-cover"
-                                                onError={(e) => {
-                                                    e.currentTarget.style.display = 'none';
-                                                    e.currentTarget.parentElement!.textContent = user.username.charAt(0).toUpperCase();
-                                                }}
+                                                onError={() => setAvatarError(true)}
                                             />
                                         ) : (
                                             user.username.charAt(0).toUpperCase()

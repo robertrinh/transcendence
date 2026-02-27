@@ -52,6 +52,7 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [editingField, setEditingField] = useState<string | null>(null);
+    const [avatarLoadError, setAvatarLoadError] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -62,6 +63,10 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
             });
         }
     }, [user]);
+
+    useEffect(() => {
+        setAvatarLoadError(false);
+    }, [user?.avatar_url]);
 
     const showMessage = (type: 'success' | 'error', text: string) => {
         setMessage({ type, text });
@@ -636,9 +641,9 @@ const handleAnonymizeProfile = async () => {
                                     <div className="flex items-center gap-6">
                                         <div className="w-20 h-20 bg-brand-orange/80 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 border-2 border-slate-600">
                                             {previewUrl ? (
-                                                <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                                            ) : avatarUrl ? (
-                                                <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                                                <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" onError={() => setPreviewUrl(null)} />
+                                            ) : avatarUrl && !avatarLoadError ? (
+                                                <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" onError={() => setAvatarLoadError(true)} />
                                             ) : (
                                                 <span className="text-white text-2xl font-bold">
                                                     {user.username.charAt(0).toUpperCase()}

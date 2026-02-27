@@ -1,17 +1,11 @@
 import { test } from 'node:test'
 import assert from 'node:assert'
 
-//* what sort of tests?
-//* registration tests
-//* login tests
-//* Token validation tests
-//! 2fa tests difficult because of time based, hard to test
 
 const BASE_URL = 'http://localhost:3000/api'
 
 //* Shared test user data
 //* testuser stays persistent throughout the tests
-//* so don't need to create a new user for each test
 const testuser = {
 	username: `testuser_${Date.now()}`,
 	password: 'testpassword',
@@ -19,7 +13,7 @@ const testuser = {
 }
 
 //* JWT token is used to authenticate the user for the tests
-let token: string | undefined; //* let syntax: variable that can be reassigned
+let token: string | undefined;
 
 /**
  * @brief Helper function to make API requests with common headers and format the response as JSON.

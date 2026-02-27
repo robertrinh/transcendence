@@ -86,3 +86,11 @@ export const calculateWinRate = (wins: number, totalGames: number): string => {
         ? `${((wins / totalGames) * 100).toFixed(1)}%`
         : '0%';
 };
+
+//* returns game history sorted chronologically (oldest first). Uses finished_at or created_at.
+export const sortGameHistoryChronological = (history: GameHistoryItem[]): GameHistoryItem[] =>
+    [...history].sort((a, b) => {
+        const dateA = a.finished_at ?? a.created_at ?? '';
+        const dateB = b.finished_at ?? b.created_at ?? '';
+        return new Date(dateA).getTime() - new Date(dateB).getTime();
+    });
