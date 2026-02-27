@@ -103,6 +103,13 @@ export const gamesController = {
         return { success: true, data: result };
     },
 
+    cancelGame: async (req: FastifyRequest, reply: FastifyReply) => {
+        const player_id = req.user!.userId;
+        const { game_id } = req.body as { game_id: number };
+        const result = gamesService.cancelGame(game_id, player_id);
+        return { success: true, data: result };
+    },
+
     finishGame: async (req: FastifyRequest, reply: FastifyReply) => {
         const { id } = req.params as { id: number };
         const { score_player1, score_player2, winner_id, finished_at } = req.body as {

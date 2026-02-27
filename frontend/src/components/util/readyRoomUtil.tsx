@@ -21,19 +21,11 @@ export default function ReadyRoom({
   const [myReady, setMyReady] = useState(false)
   const [opponentReady, setOpponentReady] = useState(false)
   const [bothReady, setBothReady] = useState(false)
+  const [opponentLeft, setOpponentLeft] = useState(false)
 
   const isPlayer1 = Number(currentUser?.id) === Number(gameData?.player1_id)
   const myName = currentUser?.username || currentUser?.display_name || (isPlayer1 ? 'Player 1' : 'Player 2')
   const opponentName = oppUserName
-
-  // Debug logging
-  useEffect(() => {
-    console.log('🔍 ReadyRoom DEBUG:')
-    console.log('  currentUser?.id:', currentUser?.id, typeof currentUser?.id)
-    console.log('  gameData?.player1_id:', gameData?.player1_id, typeof gameData?.player1_id)
-    console.log('  gameData?.player2_id:', gameData?.player2_id, typeof gameData?.player2_id)
-    console.log('  isPlayer1:', isPlayer1)
-  }, [currentUser, gameData, isPlayer1])
 
   // For local games, skip ready room
   const isLocalGame = gameMode === 'singleplayer' || gameMode === 'multiplayer'
@@ -76,23 +68,51 @@ export default function ReadyRoom({
     }
   }
 
-  // Poll for opponent ready status after clicking ready
+  // Handle leaving the ready room
+  const handleLeave = async () => {
+    try {
+      if (gameData?.id) {
+        await fetchWithAuth('/api/games/cancel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ game_id: gameData.id }),
+        })
+        console.log('🔴 Game cancelled')
+      }
+    } catch (err) {
+      console.error('Failed to cancel game:', err)
+    }
+    onBack()
+  }
+
+  // Poll for game status (opponent presence + ready status)
+  // Runs as soon as the component mounts (not just after clicking ready)
   useEffect(() => {
-    if (!myReady || bothReady || !gameData?.id) return
+    if (bothReady || opponentLeft || !gameData?.id || isLocalGame) return
 
     const interval = setInterval(async () => {
       try {
         const response = await fetchWithAuth(`/api/games/${gameData.id}/ready`)
         const data = await response.json()
-        console.log('🔄 Ready poll:', data)
+        console.log('🔄 Ready/status poll:', data)
 
         if (data.success && data.data) {
-          const { player1_ready, player2_ready, all_ready } = data.data
+          const { player1_ready, player2_ready, all_ready, cancelled } = data.data
 
-          if (isPlayer1) {
-            setOpponentReady(player2_ready)
-          } else {
-            setOpponentReady(player1_ready)
+          // Check if opponent left / game was cancelled
+          if (cancelled) {
+            console.log('❌ Opponent left the ready room!')
+            setOpponentLeft(true)
+            clearInterval(interval)
+            return
+          }
+
+          if (myReady) {
+            if (isPlayer1) {
+              setOpponentReady(player2_ready)
+            } else {
+              setOpponentReady(player1_ready)
+            }
           }
 
           if (all_ready) {
@@ -101,12 +121,11 @@ export default function ReadyRoom({
           }
         }
       } catch (err) {
-        console.error('Ready poll error:', err)
+        console.error('Ready/status poll error:', err)
       }
     }, 1500)
-
-    return () => clearInterval(interval)
-  }, [myReady, bothReady, gameData, isPlayer1])
+  return () => clearInterval(interval)
+  }, [myReady, bothReady, opponentLeft, gameData, isPlayer1, isLocalGame])
 
   // When both ready, proceed to countdown
   useEffect(() => {
@@ -118,9 +137,19 @@ export default function ReadyRoom({
     }
   }, [bothReady, onBothReady])
 
+  // Auto-redirect after opponent leaves + time to read the message
+  useEffect(() => {
+    if (opponentLeft) {
+      const timer = setTimeout(() => {
+        onBack()
+      }, 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [opponentLeft, onBack])
+
   if (isLocalGame) return null
 
-  return (
+   return (
     <div className="min-h-screen flex items-center justify-center bg-black p-4" style={{
       backgroundImage: 'linear-gradient(45deg, #1a1a2e 25%, transparent 25%, transparent 75%, #1a1a2e 75%, #1a1a2e), linear-gradient(45deg, #1a1a2e 25%, transparent 25%, transparent 75%, #1a1a2e 75%, #1a1a2e)',
       backgroundSize: '40px 40px',
@@ -189,14 +218,20 @@ export default function ReadyRoom({
             {/* Opponent */}
             <div className="flex-1 text-center">
               <div className={`border-4 rounded-xl p-6 transition-all duration-500 ${
-                opponentReady
-                  ? 'border-green-400 bg-green-900/30'
-                  : 'border-gray-600 bg-gray-800/50'
+                opponentLeft
+                  ? 'border-red-500 bg-red-900/30'
+                  : opponentReady
+                    ? 'border-green-400 bg-green-900/30'
+                    : 'border-gray-600 bg-gray-800/50'
               }`} style={{
-                boxShadow: opponentReady ? '0 0 20px rgba(74,222,128,0.4)' : 'none'
+                boxShadow: opponentLeft
+                  ? '0 0 20px rgba(239,68,68,0.4)'
+                  : opponentReady
+                    ? '0 0 20px rgba(74,222,128,0.4)'
+                    : 'none'
               }}>
                 <div className="text-4xl mb-3">
-                  {opponentReady ? '✅' : '⏳'}
+                  {opponentLeft ? '💨' : opponentReady ? '✅' : '⏳'}
                 </div>
                 <p className="text-white font-bold text-lg mb-1" style={{ fontFamily: 'monospace' }}>
                   {opponentName}
@@ -206,9 +241,9 @@ export default function ReadyRoom({
                 </p>
                 <p className="text-sm mt-2" style={{
                   fontFamily: 'monospace',
-                  color: opponentReady ? '#4ade80' : '#fbbf24'
+                  color: opponentLeft ? '#ef4444' : opponentReady ? '#4ade80' : '#fbbf24'
                 }}>
-                  {opponentReady ? 'READY!' : 'WAITING...'}
+                  {opponentLeft ? 'LEFT!' : opponentReady ? 'READY!' : 'WAITING...'}
                 </p>
               </div>
             </div>
@@ -223,8 +258,23 @@ export default function ReadyRoom({
             </div>
           )}
 
+          {/* Opponent Left */}
+          {opponentLeft && (
+            <div className="text-center mb-6">
+              <p className="text-red-400 text-2xl font-bold mb-2" style={{
+                fontFamily: 'monospace',
+                textShadow: '0 0 15px #ef4444'
+              }}>
+                💨 OPPONENT LEFT
+              </p>
+              <p className="text-gray-400 text-sm" style={{ fontFamily: 'monospace' }}>
+                Returning to lobby...
+              </p>
+            </div>
+          )}
+
           {/* Both Ready */}
-          {bothReady && (
+          {bothReady && !opponentLeft && (
             <div className="text-center mb-6 animate-pulse">
               <p className="text-green-400 text-2xl font-bold" style={{
                 fontFamily: 'monospace',
@@ -236,7 +286,7 @@ export default function ReadyRoom({
           )}
 
           {/* Waiting for opponent */}
-          {myReady && !bothReady && (
+          {myReady && !bothReady && !opponentLeft && (
             <div className="text-center mb-6">
               <p className="text-green-400 font-bold mb-3" style={{ fontFamily: 'monospace' }}>
                 ✅ You are ready!
@@ -253,7 +303,7 @@ export default function ReadyRoom({
           )}
 
           {/* Ready Button */}
-          {!myReady && !bothReady && (
+          {!myReady && !bothReady && !opponentLeft && (
             <button
               onClick={handleReady}
               className="w-full py-4 rounded-lg font-bold text-xl transition-all duration-200 hover:scale-105 active:scale-95"
@@ -271,9 +321,9 @@ export default function ReadyRoom({
           )}
 
           {/* Leave Button */}
-          {!bothReady && (
+          {!bothReady && !myReady && !opponentLeft && (
             <button
-              onClick={onBack}
+              onClick={handleLeave}
               className="w-full mt-4 py-2 rounded-lg font-bold transition-all duration-200 hover:scale-105"
               style={{
                 fontFamily: 'monospace',

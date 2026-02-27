@@ -36,6 +36,10 @@ export default async function gamesRoutes (
         preHandler: [authenticate]
     }, gamesController.getReadyStatus);
 
+    fastify.post('/cancel', {
+        preHandler: [authenticate]
+    }, gamesController.cancelGame);
+
     fastify.get('/matchmaking', {
         schema: {
             tags: ['games'],

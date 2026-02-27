@@ -9,6 +9,9 @@ const TIMEOUT_MATCHMAKING = 30000 //in millisec
 // In-memory ready state (game_id -> Set of player_ids who are ready)
 const readyPlayers: Map<number, Set<number>> = new Map();
 
+// In-memory cancelled games (game_id -> true)
+const cancelledGames: Set<number> = new Set();
+
 export const gamesService = {
 
     getAllGames: () => {
@@ -137,7 +140,33 @@ export const gamesService = {
             player1_ready: readySet.has(game.player1_id!),
             player2_ready: readySet.has(game.player2_id!),
             all_ready: readySet.has(game.player1_id!) && readySet.has(game.player2_id!),
+            cancelled: cancelledGames.has(game_id) || game.status === 'cancelled',
         };
+    },
+
+    cancelGame: (game_id: number, player_id: number) => {
+        const game = db.prepare('SELECT * FROM games WHERE id = ?').get(game_id) as Game | undefined;
+        if (!game)
+            throw new ApiError(404, 'Game not found');
+        if (game.player1_id !== player_id && game.player2_id !== player_id)
+            throw new ApiError(403, 'Player not in this game');
+
+        // Mark game as cancelled in-memory
+        cancelledGames.add(game_id);
+
+        // Clean up ready state
+        readyPlayers.delete(game_id);
+
+        // Update DB: set game status to cancelled
+        db.prepare('UPDATE games SET status = ? WHERE id = ?').run('cancelled', game_id);
+
+        // Reset both players to idle
+        if (game.player1_id)
+            db.prepare('UPDATE users SET status = ? WHERE id = ?').run('idle', game.player1_id);
+        if (game.player2_id)
+            db.prepare('UPDATE users SET status = ? WHERE id = ?').run('idle', game.player2_id);
+
+        return { game_id, cancelled: true };
     },
 
     finishGame: (id: number, score_player1: number, score_player2: number, winner_id: number, finished_at: string) => {
