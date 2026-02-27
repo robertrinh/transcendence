@@ -53,6 +53,12 @@ export default function ReadyRoom({
     )
   }
 
+  useEffect(() => {
+	return () => {
+		cancelGame();
+	}
+	}, [])
+
   // Send ready to backend
   const handleReady = async () => {
     try {
@@ -75,20 +81,24 @@ export default function ReadyRoom({
     }
   }
 
+  async function cancelGame() {
+	try {
+		if (gameData?.id) {      
+			fetchWithAuth('/api/games/cancel', {
+				method: 'POST',
+				keepalive: true,
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ game_id: gameData.id }),
+			})	
+		}
+	}
+	catch (err) {
+		console.error('Failed to cancel game:', err)
+	}
+  }
   // Handle leaving the ready room
   const handleLeave = async () => {
-    try {
-      if (gameData?.id) {
-        await fetchWithAuth('/api/games/cancel', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ game_id: gameData.id }),
-        })
-        console.log('🔴 Game cancelled')
-      }
-    } catch (err) {
-      console.error('Failed to cancel game:', err)
-    }
+	cancelGame()
     onBack()
   }
 
