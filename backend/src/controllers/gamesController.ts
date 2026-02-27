@@ -3,6 +3,7 @@ import { gamesService } from '../services/gamesService.js'
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { userService } from '../services/userService.js';
 import { Player } from '../types/database.interfaces.js'
+import { tournamentService } from '../services/tournamentService.js';
 
 
 export const gamesController = {
@@ -119,6 +120,7 @@ export const gamesController = {
             finished_at: string
         };
         gamesService.finishGame(id, score_player1, score_player2, winner_id, finished_at);
+        tournamentService.advanceWinner(id);
         return { success: true, message: 'Game finished' };
     },
 
