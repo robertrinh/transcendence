@@ -9,7 +9,8 @@ interface MoveTS {
 
 export async function gameOnlineLobby(canvas: HTMLCanvasElement, 
         ctx: CanvasRenderingContext2D, drawCanvas: HTMLCanvasElement,
-        drawCtx: CanvasRenderingContext2D, websocket: WebSocket) {
+        drawCtx: CanvasRenderingContext2D, websocket: WebSocket,
+        ownName: string, oppName: string) {
     const serverTick = 1000 / 66
     let firstStateReceived = false
     let lastHearbeatSent = 0
@@ -135,8 +136,14 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
         ball.draw(drawCtx)
         playerOne.paddle.draw(drawCtx)
         playerTwo.paddle.draw(drawCtx)
-        drawPlayerScores(canvas, drawCtx, 48, "#36454f", "sans-serif",
-        p2Score, p1Score)
+        if (playerID === 2) {
+            drawPlayerScores(canvas, drawCtx, 48, "#36454f", "sans-serif",
+            p2Score, p1Score, oppName, ownName)
+        }
+        else {
+            drawPlayerScores(canvas, drawCtx, 48, "#36454f", "sans-serif",
+            p2Score, p1Score, ownName, oppName)
+        }
         ctx.drawImage(drawCanvas, 0, 0)
     }
 
@@ -279,12 +286,6 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
             case "OPPONENT_DISCONNECT":
                 console.log('❌ Opponent disconnected')
                 cleanup()
-                window.dispatchEvent(new CustomEvent('game-over', {
-                    detail: {
-                        winnerId: null,
-                        disconnect: true
-                    }
-                }))
                 break
             case "ERROR":
                 console.error('🚨 Game error:', JSONObject.message)

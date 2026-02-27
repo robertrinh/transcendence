@@ -3,10 +3,9 @@ import { fetchWithAuth } from '../../config/api'
 
 interface ReadyRoomProps {
   gameData: any
-  websocket: React.RefObject<WebSocket | null>
   gameMode: string
-  lobbyId: string
   currentUser: any
+  oppUserName: string
   onBothReady: () => void
   onBack: () => void
 }
@@ -15,6 +14,7 @@ export default function ReadyRoom({
   gameData,
   gameMode,
   currentUser,
+  oppUserName,
   onBothReady,
   onBack
 }: ReadyRoomProps) {
@@ -24,8 +24,7 @@ export default function ReadyRoom({
 
   const isPlayer1 = Number(currentUser?.id) === Number(gameData?.player1_id)
   const myName = currentUser?.username || currentUser?.display_name || (isPlayer1 ? 'Player 1' : 'Player 2')
-  const opponentId = isPlayer1 ? gameData?.player2_id : gameData?.player1_id
-  const opponentName = `Player #${opponentId}`
+  const opponentName = oppUserName
 
   // Debug logging
   useEffect(() => {

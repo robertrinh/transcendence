@@ -20,6 +20,14 @@ interface Game {
     score_player2: number | null
 }
 
+export interface TournamentParticipant {
+	id: number;
+	tournament_id: number;
+	user_id: number;
+	joined_at: string;
+    username: string
+}
+
 export default function TournamentBracket({
     tournamentId,
     onPlayMatch,
@@ -29,6 +37,8 @@ export default function TournamentBracket({
     const [games, setGames] = useState<Game[]>([])
     const [round, setRound] = useState(1)
     const [loading, setLoading] = useState(true)
+    const [gamesFound, setGamesFound] = useState(false)
+    const [userNames, setUserNames] = useState<Map<number, string> | null>(null)
 
     // Fetch games with polling
     useEffect(() => {
@@ -38,10 +48,15 @@ export default function TournamentBracket({
             try {
                 const response = await fetchWithAuth(`/api/tournaments/${tournamentId}/games`)
                 if (!response.ok) throw new Error('Failed to fetch games')
-
                 const data = await response.json()
                 console.log('🏟️ Bracket games data:', data)
-                setGames(data.games || [])
+                if (data.games.length > 0) {
+                    setGames(data.games)
+                    setGamesFound(true)
+                }
+                else {
+                    setGames([])
+                }
                 setLoading(false)
             } catch (err) {
                 console.error('Failed to fetch games:', err)
@@ -53,8 +68,27 @@ export default function TournamentBracket({
         return () => clearInterval(interval)
     }, [tournamentId])
 
+    useEffect(() => {
+        if (!gamesFound) {
+            return
+        }
+        const getParticipants = async () => {
+            const response = await fetchWithAuth(`/api/tournaments/${tournamentId}/participants`)
+            if (!response.ok) {
+                throw new Error('Failed to fetch tournament participants')
+            }
+            const data = await response.json()
+            const usernameMap = new Map<number, string>()
+            for (const row of data.participants as TournamentParticipant[]) {
+                usernameMap.set(row.user_id, row.username)
+            }
+            setUserNames(usernameMap)
+        }
+        getParticipants()
+    }, [gamesFound])
+
     const currentRoundGames = games.filter(g => g.round === round)
-    const maxRound = games.length > 0 ? Math.max(...games.map(g => g.round)) : 1
+    const maxRound = games.length > 0 ? Math.max(...games.map(g => g.round!)) : 1
     const allRoundsFinished = games.length > 0 && games.every(g => g.status === 'finished')
 
     // Auto-advance to the current active round
@@ -73,10 +107,17 @@ export default function TournamentBracket({
         setRound(maxRound)
     }, [games, maxRound])
 
-    const getPlayerName = (playerId: number | null) => {
-        if (playerId === null) return '???'
-        if (playerId === currentUserId) return 'YOU'
-        return `PLAYER #${playerId}`
+    const getPlayerName = (playerId: number | null | undefined) => {
+        if (typeof playerId !== 'number') {
+            return '???'
+        }
+        if (playerId === currentUserId) {
+            return 'YOU'
+        }
+        if (!userNames) {
+            return '???'
+        }
+        return userNames.get(playerId)
     }
 
     if (loading) {
@@ -127,7 +168,7 @@ export default function TournamentBracket({
                             fontFamily: 'monospace',
                             textShadow: '0 0 10px #fff, 2px 2px 0 #ff00ff'
                         }}>
-                            {getPlayerName(winner || null)}
+                            {getPlayerName(winner)}
                         </p>
                         <p className="text-green-400 font-bold text-lg" style={{
                             fontFamily: 'monospace',

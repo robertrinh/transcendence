@@ -16,6 +16,7 @@ export type Screen =
   | 'error'
   | 'websocket-connecting'
   | 'websocket-closed'
+  | 'game-results'
 
 export type GameMode = 
   |'none' 

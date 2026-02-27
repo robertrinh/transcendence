@@ -15,8 +15,9 @@ import TournamentJoin from '../util/tournamentJoin.js'
 import TournamentLobby from '../util/tournamentLobby.js'
 import TournamentBracket from '../util/tournamentBracket.js'
 import CountdownScreen from '../util/countDownUtil.js'
+import GameResults from "../util/gameResultUtil.tsx"
 
-type gameProps = {
+interface gameProps {
     lobbyId: string;
     gameMode: GameMode;
     screen: Screen;
@@ -27,6 +28,18 @@ type gameProps = {
     selectedBracketSize: number
     currentUser: any
     isTournamentMatch: boolean
+    ownName: string
+    oppName: string
+
+    gameResult: {
+        gameMode: string;
+        winnerLabel: string;
+        scorePlayer1: number;
+        scorePlayer2: number;
+        player1Label: string;
+        player2Label: string;
+    } | null;
+    handleBackToMenu: () => void;
 
     setScreen(screen: Screen): void
     setGameMode(gameMode: GameMode): void
@@ -38,16 +51,17 @@ type gameProps = {
     handleHostReq(): void
     joinLobbyReq(lobbyId: string): void
     resetPlayerStatus(): void
+
     handleTournamentPlayMatch(gameId: number): void
     handleTournamentFinished(): void
-    
-    onTournamentJoined: (toId: number, maxParticipants: number) => void
-    onTournamentCreated: (toId: number, maxParticipants: number) => void
-    onTournamentStarted: () => void
-    onTournamentLeft: () => void
-    onCreateTournament: () => void
-    onBackFromCreate: () => void
-    onBackFromJoin: () => void
+
+    onTournamentJoined(toId: number, maxParticipants: number): void
+    onTournamentCreated(toId: number, maxParticipants: number): void
+    onTournamentStarted(): void
+    onTournamentLeft(): void
+    onCreateTournament(): void
+    onBackFromCreate(): void
+    onBackFromJoin(): void
 }
 
 function resizeGameUI(gameUI: HTMLElement) {
@@ -62,6 +76,7 @@ export default function GameUI({
     screen, gameMode, lobbyId, error, websocket, setScreen, setGameMode,
     handleRandomPlayer, handleHostReq, joinLobbyReq, resetPlayerStatus, gameData, 
     tournamentId, selectedBracketSize, currentUser, isTournamentMatch: _isTournamentMatch,
+    ownName, oppName, gameResult, handleBackToMenu,
     setTournamentId: _setTournamentId, setGameData, setError: _setError,
     handleTournamentPlayMatch, handleTournamentFinished,
     onTournamentJoined, onTournamentCreated, onTournamentStarted,
@@ -134,10 +149,9 @@ export default function GameUI({
         case 'ready-room':
             return <ReadyRoom
                         gameData={gameData}
-                        websocket={websocket}
                         gameMode={gameMode}
-                        lobbyId={lobbyId}
                         currentUser={currentUser}
+                        oppUserName={oppName}
                         onBothReady={() => setScreen('countdown')}
                         onBack={() => { setScreen('online'); resetPlayerStatus() }}
                     />
@@ -186,7 +200,7 @@ export default function GameUI({
                         }}
                     />
         case 'game':
-            return <GameCanvas mode={gameMode} websocket={websocket}/>
+            return <GameCanvas mode={gameMode} websocket={websocket} ownName={ownName} oppName={oppName}/>
         case 'timeout':
             return <TimeoutScreen
                         onExit={() => {setGameMode('none'); setScreen('main'); resetPlayerStatus()}}
@@ -220,5 +234,20 @@ export default function GameUI({
                             </button>
                         </div>
                     </div>
+        case 'game-results':
+            if (gameResult) {
+                return <GameResults
+                    gameMode={gameResult.gameMode}
+                    winnerLabel={gameResult.winnerLabel}
+                    scorePlayer1={gameResult.scorePlayer1}
+                    scorePlayer2={gameResult.scorePlayer2}
+                    player1Label={gameResult.player1Label}
+                    player2Label={gameResult.player2Label}
+                    onBackToMenu={handleBackToMenu}
+                />
+            }
+            return <div className="flex items-center justify-center min-h-screen bg-black">
+                <p className="text-white text-xl">No results available</p>
+            </div>
     }
 }

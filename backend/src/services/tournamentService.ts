@@ -130,7 +130,21 @@ export const tournamentService = {
 
     getTournamentParticipants: (tournament_id: number) => {
         try {
-            const participants = db.prepare('SELECT * FROM tournament_participants WHERE tournament_id = ?').all(tournament_id);
+            const participants = db.prepare(
+                `SELECT
+                    tournament_participants.id,
+                    tournament_participants.tournament_id,
+                    tournament_participants.user_id,
+                    CASE users.is_anonymous
+                        WHEN 1
+                            THEN 'Anonymous'
+                        ELSE users.username
+                    END username,
+                    tournament_participants.joined_at
+                FROM tournament_participants
+                LEFT JOIN users on tournament_participants.user_id = users.id
+                WHERE tournament_id = ?`
+            ).all(tournament_id);
             return participants;
         }
         catch (err: any) {

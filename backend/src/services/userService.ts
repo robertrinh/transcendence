@@ -12,6 +12,13 @@ export const userService = {
         `).get(id)
     },
 
+    fetchUserName: (id: number) => {
+        if (userService.isUserAnonymous(id)) {
+            return 'Anonymous'
+        }
+        return db.prepare(`SELECT username FROM users WHERE id = @id`).pluck().get({id: id})
+    },
+
     fetchOwnProfile: (id:number) => {
         return db.prepare(`
            SELECT 
