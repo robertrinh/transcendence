@@ -1,9 +1,10 @@
-import { assertIsNotNull } from './lib'
+import { assertIsNotNull, resetState } from './lib'
 import { gameOnlineLobby } from './gameOnline'
 import { gameOfflineLobby } from './gameOffline'
 import { GameMode } from '../components/game/types'
 
 export default async function gameInit (gameMode: GameMode, websocket: WebSocket) {
+    resetState()
     let canvas = document.getElementById('game-canvas') as HTMLCanvasElement | null
     if (canvas === null) {
         console.error('Canvas element not found! GameCanvas component must render first.')
