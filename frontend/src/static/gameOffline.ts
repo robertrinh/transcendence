@@ -161,11 +161,11 @@ export async function gameOfflineLobby(
                 playerTwo.ai.update(deltaTimeMS, ball, playerTwo.paddle)
             }
             if (ballExitsLeftSide()) {
-                playerOne.roundScore++
+                playerTwo.roundScore++
                 app.state = gameState.RoundEnd
             }
             if (ballExitsRightSide()) {
-                playerTwo.roundScore++
+                playerOne.roundScore++
                 app.state = gameState.RoundEnd
             }
             if (app.state === gameState.RoundEnd) {
@@ -195,11 +195,11 @@ export async function gameOfflineLobby(
         // }
         if (gameMode === 'singleplayer') {
             drawPlayerScores(canvas, drawCtx, 48, textColor, "sans-serif",
-            playerOne.roundScore, playerTwo.roundScore, ownName, 'Totally Not A Bot')
+            playerTwo.roundScore, playerOne.roundScore, ownName, 'Totally Not A Bot')
         }
         if (gameMode === 'multiplayer') {
             drawPlayerScores(canvas, drawCtx, 48, textColor, "sans-serif",
-            playerOne.roundScore, playerTwo.roundScore, 'P1', 'P2')
+            playerTwo.roundScore, playerOne.roundScore, p1Name, p2Name)
         }
         ctx.drawImage(drawCanvas, 0, 0)
     }
