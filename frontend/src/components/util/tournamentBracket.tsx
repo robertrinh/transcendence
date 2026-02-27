@@ -20,6 +20,14 @@ interface Game {
     score_player2: number | null
 }
 
+export interface TournamentParticipant {
+	id: number;
+	tournament_id: number;
+	user_id: number;
+	joined_at: string;
+    username: string
+}
+
 export default function TournamentBracket({
     tournamentId,
     onPlayMatch,
