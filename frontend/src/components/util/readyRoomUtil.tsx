@@ -295,7 +295,7 @@ export default function ReadyRoom({
                 </p>
               ) : null}
               <p className="text-gray-400 text-sm" style={{ fontFamily: 'monospace' }}>
-                {forfeitWin ? 'Returning to tournament...' : 'Returning to lobby...'}
+                {forfeitWin ? 'Returning to tournament...' : 'Returning to main menu...'}
               </p>
             </div>
           )}

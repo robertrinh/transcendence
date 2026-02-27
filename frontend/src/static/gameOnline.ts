@@ -131,7 +131,7 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
         requestAnimationFrame(draw)
         ctx.clearRect(0, 0, canvas.width, canvas.height)
         drawCtx.clearRect(0, 0, canvas.width, canvas.height)
-        drawCtx.fillStyle = "white"
+        drawCtx.fillStyle = "#050510"
         drawCtx.fillRect(0, 0, canvas.width, canvas.height)
         ball.draw(drawCtx)
         playerOne.paddle.draw(drawCtx)
