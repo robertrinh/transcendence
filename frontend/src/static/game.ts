@@ -3,7 +3,9 @@ import { gameOnlineLobby } from './gameOnline'
 import { gameOfflineLobby } from './gameOffline'
 import { GameMode } from '../components/game/types'
 
-export default async function gameInit (gameMode: GameMode, websocket: WebSocket) {
+export default async function gameInit (
+    gameMode: GameMode, websocket: WebSocket, ownName: string, oppName: string
+) {
     resetState()
     let canvas = document.getElementById('game-canvas') as HTMLCanvasElement | null
     if (canvas === null) {
@@ -32,9 +34,11 @@ export default async function gameInit (gameMode: GameMode, websocket: WebSocket
     switch (gameMode) {
         case "singleplayer":
         case "multiplayer":
-            await gameOfflineLobby(gameMode, canvas, ctx, drawCanvas, drawCtx)
+            await gameOfflineLobby(
+                gameMode, canvas, ctx, drawCanvas, drawCtx, ownName)
             break
         case "online":
-            await gameOnlineLobby(canvas, ctx, drawCanvas, drawCtx, websocket)
+            await gameOnlineLobby(
+                canvas, ctx, drawCanvas, drawCtx, websocket, ownName, oppName)
     }
 }

@@ -6,12 +6,14 @@ import { GameMode } from './types.js'
 interface GameCanvas {
     mode: GameMode
     websocket: React.RefObject<null | WebSocket>
+    ownName: string
+    oppName: string
 }
 
-export default function GameCanvas({mode, websocket}:GameCanvas) {
+export default function GameCanvas({mode, websocket, ownName, oppName}:GameCanvas) {
     useEffect(() => {
         async function wrapper() {
-            await gameInit(mode, websocket.current!)
+            await gameInit(mode, websocket.current!, ownName, oppName)
         }
         wrapper()
         return () => {

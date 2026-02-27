@@ -28,7 +28,8 @@ interface gameProps {
     selectedBracketSize: number
     currentUser: any
     isTournamentMatch: boolean
-    oppUserName: string | null
+    ownName: string
+    oppName: string
 
     gameResult: {
         gameMode: string;
@@ -75,7 +76,7 @@ export default function GameUI({
     screen, gameMode, lobbyId, error, websocket, setScreen, setGameMode,
     handleRandomPlayer, handleHostReq, joinLobbyReq, resetPlayerStatus, gameData, 
     tournamentId, selectedBracketSize, currentUser, isTournamentMatch: _isTournamentMatch,
-    oppUserName, gameResult, handleBackToMenu,
+    ownName, oppName, gameResult, handleBackToMenu,
     setTournamentId: _setTournamentId, setGameData, setError: _setError,
     handleTournamentPlayMatch, handleTournamentFinished,
     onTournamentJoined, onTournamentCreated, onTournamentStarted,
@@ -150,7 +151,7 @@ export default function GameUI({
                         gameData={gameData}
                         gameMode={gameMode}
                         currentUser={currentUser}
-                        oppUserName={oppUserName}
+                        oppUserName={oppName}
                         onBothReady={() => setScreen('countdown')}
                         onBack={() => { setScreen('online'); resetPlayerStatus() }}
                     />
@@ -199,7 +200,7 @@ export default function GameUI({
                         }}
                     />
         case 'game':
-            return <GameCanvas mode={gameMode} websocket={websocket}/>
+            return <GameCanvas mode={gameMode} websocket={websocket} ownName={ownName} oppName={oppName}/>
         case 'timeout':
             return <TimeoutScreen
                         onExit={() => {setGameMode('none'); setScreen('main'); resetPlayerStatus()}}

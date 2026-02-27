@@ -365,6 +365,7 @@ export default function Game() {
           isTournamentMatch={isTournamentMatchRef.current}
           gameResult={gameResult}
           oppName={oppName}
+          ownName={currentUser ? currentUser.username : 'UNKNOWN'}
           handleBackToMenu={handleBackToMenu}
 
           setScreen={setScreen}

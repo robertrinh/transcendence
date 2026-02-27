@@ -5,7 +5,7 @@ interface ReadyRoomProps {
   gameData: any
   gameMode: string
   currentUser: any
-  oppUserName: string | null
+  oppUserName: string
   onBothReady: () => void
   onBack: () => void
 }

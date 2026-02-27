@@ -9,7 +9,8 @@ import { GameMode } from '../components/game/types'
 
 export async function gameOfflineLobby(
     gameMode: GameMode, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D,
-    drawCanvas: HTMLCanvasElement, drawCtx: CanvasRenderingContext2D) {
+    drawCanvas: HTMLCanvasElement, drawCtx: CanvasRenderingContext2D, ownName: string
+) {
     let deltaTimeMS: number
     let then: number, now: number
     let spacePressed = false
@@ -213,8 +214,14 @@ export async function gameOfflineLobby(
         // if (playerTwo.humanControlled === false) {
         //     playerTwo.ai?.drawRays(drawCtx)
         // }
-        drawPlayerScores(canvas, drawCtx, 48, textColor, "sans-serif",
-        playerOne.roundScore, playerTwo.roundScore)
+        if (gameMode === 'singleplayer') {
+            drawPlayerScores(canvas, drawCtx, 48, textColor, "sans-serif",
+            playerOne.roundScore, playerTwo.roundScore, ownName, 'Totally Not A Bot')
+        }
+        if (gameMode === 'multiplayer') {
+            drawPlayerScores(canvas, drawCtx, 48, textColor, "sans-serif",
+            playerOne.roundScore, playerTwo.roundScore, 'P1', 'P2')
+        }
         if (app.state === gameState.RoundEnd) {
             drawCtx.textAlign = "center"
             printText(drawCtx, 48, arenaWidth/2, arenaHeight * 0.8,
