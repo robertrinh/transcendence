@@ -113,7 +113,6 @@ export default function Game() {
         return
       }
       const data = await response.json()
-      const oppUsername = data.username
       setOppName(data.username)
     }
     getOppUserName()
