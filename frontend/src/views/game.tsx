@@ -26,7 +26,7 @@ export default function Game() {
   const isTournamentMatchRef = useRef(false)
   const [gameResult, setGameResult] = useState<GameResult | null>(null)
   const gameModeRef = useRef<GameMode>("none")
-  const [oppUserName, setOppUserName] = useState<string>('UNKNOWN')
+  const [oppName, setOppName] = useState<string>('UNKNOWN')
   const [websocketState, setWebsocketState] = useState<number>(WebSocket.CONNECTING)
 
   useEffect(() => {
@@ -114,7 +114,7 @@ export default function Game() {
       }
       const data = await response.json()
       const oppUsername = data.username
-      setOppUserName(oppUsername)
+      setOppName(data.username)
     }
     getOppUserName()
   }, [gameData, currentUser])
@@ -162,7 +162,7 @@ export default function Game() {
         const scoreMe = gameData.player1_id === myId ? detail.scorePlayer1: detail.scorePlayer2
         const scoreOpponent = gameData.player1_id === myId ? detail.scorePlayer2: detail.scorePlayer1
         const labelMe = 'YOU'
-        const labelOpponent = oppUserName;
+        const labelOpponent = oppName;
        setGameResult({
           gameMode: 'online',
           winnerLabel: iWon ? 'YOU WIN!' : 'YOU LOST!',
@@ -188,7 +188,7 @@ export default function Game() {
     return () => {
       window.removeEventListener('game-over', handleGameOver)
     }
-  }, [gameData, oppUserName])
+  }, [gameData, oppName])
 
   useEffect(() => {
     const handleOnBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -365,7 +365,7 @@ export default function Game() {
           currentUser={currentUser}
           isTournamentMatch={isTournamentMatchRef.current}
           gameResult={gameResult}
-          oppUserName={oppUserName}
+          oppName={oppName}
           handleBackToMenu={handleBackToMenu}
 
           setScreen={setScreen}
