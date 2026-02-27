@@ -11,6 +11,8 @@ export async function gameOfflineLobby(
     gameMode: GameMode, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D,
     drawCanvas: HTMLCanvasElement, drawCtx: CanvasRenderingContext2D, ownName: string
 ) {
+    const p1Name = 'P1'
+    const p2Name = 'P2'
     let deltaTimeMS: number
     let then: number, now: number
 
