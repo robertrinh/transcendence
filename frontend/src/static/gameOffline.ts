@@ -2,8 +2,8 @@ import { Ball } from './ball'
 import { PlayerPaddle } from './playerPaddle'
 import { playerOne, playerTwo, ball, Point, Vector2,
     applyBallHorizontalBounce, drawPlayerScores, arenaWidth, clientTick,
-    roundMax, handlePaddleCollision, assertIsNotNull, printText, 
-    arenaHeight, textColor, intervals } from './lib'
+    roundMax, handlePaddleCollision, assertIsNotNull, textColor, intervals
+} from './lib'
 import { DifficultyLevel } from './ai'
 import { GameMode } from '../components/game/types'
 
@@ -11,9 +11,10 @@ export async function gameOfflineLobby(
     gameMode: GameMode, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D,
     drawCanvas: HTMLCanvasElement, drawCtx: CanvasRenderingContext2D, ownName: string
 ) {
+    const p1Name = 'P1'
+    const p2Name = 'P2'
     let deltaTimeMS: number
     let then: number, now: number
-    let spacePressed = false
 
     function handleKeyDown(key: KeyboardEvent) {
         switch (key.key) {
@@ -38,12 +39,6 @@ export async function gameOfflineLobby(
                 else {
                     playerTwo.paddle.upPressed = true
                 }
-                break
-            case " ":
-                if (app.state !== gameState.RoundEnd) {
-                    break
-                }
-                spacePressed = true
                 break
         }
         key.preventDefault()
@@ -73,11 +68,6 @@ export async function gameOfflineLobby(
                     playerTwo.paddle.upPressed = false
                 }
                 break
-            case " ":
-                if (app.state !== gameState.RoundEnd) {
-                    break
-                }
-                spacePressed = false
         }
         key.preventDefault()
     }
@@ -152,6 +142,38 @@ export async function gameOfflineLobby(
         ActiveRound
     }
 
+    function endGame() {
+        const p1Won = playerOne.roundScore > playerTwo.roundScore
+        let detail: any
+        switch (gameMode) {
+            case 'singleplayer':
+                detail = {
+                    gameMode: gameMode,
+                    winnerLabel: p1Won ? 'YOU WIN!' : 'YOU LOST!',
+                    resultLabel: p1Won ? 'win' : 'loss',
+                    scorePlayer1: playerOne.roundScore,
+                    scorePlayer2: playerTwo.roundScore,
+                    player1Label: 'YOU',
+                    player2Label: 'BOT',
+                }
+                break
+            case 'multiplayer':
+                detail = {
+                    gameMode: gameMode,
+                    winnerLabel: p1Won ? `${p1Name} WINS!` : `${p2Name} WINS!`,
+                    resultLabel: 'win',
+                    scorePlayer1: playerOne.roundScore,
+                    scorePlayer2: playerTwo.roundScore,
+                    player1Label: p1Name,
+                    player2Label: p2Name,
+                }
+                break
+        }
+        window.dispatchEvent(new CustomEvent('game-over', {
+            detail
+        }));
+    }
+
     function update() {
         now = performance.now()
         if (then === undefined) {
@@ -161,16 +183,7 @@ export async function gameOfflineLobby(
         if (deltaTimeMS > clientTick) {
             then = now - (deltaTimeMS % clientTick)
             if (app.state === gameState.RoundEnd) {
-                if (spacePressed) {
-                    app.state = gameState.ActiveRound
-                    playerOne.roundScore = 0
-                    playerTwo.roundScore = 0
-                    ball.movementSpeed = 5
-                    spacePressed = false
-                }
-                else {
-                    return
-                }
+                return
             }
             moveBall(ball, playerOne.paddle, playerTwo.paddle)
             playerOne.paddle.update()
@@ -182,11 +195,11 @@ export async function gameOfflineLobby(
                 playerTwo.ai.update(deltaTimeMS, ball, playerTwo.paddle)
             }
             if (ballExitsLeftSide()) {
-                playerOne.roundScore++
+                playerTwo.roundScore++
                 app.state = gameState.RoundEnd
             }
             if (ballExitsRightSide()) {
-                playerTwo.roundScore++
+                playerOne.roundScore++
                 app.state = gameState.RoundEnd
             }
             if (app.state === gameState.RoundEnd) {
@@ -198,6 +211,7 @@ export async function gameOfflineLobby(
                 // we could upload the game results here (if we want to track
                 // offline games too)
                 app.state = gameState.RoundEnd
+                endGame()
             }
         }
     }
@@ -216,16 +230,11 @@ export async function gameOfflineLobby(
         // }
         if (gameMode === 'singleplayer') {
             drawPlayerScores(canvas, drawCtx, 48, textColor, "sans-serif",
-            playerOne.roundScore, playerTwo.roundScore, ownName, 'Totally Not A Bot')
+            playerTwo.roundScore, playerOne.roundScore, ownName, 'Totally Not A Bot')
         }
         if (gameMode === 'multiplayer') {
             drawPlayerScores(canvas, drawCtx, 48, textColor, "sans-serif",
-            playerOne.roundScore, playerTwo.roundScore, 'P1', 'P2')
-        }
-        if (app.state === gameState.RoundEnd) {
-            drawCtx.textAlign = "center"
-            printText(drawCtx, 48, arenaWidth/2, arenaHeight * 0.8,
-                textColor, "sans-serif", Array("Press spacebar to continue..."))
+            playerTwo.roundScore, playerOne.roundScore, p1Name, p2Name)
         }
         ctx.drawImage(drawCanvas, 0, 0)
     }
