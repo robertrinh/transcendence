@@ -1,5 +1,4 @@
-//* Marquee Effect (+ Game of life background)
-import React, { useRef, useEffect, useCallback } from 'react'; //* for the marquee effect
+import React, { useRef, useEffect, useCallback } from 'react';
 
 const COLORS = [
 	'#00FFFF', // Cyan
@@ -12,7 +11,6 @@ const COLORS = [
 	'#00FFCC', // Mint / cyan-green
 ];
 
-//* Game of Life grid
 export const GameOfLifeBackground: React.FC = () => {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const gridRef = useRef<number[][]>([]);
@@ -22,9 +20,8 @@ export const GameOfLifeBackground: React.FC = () => {
 	const CELL_SIZE = 12;
 	const UPDATE_INTERVAL = 130; //* ms between generations
 
-	//* init grid with random cells
 	const initGrid = useCallback((cols: number, rows: number) => {
-		const grid: number[][] = []; //* =[] to init the array
+		const grid: number[][] = [];
 		const colors: string[][] = [];
 		
 		for (let i = 0; i < rows; i++) {
@@ -200,7 +197,6 @@ export const MarqueeRow: React.FC<MarqueeRowProps> = ({
 	speed = 25 
 }) => {
 	const animationClass = direction === 'left' ? 'animate-marquee-left' : 'animate-marquee-right';
-	//* Duplicate items 4x to ensure full screen coverage
 	const repeatedItems = [...items, ...items, ...items, ...items];
 	
 	return (
@@ -247,7 +243,6 @@ const ShowcasePanel: React.FC = () => {
 					<p className="text-white/70 text-lg drop-shadow">Show your skills and prove your worth.</p>
 				</div>
 				
-				{/* Marquee rows */}
 				<MarqueeRow items={row1} direction="left" speed={30} />
 				<MarqueeRow items={row2} direction="right" speed={35} />
 				<MarqueeRow items={row3} direction="left" speed={28} />

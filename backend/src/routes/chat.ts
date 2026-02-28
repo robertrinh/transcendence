@@ -5,7 +5,6 @@ import { userService } from '../services/userService.js';
 import { authenticate } from '../auth/middleware.js';
 import { register as sseRegister, unregister as sseUnregister, get as sseGet, getConnectionCount, getAllConnections, sendToConnections, broadcast as sseBroadcast, getConnectionIdsForUser } from '../sseNotify.js';
 
-//* in-memory chat message history (SSE connections now in sseNotify.js)
 const chatMessages: any[] = [];
 
 //  SSE endpoint - get token from query parameter
