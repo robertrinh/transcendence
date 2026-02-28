@@ -183,34 +183,25 @@ if (user.is_anonymous) {
                 return;
             }
             const token = localStorage.getItem('token');
-            console.log('🔍 Token from localStorage:', token ? 'EXISTS' : 'MISSING');
-            
             if (!token) {
                 console.error('❌ No token found');
                 return;
             }
 
-            console.log('🔗 Connecting to SSE with token...');
             const sseUrl = `/api/chat/stream?token=${token}`;
-            console.log('📡 SSE URL:', sseUrl);
-            
             const eventSource = new EventSource(sseUrl);
             eventSourceRef.current = eventSource;
 
             eventSource.onopen = () => {
-                console.log('✅ SSE onopen triggered');
+                console.log('SSE onopen triggered');
                 setConnected(true);
             };
 
             eventSource.onmessage = (event) => {
-                console.log('📨 SSE onmessage received:', event.data);
                 try {
                     const data = JSON.parse(event.data);
-                    console.log('📦 Parsed data:', data);
-
                     switch (data.type) {
                         case 'connected':
-                            console.log('🎯 Connected event:', data);
                             setConnectionId(data.connectionId);
                             joinChat(data.connectionId);
                             if (data.onlineUsers)
@@ -321,7 +312,6 @@ if (user.is_anonymous) {
     // NEW: Join chat endpoint
     const joinChat = async (connId: string) => {
         try {
-            console.log('🔗 Joining chat with connectionId:', connId);
             const response = await fetchWithAuth('/api/chat/join', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -332,11 +322,9 @@ if (user.is_anonymous) {
                 })
             });
 
-            const data = await response.json();
-            console.log('✅ Join response:', data);
-
+            await response.json();
             if (response.ok) {
-                console.log('✅ Joined chat successfully');
+                console.log('Joined chat successfully');
             } else {
                 console.error('❌ Failed to join chat:', response.statusText);
             }
