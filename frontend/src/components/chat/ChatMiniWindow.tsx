@@ -178,13 +178,13 @@ if (user.is_anonymous) {
     const connectSSE = () => {
         try {
             if (user.is_anonymous) {
-                console.log('⏭️ Skipping SSE connection for anonymous user');
+                console.log('Skipping SSE connection for anonymous user');
                 setConnected(false);
                 return;
             }
             const token = localStorage.getItem('token');
             if (!token) {
-                console.error('❌ No token found');
+                console.error('No token found');
                 return;
             }
 
@@ -211,7 +211,6 @@ if (user.is_anonymous) {
                             break;
 
                         case 'history':
-                            console.log('📚 History received:', data.messages.length, 'messages');
                             const historyMessages = data.messages.map((msg: any) => ({
                                 id: msg.id,
                                 username: msg.username,
@@ -224,7 +223,6 @@ if (user.is_anonymous) {
                             break;
 
                         case 'message':
-                            console.log('💬 New message:', data);
                             const newMsg: Message = {
                                 id: data.id,
                                 username: data.username,
@@ -233,14 +231,10 @@ if (user.is_anonymous) {
                                 isPrivate: data.isPrivate,
                                 toUser: data.toUser
                             };
-                            setMessages(prev => {
-                                console.log('➕ Adding message to state, total:', prev.length + 1);
-                                return [...prev, newMsg];
-                            });
+                            setMessages(prev => [...prev, newMsg]);
                             break;
 
                         case 'user_joined':
-                            console.log('👥 User joined:', data);
                             setMessages(prev => [...prev, {
                                 id: Date.now().toString(),
                                 username: SYSTEM_USERNAME,
@@ -258,7 +252,6 @@ if (user.is_anonymous) {
                             }
                             break;
                         case 'user_left':
-                            console.log('👥 User event:', data);
                             setMessages(prev => [...prev, {
                                 id: Date.now().toString(),
                                 username: SYSTEM_USERNAME,
@@ -273,7 +266,6 @@ if (user.is_anonymous) {
 
 						//* System message
                         case 'friend_request':
-                            console.log('Friend request received:', data);
                             setMessages(prev => [...prev, {
                                 id: Date.now().toString(),
                                 username: SYSTEM_USERNAME,
@@ -284,28 +276,26 @@ if (user.is_anonymous) {
                             break;
 
                         default:
-                            console.log('⚠️ Unknown message type:', data.type);
+                            console.log('Unknown message type:', data.type);
                     }
                 } catch (error) {
-                    console.error('❌ Error parsing SSE message:', error);
+                    console.error('Error parsing SSE message:', error);
                 }
             };
 
             eventSource.onerror = (error) => {
-                console.error('❌ SSE onerror:', error);
-                console.log('readyState:', eventSource.readyState);
+                console.error('SSE onerror:', error);
                 setConnected(false);
-                
                 setTimeout(() => {
                     if (eventSource.readyState === EventSource.CLOSED) {
-                        console.log('🔄 Attempting reconnection...');
+                        console.log('Attempting reconnection...');
                         connectSSE();
                     }
                 }, 3000);
             };
 
         } catch (error) {
-            console.error('❌ Failed to connect SSE:', error);
+            console.error('Failed to connect SSE:', error);
         }
     };
 
@@ -326,10 +316,10 @@ if (user.is_anonymous) {
             if (response.ok) {
                 console.log('Joined chat successfully');
             } else {
-                console.error('❌ Failed to join chat:', response.statusText);
+                console.error('Failed to join chat:', response.statusText);
             }
         } catch (error) {
-            console.error('❌ Error joining chat:', error);
+            console.error('Error joining chat:', error);
         }
     };
 
@@ -412,7 +402,7 @@ if (user.is_anonymous) {
     const sendMessage = (e: React.FormEvent) => {
         e.preventDefault();
         if (!newMessage.trim() || !connectionId || !connected) {
-            console.log('⚠️ Cannot send: message=', newMessage.trim(), 'connId=', connectionId, 'connected=', connected);
+            console.log('Cannot send: message=', newMessage.trim(), 'connId=', connectionId, 'connected=', connected);
             return;
         }
         if (chatMode === 'private' && (!privateChatWith || !privateChatWith.trim())) {
@@ -421,11 +411,8 @@ if (user.is_anonymous) {
         }
 
         const msgToSend = newMessage.trim();
-        console.log('📤 Sending message:', msgToSend);
         setNewMessage('');
-        
         if (connectionId) {
-            console.log('📡 POST /api/chat/send with connectionId:', connectionId);
             fetchWithAuth('/api/chat/send', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -436,12 +423,9 @@ if (user.is_anonymous) {
                     toUser: chatMode === 'private' && privateChatWith?.trim() ? privateChatWith.trim() : undefined
                 })
             })
-            .then(res => {
-                console.log('✅ Send response status:', res.status);
-                return res.json();
-            })
-            .then(data => console.log('✅ Send response:', data))
-            .catch(error => console.error('❌ Failed to send message:', error));
+            .then(res => res.json().then(() => res))
+            .then(res => { if (res.ok) console.log('Message sent'); })
+            .catch(error => console.error('Failed to send message:', error));
         }
     };
 
