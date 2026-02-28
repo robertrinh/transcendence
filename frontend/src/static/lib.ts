@@ -37,12 +37,12 @@ const paddleSpeedPerTick = 0.5
 const ballSpeed = ballSpeedPerTick * clientTick
 export const paddleMoveUnits = paddleSpeedPerTick * clientTick
 // colors
-const ballColor = "#160f29"
-const p1PaddleColor = "#5885a2"
-const p2PaddleColor = "#b8383b"
-export const textColor = "#36454f"
+const ballColor = "#ffffff"
+const p1PaddleColor = "#00d4ff"
+const p2PaddleColor = "#ff6600"
+export const textColor = "#00d4ff"
 // objects
-const trailColors = new Array("#ffffff", "#cdc3e9", "#9c88d3")
+const trailColors = new Array("#ffffff", "#88ccff", "#003366")
 export const ball = new Ball(
     0, 0, {x: 1, y: 1}, ballRadius, ballSpeed, ballColor, 0, 7.5,
     trailColors)
@@ -258,7 +258,8 @@ export function drawPlayerScores(
     canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D,
     fontSizePX: number, color: string, textStyle: string,
     playerOneRoundScore: number, playerTwoRoundScore: number,
-    playerOneName: string, playerTwoName: string) {
+    _playerOneName: string, _playerTwoName: string) {
+        
         ctx.font = `${fontSizePX}px ${textStyle}`
         ctx.textAlign = "center"
         ctx.fillStyle = color
@@ -272,11 +273,5 @@ export function drawPlayerScores(
         )
         ctx.font = `${Math.floor(fontSizePX * 0.5)}px ${textStyle}`
         ctx.fillStyle = p1PaddleColor
-        ctx.fillText(
-            playerOneName, canvas.width * 0.25, canvas.height * 0.15
-        )
         ctx.fillStyle = p2PaddleColor
-        ctx.fillText(
-            playerTwoName, canvas.width * 0.75, canvas.height * 0.15
-        )
     }

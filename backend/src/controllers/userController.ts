@@ -57,6 +57,13 @@ export const userController = {
         return { success: true, username: userName}
     },
 
+    getUserAvatar: async (req: FastifyRequest, reply: FastifyReply) => {
+        const { id } = req.params as { id: number };
+        const user = userService.fetchUserNameAndAvatar(id)
+        return { success: true, username: user.username, avatar_url: user.avatar_url }
+    },
+
+    //ANONYMIZE PROFILE
     anonymizeProfile: async (req: FastifyRequest, reply: FastifyReply) => {
         const userId = req.user!.userId;
         if (userService.isUserAnonymous(userId)) {

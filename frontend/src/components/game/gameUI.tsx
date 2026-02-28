@@ -30,6 +30,8 @@ interface gameProps {
     isTournamentMatch: boolean
     ownName: string
     oppName: string
+    ownAvatar?: string
+    oppAvatar?: string
 
     gameResult: {
         gameMode: string;
@@ -76,7 +78,7 @@ export default function GameUI({
     screen, gameMode, lobbyId, error, websocket, setScreen, setGameMode,
     handleRandomPlayer, handleHostReq, joinLobbyReq, resetPlayerStatus, gameData, 
     tournamentId, selectedBracketSize, currentUser, isTournamentMatch: _isTournamentMatch,
-    ownName, oppName, gameResult, handleBackToMenu,
+    ownName, ownAvatar, oppName, oppAvatar, gameResult, handleBackToMenu,
     setTournamentId: _setTournamentId, setGameData, setError: _setError,
     handleTournamentPlayMatch, handleTournamentFinished,
     onTournamentJoined, onTournamentCreated, onTournamentStarted,
@@ -148,12 +150,24 @@ export default function GameUI({
                     />
         case 'ready-room':
             return <ReadyRoom
-                        gameData={gameData}
+                         gameData={gameData}
                         gameMode={gameMode}
                         currentUser={currentUser}
                         oppUserName={oppName}
                         onBothReady={() => setScreen('countdown')}
-                        onBack={() => { setScreen('online'); resetPlayerStatus() }}
+                        onBack={() => {
+                            if (gameData?.tournament_id) {
+                                // Tournament game — go back to bracket, not online menu
+                                setScreen('tournament-bracket')
+                            } else {
+                                setScreen('online')
+                            }
+                            resetPlayerStatus()
+                        }}
+                        onForfeitWin={() => {
+                            setScreen('tournament-bracket')
+                            resetPlayerStatus()
+                        }}
                     />
         case 'tournament':
             return <TournamentJoin
@@ -200,7 +214,7 @@ export default function GameUI({
                         }}
                     />
         case 'game':
-            return <GameCanvas mode={gameMode} websocket={websocket} ownName={ownName} oppName={oppName}/>
+            return <GameCanvas mode={gameMode} websocket={websocket} ownName={ownName} oppName={oppName} ownAvatar={ownAvatar} oppAvatar={oppAvatar} />
         case 'timeout':
             return <TimeoutScreen
                         onExit={() => {setGameMode('none'); setScreen('main'); resetPlayerStatus()}}
