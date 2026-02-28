@@ -14,7 +14,7 @@ declare module 'fastify' {
 //* 3. When you need to check if a user is authorized to access a resource (e.g. users routes)
 //* 4. When you need to check if a user is authenticated and authorized to access a resource (e.g. admin only, no user)
 //* example: as a user, you can only access your own data (like my stats, profile, etc.)
-//* as admin, you can access all data (like all users, all games, all tournaments, etc.)
+//* system only access, which users cannot access
 //* adding middleware helps protect routes from unauthorized access!
 
 const extractVerifyToken = (request: FastifyRequest, reply: FastifyReply) => {
@@ -76,7 +76,6 @@ export const authenticatePendingOnly = async (request: FastifyRequest, reply: Fa
 }
 
 //* reject guests for routes that require a full account (profile update, avatar, delete, anonymize)
-//TODO (tournament create/join/leave)
 export const requireNonGuest = async (request: FastifyRequest, reply: FastifyReply) => {
 	if (!request.user?.userId) {
 		return reply.code(401).send({
@@ -95,6 +94,31 @@ export const requireNonGuest = async (request: FastifyRequest, reply: FastifyRep
 		return reply.code(403).send({
 			success: false,
 			error: 'Guest accounts cannot use this feature. Register for a full account.'
+		});
+	}
+};
+
+//* system-only access
+export const requireSystem = async (request: FastifyRequest, reply: FastifyReply) => {
+	const expected = process.env.API_KEY_SYSTEM;
+	if (!expected) {
+		return reply.code(503).send({
+			success: false,
+			error: 'System authentication not configured'
+		});
+	}
+	const authHeader = request.headers.authorization;
+	if (typeof authHeader !== 'string' || !authHeader.startsWith('Bearer ')) {
+		return reply.code(403).send({
+			success: false,
+			error: 'System key required'
+		});
+	}
+	const provided = authHeader.slice(7);
+	if (provided !== expected) {
+		return reply.code(403).send({
+			success: false,
+			error: 'Invalid system key'
 		});
 	}
 };

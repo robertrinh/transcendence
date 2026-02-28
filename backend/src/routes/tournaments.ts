@@ -2,7 +2,7 @@ import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { tournamentController } from '../controllers/tournamentContr.js'
 import { IDSchema } from '../schemas/generic.schema.js'
 import { postTournamentSchemaBody, joinTournamentBody, tournamentResultSchema } from '../schemas/tournament.schema.js';
-import { authenticate } from '../auth/middleware.js'
+import { authenticate, requireSystem } from '../auth/middleware.js'
 
 export default async function tournamentsRoutes (
     fastify: FastifyInstance,
@@ -36,7 +36,8 @@ export default async function tournamentsRoutes (
 			tags: ['tournaments'],
 			summary: 'Delete a tournament by ID',
 			params: IDSchema
-		}
+		},
+		preHandler: [requireSystem]
 	}, tournamentController.deleteTournament)
 
 	fastify.post('/:id/join', {
