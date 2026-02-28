@@ -75,26 +75,32 @@ export const gamesService = {
         }
     },
 
+	timedOut: (player_id: number) => {
+		const queue = db.prepare('SELECT joined_at FROM game_queue WHERE player_id = ?').get(player_id) as Queue;
+		const timedout = db.transaction(() => {
+			if (Date.now() - queue.joined_at * 1000 > TIMEOUT_MATCHMAKING) {
+				db.prepare('UPDATE users SET status = ? WHERE id = ?').run('idle', player_id);
+				db.prepare('DELETE FROM game_queue WHERE player_id = ?').run(player_id);
+				return true
+			}
+		})
+		return timedout() || false
+	},
+
     matchmakingStatus: (player_id: number) => {
         const player = db.prepare('SELECT status FROM users WHERE id = ?').get(player_id) as Player;
         if (player.status === 'playing') {
 			const returnGame = db.transaction(() => {
-            db.prepare('UPDATE users SET status = ? WHERE id = ?').run('playing', player_id);
             return db.prepare('SELECT * FROM games WHERE player1_id = ? OR player2_id = ? ORDER BY created_at DESC LIMIT 1').get(player_id, player_id);
 			})
 			return returnGame();
 		}
         if (player.status === 'searching') {
-            const queue = db.prepare('SELECT joined_at FROM game_queue WHERE player_id = ?').get(player_id) as Queue;
-            const timedout = db.transaction(() => {
-				if (Date.now() - queue.joined_at * 1000 > TIMEOUT_MATCHMAKING) {
-					db.prepare('UPDATE users SET status = ? WHERE id = ?').run('idle', player_id);
-					db.prepare('DELETE FROM game_queue WHERE player_id = ?').run(player_id);
-					return db.prepare('SELECT status FROM users WHERE id = ?').get(player_id) as Player;
-				}
-			})
-			return timedout() || player;
+			if (gamesService.timedOut(player_id)){
+				return db.prepare('SELECT status FROM users WHERE id = ?').get(player_id) as Player;
+			}
         }
+		return player;
     },
 
 	cancelMatchmaking: (player_id: number) => {

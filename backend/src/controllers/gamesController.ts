@@ -78,6 +78,9 @@ export const gamesController = {
         if (game_queue === undefined)
             throw new ApiError(404, `Lobby \"${lobby_id}\" not found`)
         if (game_queue.player_id === player_id) {
+			if (gamesService.timedOut(player_id)) {
+				return {success: false, status: 'idle'}
+			}
             return {success: false, message: 'Waiting for your opponent to join...'}
         }
         if (player.status === 'playing') {
