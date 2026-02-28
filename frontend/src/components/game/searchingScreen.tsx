@@ -4,7 +4,7 @@ import { fetchWithAuth } from '../../config/api'
 interface SearchingScreenProps {
     onCancel: () => void
     onGameFound?: (gameData: any) => void
-    onTimeout?: () => void
+    onTimeout: () => void
 }
 
 export default function SearchingScreen ({ onCancel, onGameFound, onTimeout }: SearchingScreenProps) {
@@ -36,17 +36,13 @@ export default function SearchingScreen ({ onCancel, onGameFound, onTimeout }: S
                 const result = await response.json()
                 const data = result.data
                 
-                console.log('🔍 Poll result:', data)
-                
                 if (data && data.player1_id && data.player2_id) {
-                    console.log('🎮 Match found!', data)
-                    clearInterval(pollTimer)
+                    console.log('Match found!', data)
                     onGameFound?.(data)
                 }
                 else if (data && data.status === 'idle') {
-                    console.log('⏰ Matchmaking timed out')
-                    clearInterval(pollTimer)
-                    onTimeout?.()
+                    console.log('Matchmaking timed out')
+                    onTimeout()
                 }
             } catch (err) {
                 console.error('Polling error:', err)
@@ -54,7 +50,7 @@ export default function SearchingScreen ({ onCancel, onGameFound, onTimeout }: S
         }, 2000)
 
         return () => clearInterval(pollTimer)
-    }, [onGameFound, onTimeout])
+    }, [])
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60)
