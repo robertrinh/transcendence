@@ -139,8 +139,9 @@ export default function GameUI({
                             setGameMode('online')
                             setScreen('ready-room')
                         }}
+						onTimeout= {() => {setGameMode('none'); setScreen('timeout'); resetPlayerStatus()}}
                         onBack={() => { setScreen('online'); resetPlayerStatus() }}
-                    />
+					/>
         case 'join-lobby':
             return <JoinLobby
                         onJoin={(id: string) => joinLobbyReq(id)}
@@ -210,13 +211,13 @@ export default function GameUI({
                             setGameMode('online')
                             setScreen('ready-room')
                         }}
+						onTimeout= {() => {setGameMode('none'); setScreen('timeout'); resetPlayerStatus()}}
                     />
         case 'game':
             return <GameCanvas mode={gameMode} websocket={websocket} ownName={ownName} oppName={oppName}/>
         case 'timeout':
             return <TimeoutScreen
-                        onExit={() => {setGameMode('none'); setScreen('main'); resetPlayerStatus()}}
-                        onRetry={async () => { await resetPlayerStatus(); handleRandomPlayer()}}
+                        onExit={() => {setGameMode('none'); setScreen('online');}}
                     />
         case 'error':
             return <div className="flex items-center justify-center min-h-screen bg-red-900">
