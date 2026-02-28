@@ -62,6 +62,22 @@ export default async function usersRoutes (
         }, preHandler: [authenticate, requireNonGuest]
     }, userController.updateProfile);
 
+    fastify.post('/change-password', {
+        schema: {
+            security: [{ bearerAuth: [] }],
+            tags: ['users'],
+            summary: 'Change password',
+            body: {
+                type: 'object',
+                required: ['current_password', 'new_password'],
+                properties: {
+                    current_password: { type: 'string' },
+                    new_password: { type: 'string', minLength: 8 }
+                }
+            }
+        }, preHandler: [authenticate, requireNonGuest]
+    }, userController.changePassword);
+
     fastify.get('/username/:id', {
         schema: {
             security: [{ bearerAuth: [] }],

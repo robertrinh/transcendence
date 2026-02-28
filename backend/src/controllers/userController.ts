@@ -26,7 +26,6 @@ export const userController = {
         return { success: true, message: 'User created, welcome to the game!' };
     },
 
-    // GET OWN PROFILE - Always full data
     getMyProfile: async (req: FastifyRequest, reply: FastifyReply) => {
         const user_id = req.user!.userId;
         const profile = userService.fetchOwnProfile(user_id);
@@ -58,7 +57,6 @@ export const userController = {
         return { success: true, username: userName}
     },
 
-    //ANONYMIZE PROFILE
     anonymizeProfile: async (req: FastifyRequest, reply: FastifyReply) => {
         const userId = req.user!.userId;
         if (userService.isUserAnonymous(userId)) {
@@ -120,6 +118,50 @@ export const userController = {
         }
     },
 
+    changePassword: async (req: FastifyRequest, reply: FastifyReply) => {
+        const { current_password, new_password } = req.body as { current_password?: string; new_password?: string };
+        const userId = req.user!.userId;
+
+        if (!current_password || !new_password) {
+            return reply.code(400).send({
+                success: false,
+                error: 'Current password and new password are required'
+            });
+        }
+        if (new_password.length < 8) {
+            return reply.code(400).send({
+                success: false,
+                error: 'New password must be at least 8 characters long'
+            });
+        }
+
+        const currentHash = userService.getPasswordHash(userId);
+        if (!currentHash) {
+            return reply.code(400).send({
+                success: false,
+                error: 'Account does not support password change'
+            });
+        }
+
+        const valid = await bcrypt.compare(current_password, currentHash);
+        if (!valid) {
+            return reply.code(403).send({
+                success: false,
+                error: 'Current password is incorrect'
+            });
+        }
+
+        const hashedPassword = await bcrypt.hash(new_password, 10);
+        const result = userService.updateProfile(['password = ?'], [hashedPassword], userId);
+        if (result.changes === 0) {
+            throw new ApiError(404, 'User not found', 'USER_NOT_FOUND');
+        }
+        return reply.code(200).send({
+            success: true,
+            message: 'Password changed successfully'
+        });
+    },
+
     uploadAvatar: async (req: FastifyRequest, reply: FastifyReply) => {
        try {
             if (!existsSync(uploadsDir)) {
@@ -178,7 +220,6 @@ export const userController = {
                 });
             }
 			
-            // Get user with password hash - cast as any to access password property
             const user = userService.fetchUser(userId) as { id: number; username: string; password: string };
             if (!user) {
                 return reply.status(404).send({
@@ -186,7 +227,6 @@ export const userController = {
                 });
             }
 
-            // Verify password before deletion
             const isPasswordValid = await bcrypt.compare(password, user.password);
             if (!isPasswordValid) {
                 return reply.status(403).send({
@@ -194,7 +234,6 @@ export const userController = {
                 });
             }
 
-            // Delete user and related data
             const deleteResult = userService.deleteUser(userId);
             console.log('User deleted:', userId, deleteResult);
 

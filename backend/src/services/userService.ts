@@ -12,6 +12,11 @@ export const userService = {
         `).get(id)
     },
 
+    getPasswordHash: (id: number): string | null => {
+        const row = db.prepare('SELECT password FROM users WHERE id = ?').get(id) as { password: string | null } | undefined;
+        return row?.password ?? null;
+    },
+
     fetchUserName: (id: number) => {
         if (userService.isUserAnonymous(id)) {
             return 'Anonymous'
