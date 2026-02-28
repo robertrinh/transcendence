@@ -26,10 +26,9 @@ export default function HostLobby({ lobbyId, onGameCreated, onBack }: HostLobbyP
           body: JSON.stringify({ lobby_id: lobbyId }),
         })
         const data = await response.json()
-        console.log('🔄 Host poll:', data)
 
         if (data.success && data.data?.id) {
-          console.log('✅ Opponent joined! Game:', data.data)
+          console.log('Opponent joined! Game:', data.data)
           clearInterval(interval)
           onGameCreated(data.data)
         }

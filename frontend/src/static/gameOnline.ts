@@ -273,7 +273,6 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
                 }
                 break
             case "GAME_END":
-                console.log(`🏁 Game ended! Winner: ${JSONObject.winner_id}, Score: ${JSONObject.score_player1}-${JSONObject.score_player2}`)
                 cleanup()
                 window.dispatchEvent(new CustomEvent('game-over', {
                     detail: {
@@ -284,11 +283,11 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
                 }))
                 break
             case "OPPONENT_DISCONNECT":
-                console.log('❌ Opponent disconnected')
+                console.log('Opponent disconnected')
                 cleanup()
                 break
             case "ERROR":
-                console.error('🚨 Game error:', JSONObject.message)
+                console.error('Game error:', JSONObject.message)
                 cleanup()
                 window.dispatchEvent(new CustomEvent('game-over', {
                     detail: { error: JSONObject.message }
@@ -303,7 +302,6 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
     websocket.onmessage = gameSockOnMessage
     const buffered = (websocket as any).__bufferedMessages as MessageEvent[] | undefined
     if (buffered && buffered.length > 0) {
-        console.log(`🔄 Replaying ${buffered.length} buffered messages`)
         for (const msg of buffered) {
             await gameSockOnMessage(msg)
         }

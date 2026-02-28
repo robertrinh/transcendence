@@ -91,9 +91,7 @@ export default function Game() {
       try {
         const response = await fetchWithAuth('/api/users/profile/me')
         const data = await response.json()
-        console.log('👤 Full API response:', JSON.stringify(data))
         const user = data.profile || data.data || data
-        console.log('👤 User object:', JSON.stringify(user), 'id:', user.id)
         setCurrentUser(user)
       } catch (err) {
         console.error('Failed to fetch user:', err)
@@ -122,11 +120,7 @@ export default function Game() {
   useEffect(() => {
       const handleGameOver = (event: Event) => {
       const detail = (event as CustomEvent).detail
-      console.log('🏁 Game over event received:', detail)
-      console.log('🏆 isTournamentMatch (ref):', isTournamentMatchRef.current)
- 
       if (isTournamentMatchRef.current) {
-        console.log('🏆 Returning to tournament bracket...')
         setScreen('tournament-bracket')
         setGameMode('none')
         setGameData(null)
@@ -264,7 +258,6 @@ export default function Game() {
         return response.json()
       throw new Error('Failed to join lobby')
     }).then(data => {
-      console.log('Joined lobby response:', data)
       setGameData(data.data)
       setScreen("ready-room")
     }).catch(err => {
@@ -295,26 +288,22 @@ export default function Game() {
 
   // Tournament handlers
   const handleTournamentCreated = useCallback((toId: number, maxParticipants: number) => {
-    console.log('🏟️ Tournament created:', toId, 'Max:', maxParticipants)
     setTournamentId(toId)
     setSelectedBracketSize(maxParticipants)
     setScreen('tournament-lobby')
   }, [])
 
   const handleTournamentJoined = useCallback((toId: number, maxParticipants: number) => {
-    console.log('🏟️ Joined tournament:', toId, 'Max:', maxParticipants)
     setTournamentId(toId)
     setSelectedBracketSize(maxParticipants)
     setScreen('tournament-lobby')
   }, [])
 
   const handleTournamentStarted = useCallback(() => {
-    console.log('🏟️ Tournament started!')
     setScreen('tournament-bracket')
   }, [])
 
   const handleTournamentLeft = useCallback(() => {
-    console.log('🏟️ Left tournament')
     setTournamentId(null)
     isTournamentMatchRef.current = false
     setScreen('main')
@@ -323,20 +312,16 @@ export default function Game() {
 
   // Play a tournament match
   const handleTournamentPlayMatch = useCallback(async (gameId: number) => {
-    console.log('🎯 Playing tournament match - Game ID:', gameId)
-    // Set ref FIRST, before any async work or state updates
     isTournamentMatchRef.current = true
-    console.log('🏆 Set isTournamentMatchRef to TRUE')
     try {
       const response = await fetchWithAuth(`/api/games/${gameId}`)
       if (!response.ok) throw new Error('Failed to fetch game data')
       const data = await response.json()
-      console.log('📦 Tournament game data:', data.data)
       setGameData(data.data)
       setGameMode('online')
       setScreen('ready-room')
     } catch (err) {
-      console.error('❌ Failed to start tournament match:', err)
+      console.error('Failed to start tournament match:', err)
       isTournamentMatchRef.current = false
       setError(String(err))
     }

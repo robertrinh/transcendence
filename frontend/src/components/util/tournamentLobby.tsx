@@ -68,7 +68,6 @@ export default function TournamentLobby({
                 if (!response.ok) throw new Error('Failed to fetch tournament')
 
                 const data = await response.json()
-                console.log('🔄 Tournament poll:', data)
                 setTournament(data.data)
                 setParticipants(data.participants || [])
                 setError(null)
@@ -79,7 +78,7 @@ export default function TournamentLobby({
                     onStartTournament()
                 }
             } catch (err) {
-                console.error('❌ Failed to fetch tournament status:', err)
+                console.error('Failed to fetch tournament status:', err)
                 setError(String(err))
             }
         }
@@ -107,10 +106,9 @@ export default function TournamentLobby({
             const result = await response.json()
             if (!response.ok) throw new Error(result.message || result.error || 'Failed to start tournament')
 
-            console.log('✅ Tournament started:', result)
             onStartTournament()
         } catch (err: any) {
-            console.error('❌ Failed to start tournament:', err)
+            console.error('Failed to start tournament:', err)
             setError(err.message)
             setStarting(false)
         }
@@ -127,7 +125,7 @@ export default function TournamentLobby({
             }
             onLeaveTournament()
         } catch (err: any) {
-            console.error('❌ Failed to leave tournament:', err)
+            console.error('Failed to leave tournament:', err)
             setError(err.message)
         }
     }

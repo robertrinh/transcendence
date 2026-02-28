@@ -26,15 +26,6 @@ export default function ReadyRoom({
   const myName = currentUser?.username || currentUser?.display_name || (isPlayer1 ? 'Player 1' : 'Player 2')
   const opponentName = oppUserName
 
-  // Debug logging
-  useEffect(() => {
-    console.log('🔍 ReadyRoom DEBUG:')
-    console.log('  currentUser?.id:', currentUser?.id, typeof currentUser?.id)
-    console.log('  gameData?.player1_id:', gameData?.player1_id, typeof gameData?.player1_id)
-    console.log('  gameData?.player2_id:', gameData?.player2_id, typeof gameData?.player2_id)
-    console.log('  isPlayer1:', isPlayer1)
-  }, [currentUser, gameData, isPlayer1])
-
   // For local games, skip ready room
   const isLocalGame = gameMode === 'singleplayer' || gameMode === 'multiplayer'
   useEffect(() => {
@@ -63,7 +54,6 @@ export default function ReadyRoom({
         body: JSON.stringify({ game_id: gameData.id }),
       })
       const data = await response.json()
-      console.log('🟢 Ready response:', data)
       if (data.success) {
         setMyReady(true)
         if (data.data.all_ready) {
@@ -84,8 +74,6 @@ export default function ReadyRoom({
       try {
         const response = await fetchWithAuth(`/api/games/${gameData.id}/ready`)
         const data = await response.json()
-        console.log('🔄 Ready poll:', data)
-
         if (data.success && data.data) {
           const { player1_ready, player2_ready, all_ready } = data.data
 

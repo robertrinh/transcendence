@@ -44,7 +44,7 @@ export default function TournamentJoin({
                 setTournaments(openTournaments)
                 setError(null)
             } catch (err) {
-                console.error('❌ Failed to fetch tournaments:', err)
+                console.error('Failed to fetch tournaments:', err)
                 setError(String(err))
             } finally {
                 setLoading(false)
@@ -77,14 +77,12 @@ export default function TournamentJoin({
                 throw new Error(err.error || 'Failed to join tournament')
             }
 
-            const data = await response.json()
-            console.log('✅ Joined tournament:', data)
-
+            await response.json()
             const tourResponse = await fetch(`/api/tournaments/${tId}`)
             const tourData = await tourResponse.json()
             onTournamentJoined(tId, tourData.data.max_participants)
         } catch (err: any) {
-            console.error('❌ Failed to join:', err)
+            console.error('Failed to join:', err)
             setError(err.message)
             setJoining(null)
         }
