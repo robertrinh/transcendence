@@ -34,21 +34,30 @@ type TabMode = 'chat' | 'friends' | 'blocked';
 const SYSTEM_USERNAME = 'System';
 
 const ChatMiniWindow: React.FC<ChatMiniWindowProps> = ({ user, navigateToUserProfile }) => {
-
 if (user.is_anonymous) {
         return (
-            <div className="h-full flex items-center justify-center p-6 bg-gray-50">
+            <div className="h-full flex items-center justify-center p-6 bg-slate-800/50">
                 <div className="text-center max-w-md">
-                    <div className="w-20 h-20 bg-gray-300 rounded-full mx-auto mb-4 flex items-center justify-center">
-                        <svg className="w-10 h-10 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    <div className="w-20 h-20 bg-slate-700 border border-slate-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <svg
+                            className="w-10 h-10 text-slate-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                            />
                         </svg>
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Chat Unavailable</h3>
-                    <p className="text-gray-600">
+                    <h3 className="text-xl font-semibold text-slate-200 mb-2">Chat Unavailable</h3>
+                    <p className="text-slate-400">
                         Anonymous users cannot access the chat feature.
                     </p>
-                    <p className="text-sm text-gray-500 mt-2">
+                    <p className="text-sm text-slate-500 mt-2">
                         This restriction is permanent for anonymous profiles.
                     </p>
                 </div>
