@@ -15,7 +15,6 @@ export const Leaderboard: React.FC = () => {
         const leaderBoard = await fetchLeaderBoard(); 
         if (leaderBoard === null)
             throw Error('very bad')
-        console.log('leaderboard response:', leaderBoard);
         if (leaderBoard) {
             setLeaderBoard(leaderBoard);
         }

@@ -245,16 +245,10 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
     };
 
 const handleAnonymizeProfile = async () => {
-    console.log('🔴 handleAnonymizeProfile called'); 
     setLoading(true);
     try {
-        console.log('🔴 Sending request to /api/users/anonymize');
         const response = await fetchWithAuth('/api/users/anonymize', { method: 'POST' });
-
-        console.log('🔴 Response status:', response.status); 
         const data = await response.json();
-        console.log('🔴 Response data:', data); 
-        
         if (response.ok) {
            showMessage('success', 'Profile anonymized successfully. Logging out...');
            if (onUserUpdate) {
@@ -264,7 +258,7 @@ const handleAnonymizeProfile = async () => {
             showMessage('error', data.error || 'Failed to anonymize profile');
         }
     } catch (error) {
-        console.error('🔴 Error:', error);
+        console.error('Error anonymizing profile:', error);
         showMessage('error', 'Network error. Please try again.');
     } finally {
         setLoading(false);

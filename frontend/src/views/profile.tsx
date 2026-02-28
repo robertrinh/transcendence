@@ -38,7 +38,6 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
     const loadProfile = async () => {
         setLoading(true);
         const profile = await fetchUserProfile();
-        console.log('Profile response:', profile);
         if (profile) {
             setProfileData(profile);
         }
