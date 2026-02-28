@@ -86,5 +86,12 @@ export const tournamentController = {
 		if (games.length === 0)
 			throw new ApiError(404, 'tournament not found or no games found'); 
 		return {success: true, games };
-	}
+	},
+
+	removeFromActiveGame: async (req: FastifyRequest, reply: FastifyReply) => {
+		const user_id = req.user!.userId;
+		console.log('HELP')
+		tournamentService.removeFromActiveGame(user_id)
+		return {success: true}
+	},
 }

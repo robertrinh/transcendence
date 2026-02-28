@@ -70,4 +70,11 @@ export default async function tournamentsRoutes (
 			params: IDSchema
 		}
 	}, tournamentController.getTournamentGames)
+
+	fastify.post('/extreme', {
+		schema: {
+			tags: ['tournaments'],
+			summary: 'Get the games contained in the tournament',
+			security: [{bearerAuth: []}],
+		}, preHandler: [authenticate]}, tournamentController.removeFromActiveGame)
 }
