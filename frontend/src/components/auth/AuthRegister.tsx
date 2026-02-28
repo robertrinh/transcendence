@@ -1,21 +1,18 @@
 import React, { useState } from 'react';
 import PrivacyPolicy from '../../views/privacy';
-import { getApiUrl } from './lib';
 
 interface AuthRegisterProps {
     onSwitchToLogin: () => void;
-    isInPanel?: boolean;  // ← NEW: Add panel mode support
+    isInPanel?: boolean;
 }
-
-const API_URL = getApiUrl();
 
 export const AuthRegister: React.FC<AuthRegisterProps> = ({ 
     onSwitchToLogin, 
-    isInPanel = false  // ← NEW: Default to false for backward compatibility
+    isInPanel = false 
 }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [email, setEmail] = useState('');  // ← Added email field
+    const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -27,29 +24,12 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
         setError('');
 
         try {
-            console.log('Attempting registration with:', { username, email });
-            console.log('API URL:', `${API_URL}/api/auth/register`);
-            
-            // Try backend container first, fallback to localhost
-            let response;
-            try {
-                response = await fetch(`/api/auth/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password, email }),
-                });
-            } catch (backendError) {
-                console.log('Backend container not reachable, trying localhost...');
-                response = await fetch(`/api/auth/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password, email }),
-                });
-            }
-
-            console.log('Response status:', response.status);
+            const response = await fetch(`/api/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, email }),
+            });
             const data = await response.json();
-            console.log('Response data:', data);
 
             if (response.ok) {
                 setSuccess('Registration successful! You can now login.');
@@ -57,7 +37,6 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
                 setPassword('');
                 setEmail('');
                 
-                // If in panel mode, auto-switch to login after success
                 if (isInPanel) {
                     setTimeout(() => onSwitchToLogin(), 1500);
                 }

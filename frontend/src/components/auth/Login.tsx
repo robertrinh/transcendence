@@ -1,20 +1,17 @@
 import React, { useState } from 'react';
 import TwoFactorVerify from './TwoFactorVerify';
 import { User } from '../util/profileUtils';
-import { getApiUrl } from './lib';
 
 interface LoginProps {
 	onLoginSuccess: (userData: User, token: string) => void;
 	onSwitchToRegister?: () => void;
-	isInPanel?: boolean;  // ← NEW: Add panel mode support
+	isInPanel?: boolean;
 }
-
-const API_URL = getApiUrl();
 
 const Login: React.FC<LoginProps> = ({
 	onLoginSuccess,
 	onSwitchToRegister,
-	isInPanel = false  // ← NEW: Default to false for backward compatibility
+	isInPanel = false
 }) => {
 	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');
@@ -32,29 +29,12 @@ const Login: React.FC<LoginProps> = ({
 		setError('');
 
 		try {
-			console.log('Attempting login with:', { username });
-			console.log('API URL:', `${API_URL}/api/auth/login`);
-
-			// Try backend container first, fallback to localhost
-			let response;
-			try {
-				response = await fetch(`/api/auth/login`, {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ username, password }),
-				});
-			} catch (backendError) {
-				console.log('Backend container not reachable, trying localhost...');
-				response = await fetch(`/api/auth/login`, {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ username, password }),
-				});
-			}
-
-			console.log('Response status:', response.status);
+			const response = await fetch(`/api/auth/login`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ username, password }),
+			});
 			const data = await response.json();
-			console.log('Response data:', data); // remove this for production!!!!
 
 			if (response.ok) {
 				if (data.requires2FA) {
@@ -63,7 +43,6 @@ const Login: React.FC<LoginProps> = ({
 					setShowTwoFactor(true);
 				} else {
 					onLoginSuccess(data.user, data.token);
-					// Clear form
 					setUsername('');
 					setPassword('');
 				}

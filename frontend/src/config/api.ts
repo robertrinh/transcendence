@@ -2,13 +2,9 @@
 const getApiBaseUrl = (): string => {
     const backendPort = import.meta.env.VITE_BACKEND_PORT
     const serverHostname = import.meta.env.VITE_SERVER_HOSTNAME
-    // In Docker environment, containers communicate via service names
-    // In browser, this will be resolved by Docker networking
     if (process.env.NODE_ENV === 'production') {
         return `http://backend:${backendPort}`;
     }
-    
-    // For development, try backend container first, then localhost
     return `http://${serverHostname}:${backendPort}`;
 };
 
@@ -36,7 +32,6 @@ export const fetchWithAuth = async (path: string, options: RequestInit = {}): Pr
     return response;
 };
 
-// NEW: Handshake function to verify token and get user info
 export const verifyToken = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -66,7 +61,6 @@ export const verifyToken = async () => {
     }
 };
 
-// Login
 export const login = async (username: string, password: string) => {
     const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
@@ -81,7 +75,6 @@ export const login = async (username: string, password: string) => {
     return data;
 };
 
-// Register
 export const register = async (username: string, password: string) => {
     const response = await fetch(`${API_BASE}/auth/register`, {
         method: 'POST',
@@ -96,7 +89,6 @@ export const register = async (username: string, password: string) => {
     return data;
 };
 
-// Logout
 export const logout = async () => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -122,21 +114,5 @@ export const API_ENDPOINTS = {
         join: `${API_BASE_URL}/api/chat/join`,
         leave: `${API_BASE_URL}/api/chat/leave`,
         users: `${API_BASE_URL}/api/chat/users`,
-    }
-};
-
-// Utility function to make API calls with fallback
-export const apiCall = async (url: string, options?: RequestInit): Promise<Response> => {
-    try {
-        // Try the configured URL first
-        return await fetch(url, options);
-    } catch (error) {
-        // If that fails and we're trying backend container, try localhost
-        if (url.includes('backend:3000')) {
-            const fallbackUrl = url.replace('backend:3000', 'localhost:3000');
-            console.log(`Backend container failed, trying localhost: ${fallbackUrl}`);
-            return await fetch(fallbackUrl, options);
-        }
-        throw error;
     }
 };
