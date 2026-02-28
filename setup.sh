@@ -10,6 +10,7 @@ game_server_port=8081
 passwd=$(openssl passwd -1 "")	
 nginx_port=8443
 jwt_secret=$(openssl rand -base64 32)
+api_key_system=$(openssl rand -base64 32)
 
 function create_ssl () {
 	openssl req -x509 -newkey rsa:4096 -keyout $nginx_dir/nginx-selfsigned.key \
@@ -38,6 +39,9 @@ function create_backend_env () {
 	# JWT Configuration
 	# Use: openssl rand -base64 32
 	JWT_SECRET=$jwt_secret
+
+	# System API key for system-only routes
+	API_KEY_SYSTEM=$api_key_system
 
 	# JWT Token Expiration Time
 	# Format: 60s, 5m, 1h, 7d, etc.
