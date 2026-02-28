@@ -16,6 +16,7 @@ export interface TournamentParticipant {
 	id: number;
 	tournament_id: number;
 	user_id: number;
+	user_status: 'joined' | 'playing' | 'left';
 	joined_at: string;
 }
 

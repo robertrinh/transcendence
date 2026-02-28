@@ -172,6 +172,21 @@ export const userService = {
             dbError(err);
             throw err;
         }
+    },
+
+    getTournamentIDUser: (user_id: number): number | undefined => {
+        const tournamentID = db.prepare(`
+            SELECT
+                tournament_participants.tournament_id
+            FROM tournament_participants
+            LEFT JOIN tournaments ON tournament_participants.tournament_id = tournaments.id
+            WHERE tournament_participants.user_id = @user_id
+            AND tournaments.status IN ('open', 'ongoing')
+        `).get({user_id: user_id}) as undefined | any
+        if (typeof tournamentID === 'undefined') {
+            return undefined
+        } 
+        return tournamentID.tournament_id
     }
 }
 

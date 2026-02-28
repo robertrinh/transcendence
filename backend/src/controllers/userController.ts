@@ -209,5 +209,14 @@ export const userController = {
                 details: error.message
             });
         }
-    }
+    },
+
+    getActiveTournament: async (req: FastifyRequest, reply: FastifyReply) => {
+        const user_id = req.user!.userId;
+        const tournamentID = userService.getTournamentIDUser(user_id)
+        if (!tournamentID) {
+            return { success: false}
+        }
+        return { success: true, tournament_id: tournamentID };
+    },
 }

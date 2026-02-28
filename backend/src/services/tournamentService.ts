@@ -24,6 +24,18 @@ export const tournamentService = {
 
     joinTournament: (tournament_id: number, user_id: number) => {
         try {
+            const tournament_status = db.prepare(`
+                SELECT
+                    status
+                FROM tournaments
+                WHERE id = @tournament_id
+                `).pluck().get({tournament_id: tournament_id}) as undefined | 'open' | 'ongoing' | 'finished' | 'cancelled'
+            if (!tournament_status) {
+                throw new ApiError(404, 'Tournament not found')
+            }
+            if (tournament_status !== 'open') {
+                throw new ApiError(400, 'Tournament is not open for signups')
+            }
 			const user_already_in = db.prepare(
 				'SELECT * FROM tournament_participants WHERE tournament_id = @tournament_id AND user_id = @user_id'
 			).all({tournament_id: tournament_id, user_id: user_id})
@@ -116,12 +128,61 @@ export const tournamentService = {
 
     leaveTournament: (tournament_id: number, user_id: number) => {
         try {
-            const status = db.prepare('SELECT status FROM tournaments WHERE id = ?').get(tournament_id) as Tournament;
-            if (status.status !== 'open')
-                throw new ApiError(400, 'tournament already started');
-            const result = db.prepare('DELETE FROM tournament_participants WHERE tournament_id = ? AND user_id = ?').run(tournament_id, user_id);
-            if (result.changes == 0)
-                throw new ApiError(404, 'player or tournament not found');
+            const tournament = db.prepare('SELECT status FROM tournaments WHERE id = ?').get(tournament_id) as Tournament | undefined;
+            if (!tournament) {
+                throw new ApiError(404, 'Tournament not found')
+            }
+            const tournamentParticipants = db.prepare(
+                'SELECT * FROM tournament_participants WHERE tournament_id = ?')
+                .all(tournament_id) as TournamentParticipant[]
+            let userFound = false
+            for (const particpant of tournamentParticipants) {
+                if (particpant.id === user_id) {
+                    userFound = true
+                }
+            }
+            if (!userFound) {
+                throw new ApiError(404, 'Player not in tournament')
+            }
+            // we need a round max envvar
+            const roundMax = 5
+            console.log(`TOURNAMENT STATUS: ${tournament.status}`)
+            switch (tournament.status) {
+                case 'ongoing':
+                    // Give default wins for upcoming games
+                    db.prepare(`
+                        UPDATE games
+                        SET winner_id = CASE
+                        WHEN player1_id = @user_id
+                            THEN player2_id
+                            ELSE player1_id
+                        END,
+                        score_player1 = CASE
+                        WHEN player1_id = @user_id
+                            THEN 0
+                            ELSE @round_max
+                        END,
+                        score_player2 = CASE
+                        WHEN player2_id = @user_id
+                            THEN 0
+                            ELSE @round_max
+                        END,
+                        status = 'finished'
+                        WHERE tournament_id = @tournament_id
+                    `).run({
+                        tournament_id: tournament_id,
+                        user_id: user_id,
+                        round_max: roundMax
+                    })
+                    break
+                case 'open':
+                    console.log("BLOCK ENJOYER")
+                    db.prepare('DELETE FROM tournament_participants WHERE tournament_id = ? AND user_id = ?')
+                    .run(tournament_id, user_id)
+                    break
+                default:
+                    return
+            }
         }
         catch (err: any) {
             dbError(err);

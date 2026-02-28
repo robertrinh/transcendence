@@ -78,4 +78,11 @@ export default async function usersRoutes (
         }, preHandler: [authenticate, requireNonGuest]
     }, userController.deleteUser);
 
+    fastify.get('/tournament', {
+        schema: {
+            security: [{ bearerAuth: [] }],
+            tags: ['users', 'tournaments'],
+            summary: 'Returns a tournament ID from an open/ongoing tournament or undefined if a user is not in one',
+        }, preHandler: [authenticate]
+    }, userController.getActiveTournament);
 }

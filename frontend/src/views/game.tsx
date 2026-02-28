@@ -190,7 +190,8 @@ export default function Game() {
   }, [gameData, oppName])
 
   useEffect(() => {
-    const handleOnBeforeUnload = (event: BeforeUnloadEvent) => {
+    const handleOnBeforeUnload = async (event: BeforeUnloadEvent) => {
+      await stateKiller()
       event.preventDefault();
       event.returnValue = '';
       return (event.returnValue);
@@ -200,7 +201,33 @@ export default function Game() {
       window.removeEventListener('beforeunload', handleOnBeforeUnload, {capture : true})
     }
   },[])
-  
+
+  async function stateKiller() {
+      try {
+        // can be better if we have a function to check if the player is ACTUALLY matchmaking
+        // or change the endpoint to not give an error
+        await fetchWithAuth('/api/matchmaking/cancel', {method: 'PUT'})
+      }
+      catch (err: any) {
+
+      }
+      try {
+        const resTournamentID = await fetchWithAuth('/api/users/tournament')
+        if (!resTournamentID.ok) {
+          return
+        }
+        const dataTournamentID = await resTournamentID.json()
+        if (!dataTournamentID.success) {
+          return
+        }
+        await fetchWithAuth(`/api/tournaments/${dataTournamentID.tournament_id}/leave`,
+          {method: 'DELETE'})
+      }
+      catch (err: any) {
+        // open for suggestions
+      }
+  }
+
   function handleRandomPlayer() {
     setGameMode("online")
     setScreen("searching")
