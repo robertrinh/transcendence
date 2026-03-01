@@ -28,16 +28,7 @@ export default async function tournamentsRoutes (
 			tags: ['tournaments'],
 			summary: 'Get a tournament by ID',
 			params: IDSchema
-		}
-	}, tournamentController.getTournamentByID)
-
-    fastify.delete('/:id', {
-		schema: {
-			tags: ['tournaments'],
-			summary: 'Delete a tournament by ID',
-			params: IDSchema
-		}
-	}, tournamentController.deleteTournament)
+		}, preHandler: [authenticate]}, tournamentController.getTournamentByID)
 
 	fastify.post('/:id/join', {
 		schema: {
