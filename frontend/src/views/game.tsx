@@ -216,7 +216,7 @@ export default function Game() {
 		}
         fetchWithAuth(`/api/tournaments/${tournamentIdRef.current}/leave`,
           {method: 'DELETE', keepalive: true})
-        fetchWithAuth('/api/matchmaking/cancel', {method: 'PUT', keepalive: true})
+		fetchWithAuth('/api/games/matchmaking/cancel', {method: 'PUT', keepalive: true})
 		fetchWithAuth('/api/tournaments/extreme', {method: 'POST', keepalive: true})
   }
 
@@ -281,8 +281,10 @@ export default function Game() {
 		throw new Error('Failed to join lobby')
       const data = await response.json()
       console.log('Joined lobby response:', data)
-      setGameData(data.data)
-      setScreen("ready-room")
+	  if (data.success as boolean) {
+		setGameData(data.data)
+		setScreen("ready-room")
+	  }
     } catch (err) {
       console.error('Join lobby failed err:', err)
       setScreen("main")
