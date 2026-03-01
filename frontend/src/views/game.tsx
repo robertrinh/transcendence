@@ -21,6 +21,7 @@ export default function Game() {
   const [gameData, setGameData] = useState<any>(null)
   const websocket = useRef<WebSocket | null>(null)
   const [tournamentId, setTournamentId] = useState<number | null>(null)
+  const tournamentIdRef = useRef(tournamentId)
   const [selectedBracketSize, setSelectedBracketSize] = useState<number>(4)
   const [currentUser, setCurrentUser] = useState<any>(null)
   const currentUserRef = useRef<any>(null)
@@ -30,6 +31,10 @@ export default function Game() {
   const [oppName, setOppName] = useState<string>('UNKNOWN')
   const [oppAvatar, setOppAvatar] = useState<string | undefined>(undefined)
   const [websocketState, setWebsocketState] = useState<number>(WebSocket.CONNECTING)
+
+  useEffect(() => {
+	tournamentIdRef.current = tournamentId
+  }, [tournamentId])
 
   useEffect(() => {
     const token = localStorage.getItem('token')
