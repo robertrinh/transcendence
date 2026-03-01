@@ -91,7 +91,7 @@ export default function ReadyRoom({
   async function cancelGame() {
 	try {
 		if (gameData?.id) {      
-			fetchWithAuth('/api/games/cancel', {
+			await fetchWithAuth('/api/games/cancel', {
 				method: 'POST',
 				keepalive: true,
 				headers: { 'Content-Type': 'application/json' },
@@ -105,7 +105,7 @@ export default function ReadyRoom({
   }
   // Handle leaving the ready room
   const handleLeave = async () => {
-	cancelGame()
+	await cancelGame()
     onBack()
   }
 
