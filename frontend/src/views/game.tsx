@@ -33,6 +33,12 @@ export default function Game() {
   const [websocketState, setWebsocketState] = useState<number>(WebSocket.CONNECTING)
 
   useEffect(() => {
+	return () => {
+		stateKiller()
+	}
+  }, [])
+
+  useEffect(() => {
 	tournamentIdRef.current = tournamentId
   }, [tournamentId])
 
@@ -199,6 +205,7 @@ export default function Game() {
 
   useEffect(() => {
     const handleOnBeforeUnload = (event: BeforeUnloadEvent) => {
+	  stateKiller()
       event.preventDefault();
       event.returnValue = '';
       return (event.returnValue);
@@ -208,7 +215,17 @@ export default function Game() {
       window.removeEventListener('beforeunload', handleOnBeforeUnload, {capture : true})
     }
   },[])
-  
+
+	function stateKiller() {
+		if (!tournamentIdRef.current) {
+			return
+		}
+        fetchWithAuth(`/api/tournaments/${tournamentIdRef.current}/leave`,
+          {method: 'DELETE', keepalive: true})
+        fetchWithAuth('/api/matchmaking/cancel', {method: 'PUT', keepalive: true})
+		fetchWithAuth('/api/tournaments/extreme', {method: 'POST', keepalive: true})
+  }
+
   async function handleRandomPlayer() {
     setGameMode("online")
     setScreen("searching")
