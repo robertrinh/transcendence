@@ -2,6 +2,8 @@ import { ApiError } from '../error/errors.js';
 import { userService } from '../services/userService.js';
 import { FastifyRequest, FastifyReply } from 'fastify';
 import bcrypt from 'bcrypt'
+import { comparePassword } from '../databaseInit.js'
+import { validatePassword } from '../auth/password.js'
 import { createWriteStream, existsSync, mkdirSync } from 'fs'
 import { pipeline } from 'stream/promises'
 import path from 'path'
@@ -106,6 +108,13 @@ export const userController = {
             values.push(email)
         }
         if (password) {
+            const passwordValidation = validatePassword(password)
+            if (!passwordValidation.valid) {
+                return reply.code(400).send({
+                    success: false,
+                    error: passwordValidation.error
+                })
+            }
             const hashedPassword = await bcrypt.hash(password, 10)
             updates.push('password = ?')
             values.push(hashedPassword)
@@ -135,10 +144,11 @@ export const userController = {
                 error: 'Current password and new password are required'
             });
         }
-        if (new_password.length < 8) {
+        const passwordValidation = validatePassword(new_password);
+        if (!passwordValidation.valid) {
             return reply.code(400).send({
                 success: false,
-                error: 'New password must be at least 8 characters long'
+                error: passwordValidation.error
             });
         }
 
@@ -150,7 +160,7 @@ export const userController = {
             });
         }
 
-        const valid = await bcrypt.compare(current_password, currentHash);
+        const valid = await comparePassword(current_password, currentHash);
         if (!valid) {
             return reply.code(403).send({
                 success: false,
@@ -234,7 +244,7 @@ export const userController = {
                 });
             }
 
-            const isPasswordValid = await bcrypt.compare(password, user.password);
+            const isPasswordValid = await comparePassword(password, user.password);
             if (!isPasswordValid) {
                 return reply.status(403).send({
                     error: 'Invalid password'

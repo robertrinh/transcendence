@@ -1,4 +1,5 @@
 import S from 'fluent-json-schema';
+import { MIN_PASSWORD_LENGTH } from '../auth/password.js';
 
 export const userSchema = S.object()
 	.prop('id', S.number())
@@ -6,7 +7,7 @@ export const userSchema = S.object()
 
 export const userBody = S.object()
 	.prop('username', S.string().required())
-	.prop('password', S.string().minLength(6).required());
+	.prop('password', S.string().minLength(MIN_PASSWORD_LENGTH).required());
 
 export const tokenSchema = S.object()
   .prop('token', S.string());
@@ -34,4 +35,3 @@ export const anonymizeResponseSchema = S.object()
 
 export const userParamSchema = S.object()
   .prop('username', S.string().required());
-	

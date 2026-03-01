@@ -1,7 +1,8 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyReply } from 'fastify'
-import { db } from '../databaseInit.js'
+import { db, comparePassword } from '../databaseInit.js'
 import bcrypt from 'bcrypt'
 import { generateToken, verifyToken } from '../auth/utils.js'
+import { validatePassword } from '../auth/password.js'
 
 async function registerGuest(
 	reply: FastifyReply, username: string
@@ -34,10 +35,11 @@ async function registerUser(
 			error: 'Password is required'
 		})
 	}
-	if (password.length < 6) {
+	const passwordValidation = validatePassword(password)
+	if (!passwordValidation.valid) {
 		return reply.code(400).send({
 			success: false,
-			error: 'Password must be at least 6 characters long'
+			error: passwordValidation.error
 		})
 	}
 	const hashedPassword = await bcrypt.hash(password, 10)
@@ -76,7 +78,7 @@ export default async function authRoutes (
 				success: false,
 				error: 'Invalid username or password'
 			})
-		const checkPassword = await bcrypt.compare(password, user.password)
+		const checkPassword = await comparePassword(password, user.password)
 		if (!checkPassword)
 			return reply.code(401).send({
 				success: false,
