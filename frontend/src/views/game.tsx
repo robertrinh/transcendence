@@ -287,8 +287,10 @@ export default function Game() {
 		throw new Error('Failed to join lobby')
       const data = await response.json()
       console.log('Joined lobby response:', data)
-      setGameData(data.data)
-      setScreen("ready-room")
+	  if (data.success as boolean) {
+		setGameData(data.data)
+		setScreen("ready-room")
+	  }
     } catch (err) {
       console.error('Join lobby failed err:', err)
       setScreen("main")
