@@ -90,10 +90,6 @@ export const tournamentService = {
         return db.prepare('INSERT INTO tournaments (name, description, max_participants) VALUES (?, ?, ?)').run(name, description, max_participants)
     },
 
-    deleteTournament: (id: number) => {
-        return db.prepare('DELETE FROM tournaments WHERE id = ?').run(id)
-    },
-
     joinTournament: (tournament_id: number, user_id: number) => {
         try {
 			const user_already_in = db.prepare(
