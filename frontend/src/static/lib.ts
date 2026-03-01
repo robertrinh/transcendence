@@ -25,7 +25,7 @@ class Intervals {
  */
 export const arenaWidth = 1024
 export const arenaHeight = 768
-export const roundMax = 3
+export const roundMax = 5
 export const ballRadius = 15
 export const ballSize = ballRadius * 2
 // physics, the speeds need to be equal to the server
