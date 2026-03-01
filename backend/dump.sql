@@ -130,6 +130,7 @@ CREATE TABLE IF NOT EXISTS tournament_participants (
 	id INTEGER PRIMARY KEY AUTOINCREMENT, --what is this? 
 	tournament_id INTEGER NOT NULL,
 	user_id INTEGER NOT NULL,
+	user_left BOOLEAN DEFAULT 0 NOT NULL,
 	joined_at DATETIME DEFAULT (datetime('now')),
 	FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
 	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
