@@ -67,12 +67,6 @@ export default async function gamesRoutes (
             body: joinLobbySchema
         }, preHandler: [authenticate]} , gamesController.joinLobby);
 
-    fastify.get('/queue', {
-        schema: {
-            tags: ['games'],
-            summary: 'Get game queue',
-        }}, gamesController.getGameQueue);
-
     fastify.put('/:id/finish', {
 		schema: {
 			tags: ['games'],
