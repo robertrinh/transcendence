@@ -4,6 +4,7 @@ import { IDSchema } from '../schemas/generic.schema.js'
 import { userBody, userParamSchema } from '../schemas/users.schema.js'
 import { authenticate, requireNonGuest } from '../auth/middleware.js'
 import { anonymizeResponseSchema } from '../schemas/users.schema.js'
+import { MIN_PASSWORD_LENGTH } from '../auth/password.js'
 
 export default async function usersRoutes (
     fastify: FastifyInstance,
@@ -61,6 +62,22 @@ export default async function usersRoutes (
             summary: 'Update user',
         }, preHandler: [authenticate, requireNonGuest]
     }, userController.updateProfile);
+
+    fastify.post('/change-password', {
+        schema: {
+            security: [{ bearerAuth: [] }],
+            tags: ['users'],
+            summary: 'Change password',
+            body: {
+                type: 'object',
+                required: ['current_password', 'new_password'],
+                properties: {
+                    current_password: { type: 'string' },
+                    new_password: { type: 'string', minLength: MIN_PASSWORD_LENGTH }
+                }
+            }
+        }, preHandler: [authenticate, requireNonGuest]
+    }, userController.changePassword);
 
     fastify.get('/username/:id', {
         schema: {

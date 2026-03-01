@@ -81,7 +81,7 @@ test('POST /auth/register: password too short', async () => {
 
 		assert.strictEqual(response.status, 400)
 		assert.strictEqual(data.success, false)
-		assert.strictEqual(data.error, 'Password must be at least 6 characters long')
+		assert.strictEqual(data.error, 'Password must be at least 8 characters long')
 	})
 
 test('POST /auth/register: username too short', async () => {

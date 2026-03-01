@@ -29,8 +29,6 @@ export default async function gameInit (
     const drawCtx = drawCanvas.getContext("2d", {alpha: false})
     assertIsNotNull(drawCtx)
     canvas.focus()
-    console.log(`GAMING MODE: ${gameMode}`)
-    
     switch (gameMode) {
         case "singleplayer":
         case "multiplayer":

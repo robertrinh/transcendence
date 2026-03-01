@@ -37,7 +37,6 @@ export default function SearchingScreen ({ onCancel, onGameFound, onTimeout }: S
                 const data = result.data
                 
                 if (data && data.player1_id && data.player2_id) {
-                    console.log('Match found!', data)
                     onGameFound?.(data)
                 }
                 else if (data && data.status === 'idle') {

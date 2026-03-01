@@ -1,4 +1,3 @@
-import Button from "./button";
 import { InfoBox, infoBoxType } from "./infoBox";
 
 interface TimeoutScreenProps {
@@ -45,16 +44,17 @@ export function TimeoutScreen ({onExit}: TimeoutScreenProps) {
 	)
 }
 
-export function InfoScreen ({onExit, message, screenType}: InfoScreenProps) {
+export function InfoScreen({ onExit, message, screenType }: InfoScreenProps) {
 	return (
 		<InfoBox type={screenType}>
 			<p>{message}</p>
-			<Button
-				id='btn-exit'
-			className={"bg-indigo-500 text-white py-2 px-8 uppercase rounded-xl"}
-				buttonName='exit'
-				onClick={(onExit)}
-			/>
+			<button
+				type="button"
+				className="bg-indigo-500 text-white py-2 px-8 uppercase rounded-xl"
+				onClick={onExit}
+			>
+				exit
+			</button>
 		</InfoBox>
-	)
+	);
 }

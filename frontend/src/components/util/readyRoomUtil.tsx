@@ -76,7 +76,6 @@ export default function ReadyRoom({
         body: JSON.stringify({ game_id: gameData.id }),
       })
       const data = await response.json()
-      console.log('🟢 Ready response:', data)
       if (data.success) {
         setMyReady(true)
         if (data.data.all_ready) {
@@ -119,13 +118,12 @@ export default function ReadyRoom({
       try {
         const response = await fetchWithAuth(`/api/games/${gameData.id}/ready`)
         const data = await response.json()
-        console.log('🔄 Ready/status poll:', data)
 
         if (data.success && data.data) {
           const { player1_ready, player2_ready, all_ready, cancelled, winner_id, is_tournament } = data.data
 
           if (cancelled) {
-            console.log('❌ Opponent left the ready room!')
+            console.log('Opponent left the ready room!')
             setOpponentLeft(true)
 
             if (is_tournament && winner_id === Number(currentUser?.id)) {
