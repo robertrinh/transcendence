@@ -3,6 +3,78 @@ import { ApiError } from '../error/errors.js'
 import { dbError } from '../error/dbErrors.js'
 import { Tournament, TournamentParticipant, Game } from '../types/database.interfaces.js';
 import { systemBroadcast } from '../sseNotify.js';
+import { gamesService } from './gamesService.js';
+
+function finalizeNextGame(nextGame: Game, finishedGame: Game,
+	TournamentId: number){
+		if (nextGame.player1_id === null) {
+			db.prepare('UPDATE games SET player1_id = ? WHERE id = ?')
+			.run(finishedGame.winner_id, nextGame.id);
+			return
+		}
+		const upcomingPlayersLeft = db.prepare(`
+			SELECT
+				tournament_participants.user_id,
+				tournament_participants.user_left
+			FROM tournament_participants
+			LEFT JOIN tournaments ON tournament_participants.tournament_id = tournaments.id
+			WHERE (tournament_participants.user_id = ? OR tournament_participants.user_id = ?)
+				AND tournament_participants.tournament_id = ?
+				AND tournaments.status = 'ongoing'
+			`).all(finishedGame.winner_id, nextGame.player1_id, TournamentId) as undefined | { user_id: number, user_left: boolean }[]
+		if (upcomingPlayersLeft === undefined) {
+			throw new ApiError(404, 'Send help')
+		}
+		const playerMap = new Map<number, boolean>([
+			[upcomingPlayersLeft[0].user_id, upcomingPlayersLeft[0].user_left],
+			[upcomingPlayersLeft[1].user_id, upcomingPlayersLeft[1].user_left]
+		])
+		const playerOneId = nextGame.player1_id
+		const playerOneLeft = playerMap.get(playerOneId)
+		const playerTwoId = finishedGame.winner_id
+		if (playerTwoId === null) {
+			throw new ApiError(500, 'Everything bad')
+		}
+		const playerTwoLeft = playerMap.get(playerTwoId)
+		const roundMax = 5 // we need an envvar
+		if (playerOneLeft && playerTwoLeft) {
+			throw new ApiError(500, 'New world lost')
+		}
+		if (playerOneLeft) {
+			db.prepare(`
+				UPDATE games
+				SET
+					player2_id = ?,
+					status = 'finished',
+					score_player1 = 0,
+					score_player2 = ?,
+					winner_id = ?,
+					finished_at = (datetime('now'))
+				WHERE id = ?
+				`).run(playerTwoId, roundMax, playerTwoId, nextGame.id)
+		}
+		else if (playerTwoLeft) {
+			db.prepare(`
+				UPDATE games
+				SET
+					player2_id = ?,
+					status = 'finished',
+					score_player1 = ?,
+					score_player2 = 0,
+					winner_id = ?,
+					finished_at = (datetime('now'))
+				WHERE id = ?
+				`).run(playerTwoId, roundMax, playerOneId, nextGame.id)
+		}
+		else {
+			db.prepare(`
+				UPDATE games
+				SET player2_id = ?, status = ? WHERE id = ?
+			`)
+			.run(playerTwoId, 'ready', nextGame.id);
+		}
+}
+
 
 export const tournamentService = {
 
@@ -100,18 +172,10 @@ export const tournamentService = {
         const nextGame = db.prepare(
             'SELECT * FROM games WHERE tournament_id = ? AND round = ? AND (player1_id IS NULL OR player2_id IS NULL) ORDER BY id ASC LIMIT 1'
         ).get(tournament_id, nextRound) as Game | undefined;
-
         if (nextGame) {
-            if (nextGame.player1_id === null) {
-                db.prepare('UPDATE games SET player1_id = ? WHERE id = ?')
-                    .run(game.winner_id, nextGame.id);
-                console.log(`➡️ Winner ${game.winner_id} placed in game ${nextGame.id} as player1`);
-            } else {
-                db.prepare('UPDATE games SET player2_id = ?, status = ? WHERE id = ?')
-                    .run(game.winner_id, 'ready', nextGame.id);
-                console.log(`➡️ Winner ${game.winner_id} placed in game ${nextGame.id} as player2 — game is READY`);
-            }
-        }
+			finalizeNextGame(nextGame, game, tournament_id)
+		}
+
     },
 
     leaveTournament: (tournament_id: number, user_id: number) => {
