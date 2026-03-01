@@ -206,7 +206,7 @@ export const gamesService = {
 
         if (game.tournament_id) {
             // Tournament game — award forfeit win and advance bracket
-            const score_winner = 3;
+            const score_winner = 5;
             const score_loser = 0;
             db.prepare(`
                 UPDATE games 
