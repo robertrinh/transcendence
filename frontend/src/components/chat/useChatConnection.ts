@@ -164,28 +164,29 @@ export function useChatConnection(user: User, friendRequestCallbackRef?: Mutable
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    const sendMessage = (e: React.FormEvent, options?: { isPrivate?: boolean; toUser?: string }) => {
+    const sendMessage = async (e: React.FormEvent, options?: { isPrivate?: boolean; toUser?: string }) => {
         e.preventDefault();
         if (!newMessage.trim() || !connectionId || !connected) return;
         const msgToSend = newMessage.trim();
         setNewMessage('');
         const isPrivate = options?.isPrivate ?? false;
         const toUser = options?.toUser?.trim();
-        fetchWithAuth('/api/chat/send', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                connectionId,
-                message: msgToSend,
-                isPrivate,
-                toUser: isPrivate && toUser ? toUser : undefined
-            })
-        })
-            .then((res) => res.json().then(() => res))
-            .then((res) => {
-                if (res.ok) console.log('Message sent');
-            })
-            .catch((err) => console.error('Failed to send message:', err));
+        try {
+            const res = await fetchWithAuth('/api/chat/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    connectionId,
+                    message: msgToSend,
+                    isPrivate,
+                    toUser: isPrivate && toUser ? toUser : undefined
+                })
+            });
+            await res.json();
+            if (res.ok) console.log('Message sent');
+        } catch (err) {
+            console.error('Failed to send message:', err);
+        }
     };
 
     return {
