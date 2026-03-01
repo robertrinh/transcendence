@@ -172,7 +172,7 @@ export const tournamentService = {
         const nextGame = db.prepare(
             'SELECT * FROM games WHERE tournament_id = ? AND round = ? AND (player1_id IS NULL OR player2_id IS NULL) ORDER BY id ASC LIMIT 1'
         ).get(tournament_id, nextRound) as Game | undefined;
-        if (nextGame) {
+		if (nextGame) {
 			finalizeNextGame(nextGame, game, tournament_id)
 		}
 
@@ -180,12 +180,42 @@ export const tournamentService = {
 
     leaveTournament: (tournament_id: number, user_id: number) => {
         try {
-            const status = db.prepare('SELECT status FROM tournaments WHERE id = ?').get(tournament_id) as Tournament;
-            if (status.status !== 'open')
-                throw new ApiError(400, 'tournament already started');
-            const result = db.prepare('DELETE FROM tournament_participants WHERE tournament_id = ? AND user_id = ?').run(tournament_id, user_id);
-            if (result.changes == 0)
-                throw new ApiError(404, 'player or tournament not found');
+            const tournament = db.prepare('SELECT status FROM tournaments WHERE id = ?').get(tournament_id) as Tournament | undefined;
+            if (!tournament) {
+                throw new ApiError(404, 'Tournament not found')
+            }
+            const tournamentParticipants = db.prepare(
+                'SELECT * FROM tournament_participants WHERE tournament_id = ?')
+                .all(tournament_id) as TournamentParticipant[]
+            let userFound = false
+            for (const participant of tournamentParticipants) {
+                if (participant.user_id === user_id) {
+                    userFound = true
+                }
+            }
+            if (!userFound) {
+                throw new ApiError(404, 'Player not in tournament')
+            }
+            switch (tournament.status) {
+                case 'ongoing':
+                    // Give default wins for upcoming games
+                    db.prepare(`
+                        UPDATE tournament_participants
+						SET user_left = 1
+						WHERE tournament_id = @tournament_id
+						AND user_id = @user_id
+                    `).run({
+                        tournament_id: tournament_id,
+                        user_id: user_id
+                    })
+                    break
+                case 'open':
+                    db.prepare('DELETE FROM tournament_participants WHERE tournament_id = ? AND user_id = ?')
+                    .run(tournament_id, user_id)
+                    break
+                default:
+                    return
+            }
         }
         catch (err: any) {
             dbError(err);
@@ -233,5 +263,5 @@ export const tournamentService = {
 			return
 		}
 		gamesService.cancelGame(activeGameId, user_id)
-    }
+	}
 }
