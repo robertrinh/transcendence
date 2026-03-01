@@ -49,7 +49,6 @@ export default function TournamentBracket({
                 const response = await fetchWithAuth(`/api/tournaments/${tournamentId}/games`)
                 if (!response.ok) throw new Error('Failed to fetch games')
                 const data = await response.json()
-                console.log('🏟️ Bracket games data:', data)
                 if (data.games.length > 0) {
                     setGames(data.games)
                     setGamesFound(true)
@@ -288,8 +287,6 @@ export default function TournamentBracket({
                             const isOngoing = game.status === 'ongoing'
                             const isReady = game.status === 'ready'
                             const isPending = game.status === 'pending'
-                            console.log(`🎮 Game ${game.id}: status=${game.status}, p1=${game.player1_id}, p2=${game.player2_id}, currentUserId=${currentUserId}, isMyMatch=${isMyMatch}, isReady=${isReady}`)
-
                             return (
                                 <div
                                     key={game.id}

@@ -16,14 +16,12 @@ const start = async () => {
             `\t - Backend server running on ${devBackendURL}\n` +
             `\t - API Documentation available at ${devBackendURL}/api/docs\n` +
             `\t - Frontend should be accessible at ${devFrontendURL}\n` +
-            `\t - SSE Chat endpoint: ${devBackendURL}/api/chat/stream?token=YOUR_JWT_TOKEN\n` + 
             `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
         )
         console.log(
             `Production access points:\n` + 
             `\t - API Documentation available at ${prodURL}/api/docs\n` +
             `\t - Frontend should be accessible at ${prodURL}\n` +
-            `\t - SSE Chat endpoint: ${prodURL}/api/chat/stream?token=YOUR_JWT_TOKEN\n` + 
             `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
         )
         dbCleanUpJob();

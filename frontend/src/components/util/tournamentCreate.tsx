@@ -39,11 +39,10 @@ export default function TournamentCreate({ onTournamentCreated, onBack }: Tourna
             }
 
             const data = await response.json()
-            console.log('✅ Tournament created:', data.data.id)
             onTournamentCreated(data.data.id, data.data.max_participants)
         } catch (err: any) {
             setError(err.message)
-            console.error('❌ Failed to create tournament:', err)
+            console.error('Failed to create tournament:', err)
         } finally {
             setLoading(false)
         }

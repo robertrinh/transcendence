@@ -76,7 +76,6 @@ export const authenticatePendingOnly = async (request: FastifyRequest, reply: Fa
 }
 
 //* reject guests for routes that require a full account (profile update, avatar, delete, anonymize)
-//TODO (tournament create/join/leave)
 export const requireNonGuest = async (request: FastifyRequest, reply: FastifyReply) => {
 	if (!request.user?.userId) {
 		return reply.code(401).send({

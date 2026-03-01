@@ -36,15 +36,12 @@ export default function SearchingScreen ({ onCancel, onGameFound, onTimeout }: S
                 const result = await response.json()
                 const data = result.data
                 
-                console.log('🔍 Poll result:', data)
-                
                 if (data && data.player1_id && data.player2_id) {
-                    console.log('🎮 Match found!', data)
                     clearInterval(pollTimer)
                     onGameFound?.(data)
                 }
                 else if (data && data.status === 'idle') {
-                    console.log('⏰ Matchmaking timed out')
+                    console.log('Matchmaking timed out')
                     clearInterval(pollTimer)
                     onTimeout?.()
                 }

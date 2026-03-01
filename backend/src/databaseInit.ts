@@ -48,14 +48,12 @@ export const initializeDatabase = () => {
                 const adminPassword = bcrypt.hashSync('admin123', 10); // Sync for one-time init
                 const insertAdmin = db.prepare('INSERT INTO users (username, password, email) VALUES (?, ?, ?)');
                 insertAdmin.run('admin', adminPassword, 'admin@transcendence.local');
-                console.log('Default admin user created (username: admin, password: admin123)');
             }
             const testerCheck = db.prepare('SELECT COUNT(*) as count FROM users WHERE username = ?').get('tester') as { count: number };
             if (testerCheck.count === 0) {
                 const testerPassword = bcrypt.hashSync('tester123', 10); // Sync for one-time init
                 const inserttester = db.prepare('INSERT INTO users (username, password, email) VALUES (?, ?, ?)');
                 inserttester.run('tester', testerPassword, 'tester@transcendence.local');
-                console.log('Default tester user created (username: tester, password: tester123)');
             }
             const systemCheck = db.prepare('SELECT COUNT(*) as count FROM users WHERE username = ?').get('System') as { count: number };
             if (systemCheck.count === 0) {
