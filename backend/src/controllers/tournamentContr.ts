@@ -57,14 +57,6 @@ export const tournamentController = {
 		return {success: true, message: 'Player joined tournament!'}
 	},
 
-	deleteTournament: async (req: FastifyRequest, reply: FastifyReply) => {
-		const { id } = req.params as { id: number };
-		const result = tournamentService.deleteTournament(id);
-		if (result.changes == 0)
-			throw new ApiError(404, 'Tournament not found');
-		return {success: true, message: 'Tournament deleted'}
-	},
-
 	leaveTournament: async (req: FastifyRequest, reply: FastifyReply) => {
 		const { id } = req.params as {id: number};
 		const user_id = req.user!.userId;

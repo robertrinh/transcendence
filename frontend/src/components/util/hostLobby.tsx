@@ -4,10 +4,11 @@ import { fetchWithAuth } from '../../config/api'
 interface HostLobbyProps {
   lobbyId: string
   onGameCreated: (gameData: any) => void
+  onTimeout: () => void
   onBack: () => void
 }
 
-export default function HostLobby({ lobbyId, onGameCreated, onBack }: HostLobbyProps) {
+export default function HostLobby({ lobbyId, onTimeout, onGameCreated, onBack }: HostLobbyProps) {
   const [copied, setCopied] = useState(false)
 
   const handleCopy = () => {
@@ -32,13 +33,18 @@ export default function HostLobby({ lobbyId, onGameCreated, onBack }: HostLobbyP
           clearInterval(interval)
           onGameCreated(data.data)
         }
+		else if (data.status === 'idle') {
+			console.log('player timed out')
+        	clearInterval(interval)
+			onTimeout()
+		}
       } catch (err) {
         console.error('Poll error:', err)
       }
     }, 2000)
 
     return () => clearInterval(interval)
-  }, [lobbyId, onGameCreated])
+  }, [lobbyId])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black p-4" style={{
