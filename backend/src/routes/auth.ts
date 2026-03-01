@@ -23,6 +23,12 @@ async function registerUser(
 	reply: FastifyReply, username: string,
 	password: string | undefined, email: string | undefined
 ) {
+	if (username.length > 15){
+		return reply.code(400).send({
+			success: false,
+			error: 'Username can not be longer then 15 characters'
+		})
+	}
 	if (!email) {
 		return reply.code(400).send({
 			success: false,
