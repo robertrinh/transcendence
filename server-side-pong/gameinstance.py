@@ -3,7 +3,7 @@ import json
 import random as rand
 import requests
 import sys
-from websockets import ServerConnection, broadcast
+from websockets import ServerConnection, broadcast, WebSocketException
 from player import Player
 from ball import Ball
 from lib import Vector2, Rect
@@ -175,8 +175,12 @@ class GameInstance:
             self.p2_score = ROUND_MAX
         else:
             self.p1_score = ROUND_MAX
-        await player_left.connection.send(json.dumps(
+        try:
+            await player_left.connection.send(json.dumps(
             {'type': 'OPPONENT_DISCONNECT'}))
+        except WebSocketException:
+            self.p1_score = 0
+            self.p2_score = 0
         handle_score(self)
 
 
