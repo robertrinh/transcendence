@@ -13,7 +13,11 @@ interface GameCanvas {
 }
 
 export default function GameCanvas({mode, websocket, ownName, oppName, ownAvatar, oppAvatar}:GameCanvas) {
-    const displayOppName = (oppName === 'UNKNOWN' || mode === 'singleplayer') ? 'BOT' : oppName
+    const isLocalMultiplayer = mode === 'multiplayer'
+    const displayOwnName = isLocalMultiplayer ? 'P1' : ownName
+    const displayOppName = isLocalMultiplayer ? 'P2' : (oppName === 'UNKNOWN' || mode === 'singleplayer')
+        ? 'BOT' : oppName
+    const shouldShowOppAvatar = Boolean(oppAvatar) && displayOppName !== 'BOT'
     useEffect(() => {
         async function wrapper() {
             await gameInit(mode, websocket.current!, ownName, oppName)
@@ -54,12 +58,12 @@ export default function GameCanvas({mode, websocket, ownName, oppName, ownAvatar
                         {ownAvatar ? (
                             <img
                                 src={ownAvatar}
-                                // alt={ownName}
+                                alt={ownAvatar}
                                 className="w-full h-full object-cover"
                             />
                         ) : (
                             <span className="text-white text-2xl font-bold">
-                                {ownName.charAt(0).toUpperCase()}
+                                {displayOwnName.charAt(0).toUpperCase()}
                             </span>
                         )}
                     </div>
@@ -68,7 +72,7 @@ export default function GameCanvas({mode, websocket, ownName, oppName, ownAvatar
                         color: '#00d4ff',
                         textShadow: '0 0 12px #00d4ff'
                     }}>
-                        {ownName}
+                        {displayOwnName}
                     </p>
                 </div>
 
@@ -99,10 +103,10 @@ export default function GameCanvas({mode, websocket, ownName, oppName, ownAvatar
                             boxShadow: '0 0 10px #ff6600'
                         }}
                     >
-                        {oppAvatar ? (
+                        {shouldShowOppAvatar ? (
                             <img
                                 src={oppAvatar}
-                                // alt={displayOppName}
+                                alt={oppAvatar}
                                 className="w-full h-full object-cover"
                             />
                         ) : (
