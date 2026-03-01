@@ -105,11 +105,11 @@ export const tournamentService = {
             if (nextGame.player1_id === null) {
                 db.prepare('UPDATE games SET player1_id = ? WHERE id = ?')
                     .run(game.winner_id, nextGame.id);
-                console.log(`➡️ Winner ${game.winner_id} placed in game ${nextGame.id} as player1`);
+                console.log(`Winner ${game.winner_id} placed in game ${nextGame.id} as player1`);
             } else {
                 db.prepare('UPDATE games SET player2_id = ?, status = ? WHERE id = ?')
                     .run(game.winner_id, 'ready', nextGame.id);
-                console.log(`➡️ Winner ${game.winner_id} placed in game ${nextGame.id} as player2 — game is READY`);
+                console.log(`Winner ${game.winner_id} placed in game ${nextGame.id} as player2 — game is READY`);
             }
         }
     },

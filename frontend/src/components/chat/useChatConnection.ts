@@ -183,7 +183,6 @@ export function useChatConnection(user: User, friendRequestCallbackRef?: Mutable
                 })
             });
             await res.json();
-            if (res.ok) console.log('Message sent');
         } catch (err) {
             console.error('Failed to send message:', err);
         }

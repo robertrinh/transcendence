@@ -184,7 +184,6 @@ export const userController = {
             if (!existsSync(uploadsDir)) {
                 try {
                     mkdirSync(uploadsDir, { recursive: true })
-                    console.log('Created uploads directory at runtime:', uploadsDir)
                 } catch (dirError) {
                     console.error('Failed to create uploads directory:', dirError)
                     return reply.code(500).send({ 

@@ -283,7 +283,6 @@ export default function Game() {
       const data = await res.json()
       if (data.success) {
         setCurrentUser(data.data)
-        console.log('🔄 User status refreshed:', data.data.status)
       }
     } catch (err) {
       console.error('Failed to refresh user:', err)
