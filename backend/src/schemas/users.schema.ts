@@ -34,29 +34,4 @@ export const anonymizeResponseSchema = S.object()
 
 export const userParamSchema = S.object()
   .prop('username', S.string().required());
-/*
-
-Can have a schema and then create other schemas with just some things...
-const S = require('fluent-json-schema')
-const userSchema = S.object()
-  .prop('username', S.string())
-  .prop('password', S.string())
-  .prop('id', S.string().format('uuid'))
-  .prop('createdAt', S.string().format('time'))
-  .prop('updatedAt', S.string().format('time'))
-
-const loginSchema = userSchema.only(['username', 'password'])
-
-...or all things except the things you exclude!
-const S = require('fluent-json-schema')
-const personSchema = S.object()
-  .prop('name', S.string())
-  .prop('age', S.number())
-  .prop('id', S.string().format('uuid'))
-  .prop('createdAt', S.string().format('time'))
-  .prop('updatedAt', S.string().format('time'))
-
-const bodySchema = personSchema.without(['createdAt', 'updatedAt'])
-
-*/
 	
