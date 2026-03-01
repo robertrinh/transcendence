@@ -11,7 +11,6 @@ function TwoFactorSetup({ onSuccess }: TwoFactorSetupProps) {
 	const [message, setMessage] = useState('');
 	const [verificationCode, setVerificationCode] = useState('');
 
-	//* Show QR code straight away when modal opens 
 	useEffect(() => {
 		setupTwoFactor();
 	}, []);
@@ -36,7 +35,7 @@ function TwoFactorSetup({ onSuccess }: TwoFactorSetupProps) {
 			});
 			const data = await response.json();
 			if (response.ok && data.success) {
-				setQrCode(data.qrCode); //* qrCode is now a string, stored in state
+				setQrCode(data.qrCode);
 				setMessage(data.message);
 			} else {
 				setError(data.error || 'Failed to setup 2FA');

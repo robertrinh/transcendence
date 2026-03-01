@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react"
 import GameUI from "../components/game/gameUI.tsx"
 import { fetchWithAuth } from '../config/api'
 import type { GameMode, Screen } from "../components/game/types.ts"
+import { getAvatarUrl } from "../components/util/profileUtils.tsx"
 
 interface GameResult {
   gameMode: string
@@ -20,6 +21,7 @@ export default function Game() {
   const [gameData, setGameData] = useState<any>(null)
   const websocket = useRef<WebSocket | null>(null)
   const [tournamentId, setTournamentId] = useState<number | null>(null)
+  const tournamentIdRef = useRef(tournamentId)
   const [selectedBracketSize, setSelectedBracketSize] = useState<number>(4)
   const [currentUser, setCurrentUser] = useState<any>(null)
   const currentUserRef = useRef<any>(null)
@@ -27,7 +29,18 @@ export default function Game() {
   const [gameResult, setGameResult] = useState<GameResult | null>(null)
   const gameModeRef = useRef<GameMode>("none")
   const [oppName, setOppName] = useState<string>('UNKNOWN')
+  const [oppAvatar, setOppAvatar] = useState<string | undefined>(undefined)
   const [websocketState, setWebsocketState] = useState<number>(WebSocket.CONNECTING)
+
+  useEffect(() => {
+	return () => {
+		stateKiller()
+	}
+  }, [])
+
+  useEffect(() => {
+	tournamentIdRef.current = tournamentId
+  }, [tournamentId])
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -108,12 +121,13 @@ export default function Game() {
     }
     const getOppUserName = async () => {
       const oppID = currentUser.id === gameData.player1_id ? gameData.player2_id: gameData.player1_id
-      const response = await fetchWithAuth(`/api/users/username/${oppID}`)
+      const response = await fetchWithAuth(`/api/users/avatar/${oppID}`)
       if (!response.ok) {
         return
       }
       const data = await response.json()
       setOppName(data.username)
+      setOppAvatar(getAvatarUrl(data.avatar_url))
     }
     getOppUserName()
   }, [gameData, currentUser])
@@ -191,6 +205,7 @@ export default function Game() {
 
   useEffect(() => {
     const handleOnBeforeUnload = (event: BeforeUnloadEvent) => {
+	  stateKiller()
       event.preventDefault();
       event.returnValue = '';
       return (event.returnValue);
@@ -200,100 +215,107 @@ export default function Game() {
       window.removeEventListener('beforeunload', handleOnBeforeUnload, {capture : true})
     }
   },[])
-  
-  function handleRandomPlayer() {
-    setGameMode("online")
-    setScreen("searching")
-    fetchWithAuth('/api/games/matchmaking/cancel', { method: 'PUT' })
-      .catch(() => {})
-      .finally(() => {
-        fetchWithAuth('/api/games/matchmaking', {
-          method: 'POST',
-        }).then(response => {
-          if (!response.ok) throw new Error('Failed matchmaking')
-          return response.json()
-        }).then(data => {
-          if (data.data) {
-            setGameData(data.data)
-            setScreen('ready-room')
-          } else {
-            setScreen("searching")
-          }
-        }).catch(err => {
-          console.error('Matchmaking failed err:', err)
-          setScreen("main")
-          setGameMode("none")
-        })
-      })
+
+	function stateKiller() {
+		if (!tournamentIdRef.current) {
+			return
+		}
+        fetchWithAuth(`/api/tournaments/${tournamentIdRef.current}/leave`,
+          {method: 'DELETE', keepalive: true})
+        fetchWithAuth('/api/matchmaking/cancel', {method: 'PUT', keepalive: true})
+		fetchWithAuth('/api/tournaments/extreme', {method: 'POST', keepalive: true})
   }
 
-  function handleHostReq() {
+  async function handleRandomPlayer() {
     setGameMode("online")
     setScreen("searching")
-    fetchWithAuth('/api/games/matchmaking/cancel', { method: 'PUT' })
-      .catch(() => {})
-      .finally(() => {
-        fetchWithAuth('/api/games/host', {
-          method: 'POST',
-        }).then(response => {
-          if(response.ok)
-            return response.json()
-          throw new Error('Failed hosting')
-        }).then(data => {
-          setLobbyId(data.data.lobby_id)
-          setScreen("host-lobby")
-        }).catch(err => {
-          console.error('Hosting failed err:', err)
-          setScreen("main")
-          setGameMode("none")
-        })
-      })
+    try {
+      await fetchWithAuth('/api/games/matchmaking/cancel', { method: 'PUT' })
+    } catch {
+      //* ignore cancel errors
+    }
+    try {
+      const response = await fetchWithAuth('/api/games/matchmaking', { method: 'POST' })
+      if (!response.ok) 
+		throw new Error('Failed matchmaking')
+      const data = await response.json()
+      if (data.data) {
+        setGameData(data.data)
+        setScreen('ready-room')
+      } else {
+        setScreen("searching")
+      }
+    } catch (err) {
+      console.error('Matchmaking failed err:', err)
+      setScreen("main")
+      setGameMode("none")
+    }
   }
 
-  function joinLobbyReq(lobbyId: string) {
+  async function handleHostReq() {
     setGameMode("online")
     setScreen("searching")
-    fetchWithAuth('/api/games/joinlobby', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ lobby_id: lobbyId }),
-    }).then(response => {
-      if(response.ok)
-        return response.json()
-      throw new Error('Failed to join lobby')
-    }).then(data => {
+    try {
+      await fetchWithAuth('/api/games/matchmaking/cancel', { method: 'PUT' })
+    } catch {
+      //* ignore cancel errors
+    }
+    try {
+      const response = await fetchWithAuth('/api/games/host', { method: 'POST' })
+      if (!response.ok) 
+		throw new Error('Failed hosting')
+      const data = await response.json()
+      setLobbyId(data.data.lobby_id)
+      setScreen("host-lobby")
+    } catch (err) {
+      console.error('Hosting failed err:', err)
+      setScreen("main")
+      setGameMode("none")
+    }
+  }
+
+  async function joinLobbyReq(lobbyId: string) {
+    setGameMode("online")
+    setScreen("searching")
+    try {
+      const response = await fetchWithAuth('/api/games/joinlobby', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lobby_id: lobbyId }),
+      })
+      if (!response.ok) 
+		throw new Error('Failed to join lobby')
+      const data = await response.json()
       console.log('Joined lobby response:', data)
       setGameData(data.data)
       setScreen("ready-room")
-    }).catch(err => {
+    } catch (err) {
       console.error('Join lobby failed err:', err)
       setScreen("main")
       setGameMode("none")
-    })
+    }
   }
 
-  function resetPlayerStatus() {
-    fetchWithAuth('/api/games/matchmaking/cancel', {
-      method: 'PUT'
-    }).then(response => {
-      if (!response.ok) throw new Error('Failed to cancel matchmaking')
+  async function resetPlayerStatus() {
+    try {
+      const response = await fetchWithAuth('/api/games/matchmaking/cancel', { method: 'PUT' })
+      if (!response.ok) 
+		throw new Error('Failed to cancel matchmaking')
       console.log('Matchmaking cancelled')
-    }).catch(err => {
+    } catch (err) {
       console.error('Cancel matchmaking failed:', err)
-    }).finally(() => {
-      // Refresh currentUser so the frontend has the updated status ('idle')
-      fetchWithAuth('/api/users/me')
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            setCurrentUser(data.data)
-            console.log('🔄 User status refreshed:', data.data.status)
-          }
-        })
-        .catch(err => console.error('Failed to refresh user:', err))
-    })
+    }
+    // Refresh currentUser so the frontend has the updated status ('idle')
+    try {
+      const res = await fetchWithAuth('/api/users/me')
+      const data = await res.json()
+      if (data.success) {
+        setCurrentUser(data.data)
+        console.log('🔄 User status refreshed:', data.data.status)
+      }
+    } catch (err) {
+      console.error('Failed to refresh user:', err)
+    }
   }
 
   const handleBackToMenu = useCallback(() => {
@@ -376,7 +398,9 @@ export default function Game() {
           isTournamentMatch={isTournamentMatchRef.current}
           gameResult={gameResult}
           oppName={oppName}
+          oppAvatar={oppAvatar}
           ownName={currentUser ? currentUser.username : 'UNKNOWN'}
+          ownAvatar={getAvatarUrl(currentUser?.avatar_url)}
           handleBackToMenu={handleBackToMenu}
 
           setScreen={setScreen}

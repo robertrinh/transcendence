@@ -19,12 +19,6 @@ export async function gameOfflineLobby(
     function handleKeyDown(key: KeyboardEvent) {
         switch (key.key) {
             case "ArrowDown":
-                playerOne.paddle.downPressed = true
-                break
-            case "ArrowUp":
-                playerOne.paddle.upPressed = true
-                break
-            case "s":
                 if (gameMode === 'singleplayer') {
                     playerOne.paddle.downPressed = true
                 }
@@ -32,13 +26,19 @@ export async function gameOfflineLobby(
                     playerTwo.paddle.downPressed = true
                 }
                 break
-            case "w":
+            case "ArrowUp":
                 if (gameMode === 'singleplayer') {
                     playerOne.paddle.upPressed = true
                 }
                 else {
                     playerTwo.paddle.upPressed = true
                 }
+                break
+            case "s":
+                playerOne.paddle.downPressed = true
+                break
+            case "w":
+                playerOne.paddle.upPressed = true
                 break
         }
         key.preventDefault()
@@ -47,12 +47,6 @@ export async function gameOfflineLobby(
     function handleKeyUp(key: KeyboardEvent) {
         switch (key.key) {
             case "ArrowDown":
-                playerOne.paddle.downPressed = false
-                break
-            case "ArrowUp":
-                playerOne.paddle.upPressed = false
-                break
-            case "s":
                 if (gameMode === 'singleplayer') {
                     playerOne.paddle.downPressed = false
                 }
@@ -60,13 +54,19 @@ export async function gameOfflineLobby(
                     playerTwo.paddle.downPressed = false
                 }
                 break
-            case "w":
+            case "ArrowUp":
                 if (gameMode === 'singleplayer') {
                     playerOne.paddle.upPressed = false
                 }
                 else {
                     playerTwo.paddle.upPressed = false
                 }
+                break
+            case "s":
+                playerOne.paddle.downPressed = false
+                break
+            case "w":
+                playerOne.paddle.upPressed = false
                 break
         }
         key.preventDefault()

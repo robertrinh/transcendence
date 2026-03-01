@@ -92,7 +92,7 @@ if (user.is_anonymous) {
     //* load friends and blocked from API (guests only get blocked list)
     const loadFriendsAndBlocked = async () => {
         try {
-            if (user.is_guest) {
+            if (user.is_guest === true) {
                 const blockedRes = await fetchWithAuth('/api/friends/blocked');
                 if (blockedRes.ok) {
                     const data = await blockedRes.json();
@@ -141,7 +141,6 @@ if (user.is_anonymous) {
         }
     };
 
-    //* connect to SSE on component mount + load friends/blocked
     useEffect(() => {
         connectSSE();
         loadFriendsAndBlocked();
@@ -152,7 +151,6 @@ if (user.is_anonymous) {
         };
     }, [user]);
 
-    //* when viewing as guest, don't stay on Friends tab
     useEffect(() => {
         if (user.is_guest && activeTab === 'friends') {
             setActiveTab('chat');
@@ -166,8 +164,8 @@ if (user.is_anonymous) {
         }
     }, [activeTab]);
 
-	//* Checks status of friend request with a poll	
-    const FRIENDS_POLL_MS = 5000; // 5 seconds
+	//* Checks status of friend request with a poll
+    const FRIENDS_POLL_MS = 5000; //* 5 seconds
     useEffect(() => {
         if (activeTab !== 'friends' || user.is_guest) 
 			return;
@@ -177,7 +175,6 @@ if (user.is_anonymous) {
         return () => clearInterval(interval);
     }, [activeTab, user.is_guest]);
 
-    // NEW: Helper to connect to SSE stream
     const connectSSE = () => {
         try {
             if (user.is_anonymous) {
@@ -194,7 +191,6 @@ if (user.is_anonymous) {
             }
 
             console.log('🔗 Connecting to SSE with token...');
-            //  Pass token as query parameter
             const sseUrl = `/api/chat/stream?token=${token}`;
             console.log('📡 SSE URL:', sseUrl);
             
@@ -473,7 +469,7 @@ if (user.is_anonymous) {
                 body: JSON.stringify({ username })
             });
             if (res.ok) {
-                loadFriendsAndBlocked();
+                await loadFriendsAndBlocked();
                 showToast('Friend request sent');
             } else {
                 const errorData = await res.json() as { error?: string };
@@ -632,10 +628,10 @@ if (user.is_anonymous) {
             <div className="flex border-b border-slate-600/70 bg-slate-700/80 flex-shrink-0">
                 <button
                     onClick={() => setActiveTab('chat')}
-                    className={`flex-1 py-2 px-3 text-xs font-medium transition-colors rounded-lg ${
+                    className={`flex-1 py-2 px-3 text-xs font-medium transition-colors ${
                         activeTab === 'chat'
-                            ? 'bg-brand-orange/80 text-black'
-                            : 'text-slate-300 hover:text-white hover:bg-slate-600/80'
+                            ? 'text-brand-orange border-b-2 border-brand-orange bg-slate-700/40'
+                            : 'text-slate-400 hover:text-slate-200'
                     }`}
                 >
                     Lobby
@@ -643,10 +639,10 @@ if (user.is_anonymous) {
 	                 {!user.is_guest && (
                     <button
                         onClick={() => setActiveTab('friends')}
-                        className={`flex-1 py-2 px-3 text-xs font-medium transition-colors rounded-lg ${
+                        className={`flex-1 py-2 px-3 text-xs font-medium transition-colors ${
                             activeTab === 'friends'
-                                ? 'bg-brand-orange/80 text-black'
-                                : 'text-slate-300 hover:text-white hover:bg-slate-600/80'
+                                ? 'text-brand-orange border-b-2 border-brand-orange bg-slate-700/40'
+                                : 'text-slate-400 hover:text-slate-200'
                         }`}
                     >
                         Friends ({friends.filter((f) => f.username?.trim()).length})
@@ -654,10 +650,10 @@ if (user.is_anonymous) {
                 )}
                 <button
                     onClick={() => setActiveTab('blocked')}
-                    className={`flex-1 py-2 px-3 text-xs font-medium transition-colors rounded-lg ${
+                    className={`flex-1 py-2 px-3 text-xs font-medium transition-colors ${
                         activeTab === 'blocked'
-                            ? 'bg-brand-orange/80 text-black'
-                            : 'text-slate-300 hover:text-white hover:bg-slate-600/80'
+                            ? 'text-brand-orange border-b-2 border-brand-orange bg-slate-700/40'
+                            : 'text-slate-400 hover:text-slate-200'
                     }`}
                 >
                     Blocked ({blockedUsers.length})
@@ -670,7 +666,7 @@ if (user.is_anonymous) {
                     {/* Chat Mode Indicator */}
                     <div className="bg-slate-700/60 px-3 py-2 border-b border-slate-600/70 flex-shrink-0 font-mono text-xs">
                         <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
+                            <div className="flex flex-col gap-1">
                                 {chatMode === 'private' ? (
                                     <>
                                         <span className="text-brand-purple font-medium">
@@ -678,9 +674,9 @@ if (user.is_anonymous) {
                                         </span>
                                         <button
                                             onClick={switchToPublicChat}
-                                            className="text-brand-orange hover:underline"
+                                            className="text-brand-orange hover:underline text-left"
                                         >
-                                            Switch to Public
+                                            Switch back to lobby
                                         </button>
                                     </>
                                 ) : (
@@ -803,7 +799,7 @@ if (user.is_anonymous) {
                                 className={`px-3 py-1 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 ${
                                     chatMode === 'private'
                                         ? 'bg-brand-purple/80 text-white hover:bg-brand-purple'
-                                        : 'bg-brand-orange/80 text-black hover:bg-brand-orange'
+                                        : 'bg-brand-orange/80 text-white hover:bg-brand-orange'
                                 }`}
                             >
                                 Send

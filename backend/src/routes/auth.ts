@@ -13,7 +13,7 @@ async function registerGuest(
 	return reply.code(200).send({
 		success: true,
 		token: token,
-		user: { id: result.lastInsertRowid, username: username },
+		user: { id: result.lastInsertRowid, username: username, is_guest: true },
 		message: 'Guest registration successful for ' + username
 	})
 }
@@ -170,7 +170,6 @@ export default async function authRoutes (
 			return reply.code(401).send({ success: false, error: 'Invalid or expired token' })
 		}
 
-		//* reject pending 2FA tokens, must complete 2FA first
 		if (payload.twoFactorPending) {
 			return reply.code(403).send({ success: false, error: '2FA verification required' })
 		}

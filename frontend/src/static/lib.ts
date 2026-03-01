@@ -258,7 +258,8 @@ export function drawPlayerScores(
     canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D,
     fontSizePX: number, color: string, textStyle: string,
     playerOneRoundScore: number, playerTwoRoundScore: number,
-    playerOneName: string, playerTwoName: string) {
+    _playerOneName: string, _playerTwoName: string) {
+        
         ctx.font = `${fontSizePX}px ${textStyle}`
         ctx.textAlign = "center"
         ctx.fillStyle = color
@@ -272,11 +273,5 @@ export function drawPlayerScores(
         )
         ctx.font = `${Math.floor(fontSizePX * 0.5)}px ${textStyle}`
         ctx.fillStyle = p1PaddleColor
-        ctx.fillText(
-            playerOneName, canvas.width * 0.25, canvas.height * 0.15
-        )
         ctx.fillStyle = p2PaddleColor
-        ctx.fillText(
-            playerTwoName, canvas.width * 0.75, canvas.height * 0.15
-        )
     }
