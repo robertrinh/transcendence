@@ -81,7 +81,7 @@ export default function SinglePlayerMenu({ onSinglePlayer, onMultiPlayer, onBack
             >
               <div className="text-4xl mb-2">👥</div>
               <h2 className="text-2xl font-black text-red-300 uppercase" style={{fontFamily: 'monospace'}}>
-                Multiplayer
+                1 vs 1
               </h2>
               <p className="text-red-200 text-sm font-bold mt-2" style={{fontFamily: 'monospace'}}>
                 PLAY WITH FRIEND

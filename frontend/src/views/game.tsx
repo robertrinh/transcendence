@@ -130,6 +130,13 @@ export default function Game() {
     getOppUserName()
   }, [gameData, currentUser])
 
+  useEffect(() => {
+    if (gameMode !== 'online') {
+      setOppAvatar(undefined)
+      setOppName('UNKNOWN')
+    }
+  }, [gameMode])
+
   // Listen for game-over events from the pong game
   useEffect(() => {
       const handleGameOver = (event: Event) => {
