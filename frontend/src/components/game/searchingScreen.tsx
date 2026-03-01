@@ -4,7 +4,7 @@ import { fetchWithAuth } from '../../config/api'
 interface SearchingScreenProps {
     onCancel: () => void
     onGameFound?: (gameData: any) => void
-    onTimeout?: () => void
+    onTimeout: () => void
 }
 
 export default function SearchingScreen ({ onCancel, onGameFound, onTimeout }: SearchingScreenProps) {
@@ -37,13 +37,11 @@ export default function SearchingScreen ({ onCancel, onGameFound, onTimeout }: S
                 const data = result.data
                 
                 if (data && data.player1_id && data.player2_id) {
-                    clearInterval(pollTimer)
                     onGameFound?.(data)
                 }
                 else if (data && data.status === 'idle') {
                     console.log('Matchmaking timed out')
-                    clearInterval(pollTimer)
-                    onTimeout?.()
+                    onTimeout()
                 }
             } catch (err) {
                 console.error('Polling error:', err)
@@ -51,7 +49,7 @@ export default function SearchingScreen ({ onCancel, onGameFound, onTimeout }: S
         }, 2000)
 
         return () => clearInterval(pollTimer)
-    }, [onGameFound, onTimeout])
+    }, [])
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60)
