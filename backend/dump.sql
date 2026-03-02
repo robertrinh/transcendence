@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS users (
 	),
     created_at DATETIME DEFAULT (datetime('now')) NOT NULL,
     avatar_id INTEGER,
-    email TEXT CHECK(length(email) < 65),
+    email TEXT CHECK(length(email) < 66),
     status TEXT CHECK (status IN ('idle', 'searching', 'playing')) DEFAULT 'idle' NOT NULL,
     two_factor_secret TEXT,
     two_factor_enabled BOOLEAN CHECK(two_factor_enabled IN (0,1)) DEFAULT 0 NOT NULL,
