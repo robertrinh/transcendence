@@ -206,7 +206,6 @@ export default function Game() {
 
   useEffect(() => {
     const handleOnBeforeUnload = (event: BeforeUnloadEvent) => {
-	  stateKiller()
       event.preventDefault();
       event.returnValue = '';
       return (event.returnValue);
