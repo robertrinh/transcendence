@@ -31,7 +31,7 @@ CREATE INDEX IF NOT EXISTS idx_users_anonymous ON users(is_anonymous);
 CREATE TABLE IF NOT EXISTS game_queue (
 	player_id INTEGER UNIQUE NOT NULL,
     joined_at INTEGER DEFAULT (strftime('%s','now')) NOT NULL,
-    lobby_id TEXT CHECK(length(lobby_id < 11)),
+    lobby_id TEXT CHECK(length(lobby_id) < 11),
     private BOOLEAN CHECK(private IN (0,1)) DEFAULT 0 NOT NULL,
 	FOREIGN KEY(player_id) REFERENCES users(id)
 );
@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS friends (
     user_id INTEGER NOT NULL,
     friend_id INTEGER NOT NULL,
     CHECK (user_id != friend_id),
-    FOREIGN KEY (friend_id) REFERENCES users (id) ON DELETE CASCADE
+    FOREIGN KEY (friend_id) REFERENCES users (id) ON DELETE CASCADE,
 	FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS friend_request (
     requested_id INTEGER NOT NULL,
     created_at DATETIME DEFAULT (datetime('now')) NOT NULL,
     CHECK (requester_id != requested_id),
-    FOREIGN KEY (requester_id) REFERENCES users (id) ON DELETE CASCADE
+    FOREIGN KEY (requester_id) REFERENCES users (id) ON DELETE CASCADE,
 	FOREIGN KEY (requested_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
