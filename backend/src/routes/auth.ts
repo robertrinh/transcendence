@@ -3,6 +3,7 @@ import { db, comparePassword } from '../databaseInit.js'
 import bcrypt from 'bcrypt'
 import { generateToken, verifyToken } from '../auth/utils.js'
 import { validatePassword } from '../auth/password.js'
+import { validateEmail } from '../auth/email.js'
 
 async function registerGuest(
 	reply: FastifyReply, username: string
@@ -39,6 +40,13 @@ async function registerUser(
 		return reply.code(400).send({
 			success: false,
 			error: 'Email cannot be longer than 65 characters'
+		})
+	}
+	const emailValidation = validateEmail(email)
+	if (!emailValidation.valid) {
+		return reply.code(400).send({
+			success: false,
+			error: emailValidation.error
 		})
 	}
 	if (!password) {

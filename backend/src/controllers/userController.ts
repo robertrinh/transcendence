@@ -4,6 +4,7 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import bcrypt from 'bcrypt'
 import { comparePassword } from '../databaseInit.js'
 import { validatePassword } from '../auth/password.js'
+import { validateEmail } from '../auth/email.js'
 import { createWriteStream, existsSync, mkdirSync } from 'fs'
 import { pipeline } from 'stream/promises'
 import path from 'path'
@@ -128,6 +129,12 @@ export const userController = {
         if (email !== undefined) {
             if (typeof email === 'string' && email.length >= 66) {
                 return reply.code(400).send({ success: false, error: 'Email cannot be longer than 65 characters' });
+            }
+            if (typeof email === 'string' && email.length > 0) {
+                const emailValidation = validateEmail(email);
+                if (!emailValidation.valid) {
+                    return reply.code(400).send({ success: false, error: emailValidation.error });
+                }
             }
             updates.push('email = ?')
             values.push(email)
