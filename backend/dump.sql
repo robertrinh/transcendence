@@ -72,16 +72,6 @@ CREATE TABLE IF NOT EXISTS tournaments (
 	FOREIGN KEY (winner_id) REFERENCES users(id)
 );
 
--- New tables for authentication, chat and messages
-CREATE TABLE IF NOT EXISTS user_sessions (
-    id TEXT PRIMARY KEY NOT NULL,
-    user_id INTEGER NOT NULL,
-    username TEXT NOT NULL, --delete later
-    created_at DATETIME DEFAULT (datetime('now')) NOT NULL, --some validation for valid date?
-    expires_at DATETIME NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-);
-
 CREATE TABLE IF NOT EXISTS chat_messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -91,13 +81,6 @@ CREATE TABLE IF NOT EXISTS chat_messages (
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS chat_users (
-    user_id INTEGER PRIMARY KEY,
-    username TEXT NOT NULL, --delete later
-    is_online BOOLEAN CHECK(is_online IN (0,1)) DEFAULT 0 NOT NULL,
-    last_seen DATETIME DEFAULT (datetime('now')),
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-);
 
 CREATE TABLE IF NOT EXISTS friends (
     user_id INTEGER NOT NULL,
