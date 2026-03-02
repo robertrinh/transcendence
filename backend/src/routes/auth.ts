@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyReply } from 'fastify'
 import { db, comparePassword } from '../databaseInit.js'
 import bcrypt from 'bcrypt'
-import { generateToken, verifyToken } from '../auth/utils.js'
+import { generateToken, verifyToken } from '../auth/jwt.js'
 import { validatePassword } from '../auth/password.js'
 import { validateEmail } from '../auth/email.js'
 

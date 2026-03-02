@@ -3,7 +3,7 @@ import { authenticator } from "otplib";
 import QRCode from "qrcode";
 import { db } from '../databaseInit.js'
 import { authenticate, authenticatePendingOnly, requireNonGuest } from "../auth/middleware.js";
-import { generateToken } from "../auth/utils.js";
+import { generateToken } from "../auth/jwt.js";
 
 export default async function twofaRoutes(
 	fastify: FastifyInstance

@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { verifyToken, TokenPayload} from './utils.js';
+import { verifyToken, TokenPayload} from './jwt.js';
 import { db } from '../databaseInit.js';
 
 declare module 'fastify' {
