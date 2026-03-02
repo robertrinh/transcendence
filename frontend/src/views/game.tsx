@@ -80,6 +80,7 @@ export default function Game() {
     switch (websocketState) {
       case WebSocket.CLOSED:
         if (error) {
+          stateKiller()
           setScreen('error')
         }
         else {
