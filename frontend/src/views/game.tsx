@@ -215,9 +215,14 @@ export default function Game() {
       event.returnValue = '';
       return (event.returnValue);
     }
+    const onPageHide = () => {
+      stateKiller()
+	}
+	window.addEventListener('pagehide', onPageHide)
     window.addEventListener('beforeunload', handleOnBeforeUnload, {capture : true})
     return () =>{
       window.removeEventListener('beforeunload', handleOnBeforeUnload, {capture : true})
+	  window.removeEventListener('pagehide', onPageHide)
     }
   },[])
 
