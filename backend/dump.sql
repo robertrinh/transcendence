@@ -80,7 +80,6 @@ CREATE TABLE IF NOT EXISTS tournaments (
 CREATE TABLE IF NOT EXISTS chat_messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
-    username TEXT NOT NULL, --delete later
     message TEXT NOT NULL CHECK(length(message) < 256),
     timestamp DATETIME DEFAULT (datetime('now')) NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
