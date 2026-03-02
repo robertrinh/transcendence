@@ -235,15 +235,15 @@ export const userController = {
                     error: 'Password is required to delete account'
                 });
             }
-			
-            const user = userService.fetchUser(userId) as { id: number; username: string; password: string };
-            if (!user) {
-                return reply.status(404).send({
-                    error: 'User not found'
+
+            const storedHash = userService.getPasswordHash(userId);
+            if (storedHash === null) {
+                return reply.status(400).send({
+                    error: 'Could not verify password'
                 });
             }
 
-            const isPasswordValid = await comparePassword(password, user.password);
+            const isPasswordValid = await comparePassword(password, storedHash);
             if (!isPasswordValid) {
                 return reply.status(403).send({
                     error: 'Invalid password'
