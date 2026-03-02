@@ -224,7 +224,6 @@ export default function Game() {
         fetchWithAuth(`/api/tournaments/${tournamentIdRef.current}/leave`,
           {method: 'DELETE', keepalive: true})
 		fetchWithAuth('/api/games/matchmaking/cancel', {method: 'PUT', keepalive: true})
-		fetchWithAuth('/api/tournaments/extreme', {method: 'POST', keepalive: true})
   }
 
   async function handleRandomPlayer() {
