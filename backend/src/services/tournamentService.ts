@@ -195,7 +195,8 @@ export const tournamentService = {
             }
             const tournamentParticipants = db.prepare(
                 'SELECT * FROM tournament_participants WHERE tournament_id = ?')
-                .all(tournament_id) as TournamentParticipant[]
+                .all(tournament_id) as undefined | TournamentParticipant[]
+            assert(tournamentParticipants !== undefined, 'tournamentParticipants cannot be undefined')
             let userFound = false
             for (const participant of tournamentParticipants) {
                 if (participant.user_id === user_id) {
