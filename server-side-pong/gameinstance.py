@@ -6,7 +6,7 @@ import sys
 from websockets import ServerConnection, broadcast, WebSocketException
 from player import Player
 from ball import Ball
-from lib import Vector2, Rect
+from lib import Vector2, Rect, is_colliding_ball_paddle
 from player_paddle import PlayerPaddle
 from datetime import datetime
 from base64 import b64encode
@@ -203,70 +203,6 @@ def line_line_intersect(
     return None
 
 
-def handle_paddle_collision(
-        old_ball_pos: Point, new_ball_pos: Point,
-        player: PlayerPaddle, ball: Ball) -> None | tuple[Point, str]:
-    intersect = None
-    shape = player.shape
-    bottomleft = [shape.x, shape.y + shape.height]
-    bottomright = [shape.x + shape.width, shape.y + shape.height]
-    topright = [shape.x + shape.width, shape.y]
-    topleft = [shape.x, shape.y]
-    # moving left
-    if ball.dir_vect.x < 0:
-        intersect = line_line_intersect(
-            old_ball_pos,
-            new_ball_pos,
-            Point(topright[0] + ball.radius_px, topright[1] - ball.radius_px),
-            Point(
-                bottomright[0] + ball.radius_px,
-                bottomright[1] + ball.radius_px
-            ),
-            "right"
-        )
-    elif ball.dir_vect.x > 0:
-        intersect = line_line_intersect(
-            old_ball_pos,
-            new_ball_pos,
-            Point(topleft[0] - ball.radius_px, topleft[1] - ball.radius_px),
-            Point(
-                bottomleft[0] - ball.radius_px,
-                bottomleft[1] + ball.radius_px
-            ),
-            "left"
-        )
-    if intersect is None:
-        if ball.dir_vect.y < 0:
-            intersect = line_line_intersect(
-                old_ball_pos,
-                new_ball_pos,
-                Point(
-                    bottomleft[0] - ball.radius_px,
-                    bottomleft[1] + ball.radius_px
-                ),
-                Point(
-                    bottomright[0] + ball.radius_px,
-                    bottomright[1] + ball.radius_px
-                ),
-                "bottom"
-            )
-        elif ball.dir_vect.y > 0:
-            intersect = line_line_intersect(
-                    old_ball_pos,
-                    new_ball_pos,
-                    Point(
-                        topleft[0] - ball.radius_px,
-                        topleft[1] - ball.radius_px
-                    ),
-                    Point(
-                        topright[0] + ball.radius_px,
-                        topright[1] - ball.radius_px
-                    ),
-                    "top"
-                )
-    return intersect
-
-
 def handle_court_collision(
         old_ball_pos: Point, new_ball_pos: Point, ball: Ball
         ) -> None | tuple[Point, str]:
@@ -362,7 +298,9 @@ def move_ball(ball: Ball, player_one: PlayerPaddle, player_two: PlayerPaddle):
         paddle = player_two
     if paddle is None:
         return
-    paddle_intersect = handle_paddle_collision(old_pos, new_pos, paddle, ball)
+    paddle_intersect = is_colliding_ball_paddle(
+        new_pos, ball.radius_px, Point(paddle.shape.x, paddle.shape.y),
+        paddle.shape.width, paddle.shape.height)
     if paddle_intersect is None:
         # Court collision
         court_pt = handle_court_collision(old_pos, new_pos, ball)
@@ -387,14 +325,14 @@ def move_ball(ball: Ball, player_one: PlayerPaddle, player_two: PlayerPaddle):
                 ball.shape.x = new_pos.x - ball.radius_px
                 ball.shape.y = ARENA_HEIGHT - (ball.radius_px * 2)
         return
-    paddle_point, side = paddle_intersect
-    match side:
-        case "left" | "right":
-            ball.dir_vect.x *= -1
-            ball.shape.x = paddle_point.x - ball.radius_px
-        case "bottom" | "top":
-            ball.dir_vect.y *= -1
-            ball.shape.y = paddle_point.y - ball.radius_px
+    if paddle_intersect == 'vert':
+        ball.dir_vect.x *= -1
+        ball.shape.x = old_pos.x - ball.radius_px
+        ball.shape.y = old_pos.y - ball.radius_px
+    else:
+        ball.dir_vect.y *= -1
+        ball.shape.x = old_pos.x - ball.radius_px
+        ball.shape.y = old_pos.y - ball.radius_px
 
 
 def random_ball_vec() -> Vector2:
@@ -445,20 +383,20 @@ async def game_loop(game: GameInstance):
     return game_state
 
 
-def process_paddle(input: list, paddle: PlayerPaddle):
+def process_paddle(input: list, paddle: PlayerPaddle, ball: Ball):
     for move in input:
         if move[0] == 'DOWN':
-            paddle.move_down(ARENA_HEIGHT)
+            paddle.move_down(ball, ARENA_HEIGHT)
         elif move[0] == 'UP':
-            paddle.move_up()
+            paddle.move_up(ball)
 
 
 def process_input(game: GameInstance):
     if len(game.p1_input) != 0:
-        process_paddle(game.p1_input, game.p1_paddle)
+        process_paddle(game.p1_input, game.p1_paddle, game.ball)
         game.p1_last_ts = game.p1_input[-1][1]
         game.p1_input.clear()
     if len(game.p2_input) != 0:
-        process_paddle(game.p2_input, game.p2_paddle)
+        process_paddle(game.p2_input, game.p2_paddle, game.ball)
         game.p2_last_ts = game.p2_input[-1][1]
         game.p2_input.clear()
