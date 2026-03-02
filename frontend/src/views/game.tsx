@@ -222,12 +222,26 @@ export default function Game() {
   },[])
 
 	function stateKiller() {
-		fetchWithAuth('/api/games/matchmaking/cancel', {method: 'PUT', keepalive: true})
-		if (!tournamentIdRef.current) {
-			return
+		fetchWithAuth('/api/games/matchmaking/cancel', {
+			method: 'PUT',
+			keepalive: true
+		})
+		if (tournamentIdRef.current) {
+    		fetchWithAuth(`/api/tournaments/${tournamentIdRef.current}/leave`, {
+				method: 'DELETE',
+				keepalive: true
+			})
+			return ;
 		}
-    fetchWithAuth(`/api/tournaments/${tournamentIdRef.current}/leave`,
-      {method: 'DELETE', keepalive: true})
+		if (gameDataRef.current?.id) {
+			console.log('LEAVING GAME!')
+			fetchWithAuth('/api/games/cancel', {
+				method: 'POST',
+				keepalive: true,
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ game_id: gameDataRef.current.id }),
+			})	
+		}
   }
 
   async function handleRandomPlayer() {
