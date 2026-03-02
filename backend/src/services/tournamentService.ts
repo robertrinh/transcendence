@@ -217,6 +217,7 @@ export const tournamentService = {
                         tournament_id: tournament_id,
                         user_id: user_id
                     })
+                    removeFromActiveGame(user_id)
                     break
                 case 'open':
                     db.prepare('DELETE FROM tournament_participants WHERE tournament_id = ? AND user_id = ?')
