@@ -42,7 +42,12 @@ CREATE TABLE IF NOT EXISTS games (
     player2_id INTEGER, --NULL for tournament placeholder games
 	score_player1 INTEGER DEFAULT 0 NOT NULL,
 	score_player2 INTEGER DEFAULT 0 NOT NULL,
-	winner_id INTEGER CHECK(winner_id IN (player1_id, player2_id, NULL)),
+	winner_id INTEGER 
+	CHECK (
+		winner_id IS NULL OR
+		winner_id = player1_id OR
+		winner_id = player2_id
+	),
 	tournament_id INTEGER,
     round INTEGER,
     status TEXT CHECK (status IN ('pending', 'ready', 'ongoing', 'finished', 'cancelled')) DEFAULT 'pending',
