@@ -9,11 +9,16 @@ CREATE TABLE IF NOT EXISTS avatars (
 
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE NOT NULL CHECK(length(username) < 15),
+    username TEXT UNIQUE NOT NULL CHECK(length(username) < 16),
     is_guest BOOLEAN CHECK(is_guest IN (0,1)) DEFAULT 0 NOT NULL,
-    nickname TEXT UNIQUE CHECK(length(nickname) < 15),
-    display_name TEXT CHECK(length(display_name) < 15),
-    password TEXT,
+    nickname TEXT UNIQUE CHECK(length(nickname) < 16),
+    display_name TEXT CHECK(length(display_name) < 16),
+    password TEXT
+	CHECK (
+		(is_guest = 1 AND password IS NULL)
+		OR
+		(is_guest = 0 AND length(password) >= 60)
+	),
     created_at DATETIME DEFAULT (datetime('now')) NOT NULL,
     avatar_id INTEGER,
     email TEXT CHECK(length(email) < 65),
@@ -61,7 +66,7 @@ CREATE TABLE IF NOT EXISTS games (
 
 CREATE TABLE IF NOT EXISTS tournaments (
 	id INTEGER PRIMARY KEY,
-	name TEXT CHECK(length(name) < 15) NOT NULL,
+	name TEXT CHECK(length(name) < 16) NOT NULL,
 	description TEXT CHECK(length(description) < 101),
 	max_participants INTEGER CHECK(max_participants IN (4, 8, 16)),
     status TEXT CHECK (status IN ('open', 'ongoing', 'finished', 'cancelled')) DEFAULT 'open',
