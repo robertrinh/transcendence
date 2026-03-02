@@ -170,7 +170,7 @@ export function ChatInput({
                     onChange={(e) => onChange(e.target.value)}
                     placeholder={placeholder}
                     className="flex-1 text-sm text-slate-100 placeholder-slate-500 border border-slate-500 bg-slate-600 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-orange focus:border-brand-orange"
-                    maxLength={200}
+                    maxLength={255}
                     disabled={!connected}
                 />
                 <button
