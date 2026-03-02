@@ -62,6 +62,7 @@ export default function JoinLobby({ onJoin, onBack }: JoinLobbyProps) {
             onKeyDown={handleKeyDown}
             placeholder="e.g. abc123"
             autoFocus
+            maxLength={10}
             className="w-full bg-black border-2 border-cyan-600 rounded-lg p-4 text-cyan-300 text-xl font-bold tracking-widest text-center mb-4 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/50 placeholder-gray-600 transition-all"
             style={{
               fontFamily: 'monospace',
