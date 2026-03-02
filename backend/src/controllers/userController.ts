@@ -22,7 +22,23 @@ try {
 export const userController = {
 
     createUser: async (req: FastifyRequest, reply: FastifyReply) => {
-        const { username, password } = req.body as { username: string, password: string};
+        const { username, password } = req.body as { username: string, password: string };
+        if (!username || typeof username !== 'string') {
+            return reply.code(400).send({ success: false, error: 'Username is required' });
+        }
+        if (username.length < 3) {
+            return reply.code(400).send({ success: false, error: 'Username must be at least 3 characters long' });
+        }
+        if (username.length >= 16) {
+            return reply.code(400).send({ success: false, error: 'Username cannot be longer than 15 characters' });
+        }
+        if (!password || typeof password !== 'string') {
+            return reply.code(400).send({ success: false, error: 'Password is required' });
+        }
+        const passwordValidation = validatePassword(password);
+        if (!passwordValidation.valid) {
+            return reply.code(400).send({ success: false, error: passwordValidation.error });
+        }
         const hashedPassword = await bcrypt.hash(password, 10);
         userService.addUser(username, hashedPassword);
         return { success: true, message: 'User created, welcome to the game!' };
@@ -96,14 +112,23 @@ export const userController = {
         const values: any[] = []
         
         if (nickname !== undefined) {
+            if (typeof nickname === 'string' && nickname.length >= 16) {
+                return reply.code(400).send({ success: false, error: 'Nickname cannot be longer than 15 characters' });
+            }
             updates.push('nickname = ?')
             values.push(nickname)
         }
         if (display_name !== undefined) {
+            if (typeof display_name === 'string' && display_name.length >= 16) {
+                return reply.code(400).send({ success: false, error: 'Display name cannot be longer than 15 characters' });
+            }
             updates.push('display_name = ?')
             values.push(display_name)
         }
         if (email !== undefined) {
+            if (typeof email === 'string' && email.length >= 66) {
+                return reply.code(400).send({ success: false, error: 'Email cannot be longer than 65 characters' });
+            }
             updates.push('email = ?')
             values.push(email)
         }

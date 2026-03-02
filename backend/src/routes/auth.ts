@@ -35,6 +35,12 @@ async function registerUser(
 			error: 'Email is required'
 		})
 	}
+	if (email.length >= 66) {
+		return reply.code(400).send({
+			success: false,
+			error: 'Email cannot be longer than 65 characters'
+		})
+	}
 	if (!password) {
 		return reply.code(400).send({
 			success: false,
@@ -76,6 +82,12 @@ export default async function authRoutes (
 			return reply.code(400).send({
 				success: false,
 				error: 'Username and/or password are required'
+			})
+		}
+		if (username.length >= 16) {
+			return reply.code(400).send({
+				success: false,
+				error: 'Username cannot be longer than 15 characters'
 			})
 		}
 		const user = db.prepare('SELECT id, username, password FROM users WHERE username = ?').get(username) as { id: number, username: string, password: string } | undefined
@@ -135,6 +147,12 @@ export default async function authRoutes (
 			return reply.code(400).send({
 				success: false,
 				error: 'Username must be at least 3 characters long'
+			})
+		}
+		if (username.length >= 16) {
+			return reply.code(400).send({
+				success: false,
+				error: 'Username cannot be longer than 15 characters'
 			})
 		}
 		//* check if username exists
