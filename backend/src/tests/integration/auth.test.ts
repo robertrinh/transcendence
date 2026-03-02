@@ -50,7 +50,7 @@ test('POST /auth/register: successful registration', async () => {
 test('POST /auth/register: missing required fields', async () => {
 	const response = await api('/auth/register', {
 		method: 'POST',
-		body: JSON.stringify({ username: `missingfields_${Date.now()}` })
+		body: JSON.stringify({ username: `missingfields` })
 	})
 
 	const data = await response.json()
