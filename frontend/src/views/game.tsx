@@ -217,12 +217,12 @@ export default function Game() {
   },[])
 
 	function stateKiller() {
+		fetchWithAuth('/api/games/matchmaking/cancel', {method: 'PUT', keepalive: true})
 		if (!tournamentIdRef.current) {
 			return
 		}
         fetchWithAuth(`/api/tournaments/${tournamentIdRef.current}/leave`,
           {method: 'DELETE', keepalive: true})
-		fetchWithAuth('/api/games/matchmaking/cancel', {method: 'PUT', keepalive: true})
   }
 
   async function handleRandomPlayer() {
