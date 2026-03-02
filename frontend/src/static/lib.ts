@@ -275,3 +275,40 @@ export function drawPlayerScores(
         ctx.fillStyle = p1PaddleColor
         ctx.fillStyle = p2PaddleColor
     }
+
+// https://www.jeffreythompson.org/collision-detection/circle-rect.php
+export function isCollidingBallPaddle(
+    ballCenter: Point, ballRadius: number, paddlePoint: Point,
+    paddleWidth: number, paddleHeight: number
+): null | 'vert' | 'hor' {
+    let testX = ballCenter.x
+    let testY = ballCenter.y
+
+    if (ballCenter.x < paddlePoint.x) {
+        // left
+        testX = paddlePoint.x
+    }
+    else if (ballCenter.x > paddlePoint.x + paddleWidth) {
+        // right
+        testX = paddlePoint.x + paddleWidth
+    }
+
+    if (ballCenter.y < paddlePoint.y) {
+        // top
+        testY = paddlePoint.y
+    }
+    else if (ballCenter.y > paddlePoint.y + paddleHeight) {
+        // bottom
+        testY = paddlePoint.y + paddleHeight
+    }
+    const distX = ballCenter.x-testX
+    const distY = ballCenter.y-testY
+    const distance = Math.sqrt((distX*distX) + (distY*distY))
+    if (distance <= ballRadius) {
+        if (Math.abs(distX) > Math.abs(distY)) {
+            return 'vert'
+        }
+        return 'hor'
+    }
+    return null
+}

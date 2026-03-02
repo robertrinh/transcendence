@@ -1,4 +1,5 @@
-import { arenaHeight } from "./lib"
+import { arenaHeight, isCollidingBallPaddle, Point } from "./lib"
+import { type Ball } from "./ball"
 
 export class PlayerPaddle
 {
@@ -20,29 +21,42 @@ export class PlayerPaddle
         this.color = color
     }
 
-    moveUp() {
+    moveUp(ball: Ball) {
         let newY = this.y - this.yVector
 
         if (newY < 0) {
             newY = 0
         }
+        const ballCenter = new Point(ball.x + ball.radius, ball.y + ball.radius)
+        const newPaddlePos = new Point(this.x, newY)
+        if (isCollidingBallPaddle(ballCenter, ball.radius, newPaddlePos,
+            this.width, this.height) !== null) {
+            return
+        }
         this.y = newY
     }
 
-    moveDown() {
+    moveDown(ball: Ball) {
         let newY = this.y + this.yVector
         if (newY + this.height > arenaHeight) {
             newY = arenaHeight - this.height
         }
+        const ballCenter = new Point(ball.x + ball.radius, ball.y + ball.radius)
+        const newPaddlePos = new Point(this.x, newY)
+        if (isCollidingBallPaddle(ballCenter, ball.radius, newPaddlePos,
+            this.width, this.height
+        ) !== null) {
+            return
+        }
         this.y = newY
     }
 
-    update() {
+    update(ball: Ball) {
         if (this.downPressed) {
-            this.moveDown()
+            this.moveDown(ball)
         }
         if (this.upPressed) {
-            this.moveUp()
+            this.moveUp(ball)
         }
     }
 

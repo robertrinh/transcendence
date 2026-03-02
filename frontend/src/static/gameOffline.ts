@@ -2,7 +2,8 @@ import { Ball } from './ball'
 import { PlayerPaddle } from './playerPaddle'
 import { playerOne, playerTwo, ball, Point, Vector2,
     applyBallHorizontalBounce, drawPlayerScores, arenaWidth, clientTick,
-    roundMax, handlePaddleCollision, assertIsNotNull, textColor, intervals
+    roundMax, assertIsNotNull, textColor, intervals,
+    isCollidingBallPaddle
 } from './lib'
 import { DifficultyLevel } from './ai'
 import { GameMode } from '../components/game/types'
@@ -91,26 +92,21 @@ export async function gameOfflineLobby(
         if (paddle === null) {
             return
         }
-        const paddleIntersect = handlePaddleCollision(
-            oldBallPos, newBallPos, paddle, ball
+        const paddlePoint = new Point(paddle.x, paddle.y)
+        const closestSide = isCollidingBallPaddle(newBallPos, ball.radius, 
+            paddlePoint, paddle.width, paddle.height
         )
-        if (paddleIntersect === null) {
+        if (closestSide === null) {
             applyBallHorizontalBounce(ball)
             return
         }
-        const paddleHitPoint = paddleIntersect[0]
-        const paddleHitSide = paddleIntersect[1]
-        switch (paddleHitSide) {
-            case "left":
-            case "right":
-                ball.dirVector.x *= -1
-                ball.x = paddleHitPoint.x - ball.radius
-                break
-            case "bottom":
-            case "top":
-                ball.dirVector.y *= -1
-                ball.y = paddleHitPoint.y - ball.radius
-                break
+        if (closestSide === 'hor') {
+            ball.dirVector.y *= -1
+            ball.y = oldBallPos.y - ball.radius
+        }
+        else {
+            ball.dirVector.x *= -1
+            ball.x = oldBallPos.x - ball.radius
         }
     }
 
@@ -186,9 +182,9 @@ export async function gameOfflineLobby(
                 return
             }
             moveBall(ball, playerOne.paddle, playerTwo.paddle)
-            playerOne.paddle.update()
+            playerOne.paddle.update(ball)
             if (playerTwo.humanControlled) {
-                playerTwo.paddle.update()
+                playerTwo.paddle.update(ball)
             }
             else {
                 assertIsNotNull(playerTwo.ai)

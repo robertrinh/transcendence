@@ -58,13 +58,13 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
         const timestamp = +new Date()
         if (playerOne.paddle.downPressed) {
             const moveObj = {type: "MOVE_DOWN", timestamp: timestamp} as MoveTS
-            playerOne.paddle.moveDown()
+            playerOne.paddle.moveDown(ball)
             websocket.send(JSON.stringify(moveObj))
             pendingMoves.push(moveObj)
         }
         if (playerOne.paddle.upPressed) {
             const moveObj = {type: "MOVE_UP", timestamp: timestamp} as MoveTS
-            playerOne.paddle.moveUp()
+            playerOne.paddle.moveUp(ball)
             websocket.send(JSON.stringify(moveObj))
             pendingMoves.push(moveObj)
         }
@@ -162,10 +162,10 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
                 break
             }
             if (movePair.type === 'MOVE_UP') {
-                playerOne.paddle.moveUp()
+                playerOne.paddle.moveUp(ball)
             }
             else if (movePair.type === 'MOVE_DOWN') {
-                playerOne.paddle.moveDown()
+                playerOne.paddle.moveDown(ball)
             }
             i++
         }
