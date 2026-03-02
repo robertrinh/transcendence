@@ -212,8 +212,6 @@ export default function Game() {
   useEffect(() => {
     const handleOnBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
-      event.returnValue = '';
-      return (event.returnValue);
     }
     const onPageHide = () => {
       stateKiller()
