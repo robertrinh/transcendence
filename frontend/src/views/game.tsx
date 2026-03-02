@@ -19,6 +19,7 @@ export default function Game() {
   const [lobbyId, setLobbyId] = useState<string>("")
   const [error, setError] = useState<string | null>(null)
   const [gameData, setGameData] = useState<any>(null)
+  const gameDataRef = useRef(gameData)
   const websocket = useRef<WebSocket | null>(null)
   const [tournamentId, setTournamentId] = useState<number | null>(null)
   const tournamentIdRef = useRef(tournamentId)
@@ -41,6 +42,10 @@ export default function Game() {
   useEffect(() => {
 	tournamentIdRef.current = tournamentId
   }, [tournamentId])
+
+  useEffect(() => {
+	gameDataRef.current = gameData
+  }, [gameData])
 
   useEffect(() => {
     const token = localStorage.getItem('token')
