@@ -177,7 +177,7 @@ class GameInstance:
             self.p1_score = ROUND_MAX
         try:
             await player_left.connection.send(json.dumps(
-            {'type': 'OPPONENT_DISCONNECT'}))
+                {'type': 'OPPONENT_DISCONNECT'}))
         except WebSocketException:
             self.p1_score = 0
             self.p2_score = 0
@@ -329,7 +329,8 @@ def handle_score(game: GameInstance):
             auth_header = "Basic " + b64encode(
                 f"gameserver:{HTTP_PASSWD}".encode()).decode()
             response = requests.put(
-                f"http://backend:{BACKEND_PORT}/api/games/{game.db_game_id}/finish",
+                f"http://backend:{BACKEND_PORT}/api/games/{game.db_game_id}"
+                "/finish",
                 headers={"Authorization": auth_header},
                 json={
                     "winner_id": winner_id,
@@ -407,7 +408,8 @@ async def check_heartbeat(game: GameInstance):
     i = 0
     while i < 2:
         player: Player = game.players[i]
-        if now - player.last_hearbeat > HEARTBEAT_FREQUENCY_MS + HEARTBEAT_GRACE_MS:
+        if now - player.last_hearbeat > \
+           HEARTBEAT_FREQUENCY_MS + HEARTBEAT_GRACE_MS:
             game.log(f"\"{player.username}\" timed out...")
             await game.on_client_disconnect(player)
             return
