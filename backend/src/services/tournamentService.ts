@@ -206,7 +206,6 @@ export const tournamentService = {
             }
             switch (tournament.status) {
                 case 'ongoing':
-                    // Give default wins for upcoming games
                     db.prepare(`
                         UPDATE tournament_participants
 						SET user_left = 1

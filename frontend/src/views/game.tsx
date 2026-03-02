@@ -221,8 +221,8 @@ export default function Game() {
 		if (!tournamentIdRef.current) {
 			return
 		}
-        fetchWithAuth(`/api/tournaments/${tournamentIdRef.current}/leave`,
-          {method: 'DELETE', keepalive: true})
+    fetchWithAuth(`/api/tournaments/${tournamentIdRef.current}/leave`,
+      {method: 'DELETE', keepalive: true})
   }
 
   async function handleRandomPlayer() {
