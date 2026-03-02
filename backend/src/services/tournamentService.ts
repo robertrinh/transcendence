@@ -81,7 +81,7 @@ function removeFromActiveGame(user_id: number) {
         SELECT
             id
         FROM games
-        WHERE player1_id = @user_id OR player2_id = @user_id
+        WHERE (player1_id = @user_id OR player2_id = @user_id)
             AND status IN ('pending', 'ready', 'ongoing')
         `).pluck().all({user_id: user_id}) as undefined | number[]
     assert(activeGameId !== undefined, 'activeGameId cannot be undefined')
