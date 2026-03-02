@@ -98,6 +98,7 @@ CREATE TABLE IF NOT EXISTS friends (
     user_id INTEGER NOT NULL,
     friend_id INTEGER NOT NULL,
     CHECK (user_id != friend_id),
+	UNIQUE(user_id, friend_id),
     FOREIGN KEY (friend_id) REFERENCES users (id) ON DELETE CASCADE,
 	FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
@@ -107,6 +108,7 @@ CREATE TABLE IF NOT EXISTS friend_request (
     requested_id INTEGER NOT NULL,
     created_at DATETIME DEFAULT (datetime('now')) NOT NULL,
     CHECK (requester_id != requested_id),
+	UNIQUE(requester_id, requested_id),
     FOREIGN KEY (requester_id) REFERENCES users (id) ON DELETE CASCADE,
 	FOREIGN KEY (requested_id) REFERENCES users (id) ON DELETE CASCADE
 );
@@ -115,6 +117,7 @@ CREATE TABLE IF NOT EXISTS blocked (
     user_id INTEGER NOT NULL,
     blocked_id INTEGER NOT NULL,
     CHECK (user_id != blocked_id),
+	UNIQUE(user_id, blocked_id),
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     FOREIGN KEY (blocked_id) REFERENCES users (id) ON DELETE CASCADE
 );
