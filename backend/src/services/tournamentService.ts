@@ -4,6 +4,7 @@ import { dbError } from '../error/dbErrors.js'
 import { Tournament, TournamentParticipant, Game } from '../types/database.interfaces.js';
 import { systemBroadcast } from '../sseNotify.js';
 import { gamesService } from './gamesService.js';
+import { strict as assert } from 'node:assert';
 
 function finalizeNextGame(nextGame: Game, finishedGame: Game,
 	TournamentId: number){
