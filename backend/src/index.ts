@@ -1,8 +1,10 @@
 import fastify from 'fastify';
 import { dbCleanUpJob } from './error/backupCleanup.js';
 import { registerRoutes } from './registerRoutes.js';
+import { registerErrorHandler } from './error/errorHandler.js';
 
 export const server = fastify({ logger: true });
+registerErrorHandler(server)
 
 const start = async () => {
     try {
