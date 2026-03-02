@@ -189,8 +189,8 @@ fastify.post('/send', {
             return reply.status(400).send({ error: 'Message cannot be empty' });
         }
 		
-		if (message.length > 1000) {
-			return reply.status(400).send({ error: 'Message cannot be longer than 1000 characters' });
+		if (message.length > 255) {
+			return reply.status(400).send({ error: 'Message cannot be longer than 255 characters' });
 		}
 
         const connection = sseGet(connectionId);
