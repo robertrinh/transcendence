@@ -2,24 +2,6 @@ import { Ball } from "./ball"
 import { Player } from "./player"
 import { PlayerPaddle } from "./playerPaddle"
 
-class Intervals {
-    gameOfflineUpdate: number | ReturnType<typeof setInterval> | undefined
-    gameOnlineUpdate: number | ReturnType<typeof setInterval> | undefined
-
-    constructor(gameOfflineUpdate?: number, gameOnlineUpdate?: number) {
-        this.gameOfflineUpdate = gameOfflineUpdate
-        this.gameOnlineUpdate = gameOnlineUpdate
-    }
-
-    reset() {
-        if (this.gameOfflineUpdate !== undefined) {
-            clearInterval(this.gameOfflineUpdate)
-        }
-        if (this.gameOnlineUpdate !== undefined) {
-            clearInterval(this.gameOnlineUpdate)
-        }
-    }
-}
 /**
  * Globals
  */
@@ -51,7 +33,6 @@ export const playerOne = new Player(
 export const playerTwo = new Player(
     arenaWidth - ballSize, 0, ballSize, ballSize * 4, paddleMoveUnits,
     p2PaddleColor)
-export const intervals = new Intervals()
 
 function resetBall() {
     ball.x = 0
@@ -94,7 +75,6 @@ export function resetState() {
     resetBall()
     resetPlayerOne()
     resetPlayerTwo()
-    intervals.reset()
 }
 
 export class Vector2

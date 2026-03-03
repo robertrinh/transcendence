@@ -212,6 +212,7 @@ export async function gameOfflineLobby(
 
     function draw() {
         requestAnimationFrame(draw)
+        update()
         ctx.clearRect(0, 0, canvas.width, canvas.height)
         drawCtx.clearRect(0, 0, canvas.width, canvas.height)
         drawCtx.fillStyle = "#050510"
@@ -242,5 +243,4 @@ export async function gameOfflineLobby(
     const app = {state: gameState.Start}
     ball.setStart(getRandomStartVec())
     requestAnimationFrame(draw)
-    intervals.gameOfflineUpdate = setInterval(update, clientTick)
 }

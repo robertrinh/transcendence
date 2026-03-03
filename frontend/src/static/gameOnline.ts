@@ -129,6 +129,7 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
     function draw() {
         if (!gameRunning) return
         requestAnimationFrame(draw)
+        update()
         ctx.clearRect(0, 0, canvas.width, canvas.height)
         drawCtx.clearRect(0, 0, canvas.width, canvas.height)
         drawCtx.fillStyle = "#050510"
@@ -310,5 +311,4 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
     ball.x = canvas.width / 2
     ball.y = canvas.height / 2
     requestAnimationFrame(draw)
-    intervals.gameOnlineUpdate = setInterval(update, clientTick)
 }
