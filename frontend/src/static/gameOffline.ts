@@ -122,13 +122,6 @@ export async function gameOfflineLobby(
         return false
     }
 
-    function getRandomStartVec(): Vector2 {
-        return new Vector2(
-            Math.random() < 0.5 ? -1: 1,
-            Math.random() < 0.5 ? -1: 1
-        )
-    }
-
     enum gameState {
         Start,
         RoundEnd,
@@ -241,6 +234,6 @@ export async function gameOfflineLobby(
         playerTwo.setAI(DifficultyLevel.Normal)
     }
     const app = {state: gameState.Start}
-    ball.setStart(getRandomStartVec())
+    ball.setRandomStart()
     requestAnimationFrame(draw)
 }

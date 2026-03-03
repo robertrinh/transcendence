@@ -74,10 +74,11 @@ export class Ball
 		ctx.strokeRect(this.x, this.y, this.radius * 2, this.radius * 2)
 	}
 
-	setStart(dirVect: Vector2) {
+	setRandomStart() {
 		this.x = (arenaWidth / 2) - this.radius
 		this.y = (arenaHeight / 2) - this.radius
-		this.dirVector = dirVect
+		this.dirVector.x = Math.random() < 0.5 ? -1: 1,
+        this.dirVector.y = Math.random() < 0.5 ? -1: 1
 	}
 
 	reset() {
