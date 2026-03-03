@@ -167,39 +167,40 @@ export async function gameOfflineLobby(
             then = now
         }
         deltaTimeMS = now - then
-        if (deltaTimeMS > clientTick) {
-            then = now - (deltaTimeMS % clientTick)
-            if (app.state === gameState.RoundEnd) {
-                return
-            }
-            moveBall(ball, playerOne.paddle, playerTwo.paddle)
-            playerOne.paddle.update(ball)
-            if (playerTwo.humanControlled) {
-                playerTwo.paddle.update(ball)
-            }
-            else {
-                assertIsNotNull(playerTwo.ai)
-                playerTwo.ai.update(deltaTimeMS, ball, playerTwo.paddle)
-            }
-            if (ballExitsLeftSide()) {
-                playerTwo.roundScore++
-                app.state = gameState.RoundEnd
-            }
-            if (ballExitsRightSide()) {
-                playerOne.roundScore++
-                app.state = gameState.RoundEnd
-            }
-            if (app.state === gameState.RoundEnd) {
-                ball.setStart(getRandomStartVec())
-                app.state = gameState.ActiveRound
-            }
-            if (playerOne.roundScore === roundMax || playerTwo.roundScore === 
-                roundMax) {
-                // we could upload the game results here (if we want to track
-                // offline games too)
-                app.state = gameState.RoundEnd
-                endGame()
-            }
+        if (deltaTimeMS < clientTick) {
+            return
+        }
+        then = now - (deltaTimeMS % clientTick)
+        if (app.state === gameState.RoundEnd) {
+            return
+        }
+        moveBall(ball, playerOne.paddle, playerTwo.paddle)
+        playerOne.paddle.update(ball)
+        if (playerTwo.humanControlled) {
+            playerTwo.paddle.update(ball)
+        }
+        else {
+            assertIsNotNull(playerTwo.ai)
+            playerTwo.ai.update(deltaTimeMS, ball, playerTwo.paddle)
+        }
+        if (ballExitsLeftSide()) {
+            playerTwo.roundScore++
+            app.state = gameState.RoundEnd
+        }
+        if (ballExitsRightSide()) {
+            playerOne.roundScore++
+            app.state = gameState.RoundEnd
+        }
+        if (app.state === gameState.RoundEnd) {
+            ball.setRandomStart()
+            app.state = gameState.ActiveRound
+        }
+        if (playerOne.roundScore === roundMax || playerTwo.roundScore === 
+            roundMax) {
+            // we could upload the game results here (if we want to track
+            // offline games too)
+            app.state = gameState.RoundEnd
+            endGame()
         }
     }
 
