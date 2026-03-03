@@ -278,31 +278,31 @@ export function drawPlayerScores(
 
 // https://www.jeffreythompson.org/collision-detection/circle-rect.php
 export function isCollidingBallPaddle(
-    ballCenter: Point, ballRadius: number, paddlePoint: Point,
-    paddleWidth: number, paddleHeight: number
+    ballCenterX: number, ballCenterY: number, ballRadius: number, paddlePointX: number,
+    paddlePointY: number, paddleWidth: number, paddleHeight: number
 ): null | 'vert' | 'hor' {
-    let testX = ballCenter.x
-    let testY = ballCenter.y
+    let testX = ballCenterX
+    let testY = ballCenterY
 
-    if (ballCenter.x < paddlePoint.x) {
+    if (ballCenterX < paddlePointX) {
         // left
-        testX = paddlePoint.x
+        testX = paddlePointX
     }
-    else if (ballCenter.x > paddlePoint.x + paddleWidth) {
+    else if (ballCenterX > paddlePointX + paddleWidth) {
         // right
-        testX = paddlePoint.x + paddleWidth
+        testX = paddlePointX + paddleWidth
     }
 
-    if (ballCenter.y < paddlePoint.y) {
+    if (ballCenterY < paddlePointY) {
         // top
-        testY = paddlePoint.y
+        testY = paddlePointY
     }
-    else if (ballCenter.y > paddlePoint.y + paddleHeight) {
+    else if (ballCenterY > paddlePointY + paddleHeight) {
         // bottom
-        testY = paddlePoint.y + paddleHeight
+        testY = paddlePointY + paddleHeight
     }
-    const distX = ballCenter.x-testX
-    const distY = ballCenter.y-testY
+    const distX = ballCenterX-testX
+    const distY = ballCenterY-testY
     const distance = Math.sqrt((distX*distX) + (distY*distY))
     if (distance <= ballRadius) {
         if (Math.abs(distX) > Math.abs(distY)) {

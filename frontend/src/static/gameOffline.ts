@@ -74,14 +74,13 @@ export async function gameOfflineLobby(
     }
 
     function moveBall(ball: Ball, playerOne: PlayerPaddle, playerTwo: PlayerPaddle): void {
-        const oldBallPos = new Point(ball.x + ball.radius, ball.y + ball.radius)
-        const newBallPos = new Point(
-            oldBallPos.x + ball.dirVector.x * ball.movementSpeed,
-            oldBallPos.y + ball.dirVector.y * ball.movementSpeed
-        )
-        ball.appendPos(new Point(ball.x, ball.y))
-        ball.x = newBallPos.x - ball.radius
-        ball.y = newBallPos.y - ball.radius
+        const oldBallX = ball.x + ball.radius
+        const oldBallY = ball.y + ball.radius
+        const newBallX = oldBallX + ball.dirVector.x * ball.movementSpeed
+        const newBallY = oldBallY + ball.dirVector.y * ball.movementSpeed
+        ball.appendPos([ball.x, ball.y])
+        ball.x = newBallX - ball.radius
+        ball.y = newBallY - ball.radius
         let paddle = null
         if (ball.dirVector.x < 0) {
             paddle = playerOne
@@ -92,9 +91,8 @@ export async function gameOfflineLobby(
         if (paddle === null) {
             return
         }
-        const paddlePoint = new Point(paddle.x, paddle.y)
-        const closestSide = isCollidingBallPaddle(newBallPos, ball.radius, 
-            paddlePoint, paddle.width, paddle.height
+        const closestSide = isCollidingBallPaddle(newBallX, newBallY, ball.radius, 
+            paddle.x, paddle.y, paddle.width, paddle.height
         )
         if (closestSide === null) {
             applyBallHorizontalBounce(ball)
@@ -102,11 +100,11 @@ export async function gameOfflineLobby(
         }
         if (closestSide === 'hor') {
             ball.dirVector.y *= -1
-            ball.y = oldBallPos.y - ball.radius
+            ball.y = oldBallY - ball.radius
         }
         else {
             ball.dirVector.x *= -1
-            ball.x = oldBallPos.x - ball.radius
+            ball.x = oldBallX - ball.radius
         }
     }
 

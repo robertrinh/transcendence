@@ -89,7 +89,7 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
             return
         }
         const updateDelta = clientTick * (1 + (deltaTimeMS / 1000))
-        ball.appendPos(new Point(ball.x, ball.y))
+        ball.appendPos([ball.x, ball.y])
         ball.x += interpVelocityBall.x * updateDelta
         ball.y += interpVelocityBall.y * updateDelta
     }

@@ -27,9 +27,9 @@ export class PlayerPaddle
         if (newY < 0) {
             newY = 0
         }
-        const ballCenter = new Point(ball.x + ball.radius, ball.y + ball.radius)
-        const newPaddlePos = new Point(this.x, newY)
-        if (isCollidingBallPaddle(ballCenter, ball.radius, newPaddlePos,
+        const ballCenterX = ball.x + ball.radius
+        const ballCenterY = ball.y + ball.radius
+        if (isCollidingBallPaddle(ballCenterX, ballCenterY, ball.radius, this.x, newY,
             this.width, this.height) !== null) {
             return
         }
@@ -41,11 +41,10 @@ export class PlayerPaddle
         if (newY + this.height > arenaHeight) {
             newY = arenaHeight - this.height
         }
-        const ballCenter = new Point(ball.x + ball.radius, ball.y + ball.radius)
-        const newPaddlePos = new Point(this.x, newY)
-        if (isCollidingBallPaddle(ballCenter, ball.radius, newPaddlePos,
-            this.width, this.height
-        ) !== null) {
+        const ballCenterX = ball.x + ball.radius
+        const ballCenterY = ball.y + ball.radius
+        if (isCollidingBallPaddle(ballCenterX, ballCenterY, ball.radius, this.x, newY,
+            this.width, this.height) !== null) {
             return
         }
         this.y = newY

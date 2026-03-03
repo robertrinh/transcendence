@@ -10,7 +10,7 @@ export class Ball
 	color: string
 	speedX: number
 	maxSpeed: number
-	private trailPos: Array<Point>
+	private trailPos: Array<[number, number]>
 	private trailLen = 27
 	private trailColors: Array<string>
 
@@ -26,7 +26,7 @@ export class Ball
 		this.color = color
 		this.speedX = speedX
 		this.maxSpeed = maxSpeed
-		this.trailPos = new Array<Vector2>(this.trailLen)
+		this.trailPos = new Array(this.trailLen)
 		this.trailColors = trailColors
 	}
 
@@ -38,7 +38,7 @@ export class Ball
 			const pos = this.trailPos[i]
 			if (pos !== undefined) {
 				this.drawHelper(ctx, this.trailColors[colorI],
-					pos.x + this.radius, pos.y + this.radius,
+					pos[0] + this.radius, pos[1] + this.radius,
 					this.radius * (i/this.trailLen))
 				if (i % colorStep - 1 === 0) {
 					colorI++
@@ -49,9 +49,9 @@ export class Ball
 	}
 
 	// the last pos is the most recent
-	appendPos(pos: Point) {
+	appendPos(point: [number, number]) {
 		this.trailPos.shift()
-		this.trailPos[this.trailLen-1] = pos
+		this.trailPos[this.trailLen-1] = point
 	}
 
 	private drawHelper(ctx: CanvasRenderingContext2D, color: string, x: number,
@@ -81,6 +81,6 @@ export class Ball
 	}
 
 	reset() {
-		this.trailPos = new Array<Vector2>(this.trailLen)
+		this.trailPos = new Array(this.trailLen)
 	}
 }
