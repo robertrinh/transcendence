@@ -22,29 +22,6 @@ try {
 
 export const userController = {
 
-    createUser: async (req: FastifyRequest, reply: FastifyReply) => {
-        const { username, password } = req.body as { username: string, password: string };
-        if (!username || typeof username !== 'string') {
-            return reply.code(400).send({ success: false, error: 'Username is required' });
-        }
-        if (username.length < 3) {
-            return reply.code(400).send({ success: false, error: 'Username must be at least 3 characters long' });
-        }
-        if (username.length >= 16) {
-            return reply.code(400).send({ success: false, error: 'Username cannot be longer than 15 characters' });
-        }
-        if (!password || typeof password !== 'string') {
-            return reply.code(400).send({ success: false, error: 'Password is required' });
-        }
-        const passwordValidation = validatePassword(password);
-        if (!passwordValidation.valid) {
-            return reply.code(400).send({ success: false, error: passwordValidation.error });
-        }
-        const hashedPassword = await bcrypt.hash(password, 10);
-        userService.addUser(username, hashedPassword);
-        return { success: true, message: 'User created, welcome to the game!' };
-    },
-
     getMyProfile: async (req: FastifyRequest, reply: FastifyReply) => {
         const user_id = req.user!.userId;
         const profile = userService.fetchOwnProfile(user_id);
