@@ -34,15 +34,6 @@ export const initializeDatabase = () => {
     
     try {
         const insertDefaults = db.transaction(() => {
-            const avatarCheck = db.prepare('SELECT COUNT(*) as count FROM avatars').get() as { count: number };
-            if (avatarCheck.count === 0) {
-                const insertAvatar = db.prepare('INSERT INTO avatars (path, name) VALUES (?, ?)');
-                insertAvatar.run('/avatars/default.png', 'Default Avatar');
-                insertAvatar.run('/avatars/robot.png', 'Robot Avatar');
-                insertAvatar.run('/avatars/alien.png', 'Alien Avatar');
-                console.log('Default avatars inserted');
-            }
-
             const adminCheck = db.prepare('SELECT COUNT(*) as count FROM users WHERE username = ?').get('admin') as { count: number };
             if (adminCheck.count === 0) {
                 const adminPassword = bcrypt.hashSync('admin123', 10); // Sync for one-time init

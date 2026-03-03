@@ -39,13 +39,6 @@ export default async function usersRoutes (
             params: userParamSchema
         }, preHandler: [authenticate] }, userController.getUserProfileByUsername);    
 
-    fastify.post('/', {
-        schema: {
-            tags: ['users'],
-            summary: 'Create new user',
-            body: userBody
-        }}, userController.createUser);
-
     fastify.post('/profile/avatar', {
         schema: {
             security: [{ bearerAuth: [] }],

@@ -4,6 +4,7 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import bcrypt from 'bcrypt'
 import { comparePassword } from '../databaseInit.js'
 import { validatePassword } from '../auth/password.js'
+import { validateEmail } from '../auth/email.js'
 import { createWriteStream, existsSync, mkdirSync } from 'fs'
 import { pipeline } from 'stream/promises'
 import path from 'path'
@@ -20,13 +21,6 @@ try {
 }
 
 export const userController = {
-
-    createUser: async (req: FastifyRequest, reply: FastifyReply) => {
-        const { username, password } = req.body as { username: string, password: string};
-        const hashedPassword = await bcrypt.hash(password, 10);
-        userService.addUser(username, hashedPassword);
-        return { success: true, message: 'User created, welcome to the game!' };
-    },
 
     getMyProfile: async (req: FastifyRequest, reply: FastifyReply) => {
         const user_id = req.user!.userId;
@@ -96,14 +90,29 @@ export const userController = {
         const values: any[] = []
         
         if (nickname !== undefined) {
+            if (typeof nickname === 'string' && nickname.length >= 16) {
+                return reply.code(400).send({ success: false, error: 'Nickname cannot be longer than 15 characters' });
+            }
             updates.push('nickname = ?')
             values.push(nickname)
         }
         if (display_name !== undefined) {
+            if (typeof display_name === 'string' && display_name.length >= 16) {
+                return reply.code(400).send({ success: false, error: 'Display name cannot be longer than 15 characters' });
+            }
             updates.push('display_name = ?')
             values.push(display_name)
         }
         if (email !== undefined) {
+            if (typeof email === 'string' && email.length >= 66) {
+                return reply.code(400).send({ success: false, error: 'Email cannot be longer than 65 characters' });
+            }
+            if (typeof email === 'string' && email.length > 0) {
+                const emailValidation = validateEmail(email);
+                if (!emailValidation.valid) {
+                    return reply.code(400).send({ success: false, error: emailValidation.error });
+                }
+            }
             updates.push('email = ?')
             values.push(email)
         }
@@ -235,15 +244,15 @@ export const userController = {
                     error: 'Password is required to delete account'
                 });
             }
-			
-            const user = userService.fetchUser(userId) as { id: number; username: string; password: string };
-            if (!user) {
-                return reply.status(404).send({
-                    error: 'User not found'
+
+            const storedHash = userService.getPasswordHash(userId);
+            if (storedHash === null) {
+                return reply.status(400).send({
+                    error: 'Could not verify password'
                 });
             }
 
-            const isPasswordValid = await comparePassword(password, user.password);
+            const isPasswordValid = await comparePassword(password, storedHash);
             if (!isPasswordValid) {
                 return reply.status(403).send({
                     error: 'Invalid password'

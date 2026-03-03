@@ -59,6 +59,7 @@ class GameInstance:
     connections: list[ServerConnection]
     game_running = False
     is_done = False
+    force_kill = False
 
     p1_last_ts: int
     p1_input: []
@@ -111,6 +112,7 @@ class GameInstance:
         self.p2_score = 0
 
     def kill(self):
+        self.log('killed...')
         self.set_game_start()
         self.players.clear()
         self.db_game_id = -1
@@ -142,6 +144,9 @@ class GameInstance:
     def lobby_full(self) -> bool:
         return len(self.players) == 2
 
+    def set_force_kill(self):
+        self.force_kill = True
+
     async def start_lobby(self):
         lobby_timeout_sec = 30
         sec_passed = 0
@@ -170,18 +175,17 @@ class GameInstance:
                 player_left = p
                 break
         if player_left is None:
-            return
-        if was_p1:
-            self.p2_score = ROUND_MAX
+            self.set_force_kill()
         else:
-            self.p1_score = ROUND_MAX
-        try:
-            await player_left.connection.send(json.dumps(
+            if was_p1:
+                self.p2_score = ROUND_MAX
+            else:
+                self.p1_score = ROUND_MAX
+            try:
+                await player_left.connection.send(json.dumps(
                 {'type': 'OPPONENT_DISCONNECT'}))
-        except WebSocketException:
-            self.p1_score = 0
-            self.p2_score = 0
-        handle_score(self)
+            except WebSocketException:
+                self.set_force_kill()
 
 
 def line_line_intersect(
@@ -356,6 +360,9 @@ async def check_heartbeat(game: GameInstance):
 
 async def update(game: GameInstance):
     await check_heartbeat(game)
+    if game.force_kill:
+        game.force_kill = False
+        game.kill()
     move_ball(game.ball, game.p1_paddle, game.p2_paddle)
     process_input(game)
     handle_score(game)

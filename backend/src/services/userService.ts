@@ -170,7 +170,7 @@ export const userService = {
     },
 
     uploadAvatar: (fileName: string, id: number) => {
-        const avatarResult = db.prepare('INSERT INTO avatars (path, name) VALUES (?, ?)').run(fileName, fileName) 
+        const avatarResult = db.prepare('INSERT INTO avatars (path) VALUES (?)').run(fileName) 
         db.prepare('UPDATE users SET avatar_id = ? WHERE id = ?').run(avatarResult.lastInsertRowid, id)
     },
 

@@ -70,6 +70,9 @@ export default async function friendsRoutes(
 				return reply.status(400).send({ error: 'Username is required' });
 			}
 			const toUsername = String(username).trim();
+			if (toUsername.length >= 16) {
+				return reply.status(400).send({ error: 'Username cannot be longer than 15 characters' });
+			}
 
 			if (toUsername === payload.username) {
 				return reply.status(400).send({ error: 'Cannot add yourself as a friend' });
@@ -208,6 +211,9 @@ export default async function friendsRoutes(
 				return reply.status(400).send({ error: 'Username is required' });
 			}
 			const fromUsername = String(username).trim();
+			if (fromUsername.length >= 16) {
+				return reply.status(400).send({ error: 'Username cannot be longer than 15 characters' });
+			}
 
 			const requester = db.prepare('SELECT id FROM users WHERE username = ?').get(fromUsername) as { id: number } | undefined;
 			if (!requester) {
@@ -258,6 +264,9 @@ export default async function friendsRoutes(
 				return reply.status(400).send({ error: 'Username is required' });
 			}
 			const fromUsername = String(username).trim();
+			if (fromUsername.length >= 16) {
+				return reply.status(400).send({ error: 'Username cannot be longer than 15 characters' });
+			}
 
 			const requester = db.prepare('SELECT id FROM users WHERE username = ?').get(fromUsername) as { id: number } | undefined;
 			if (!requester) {
@@ -297,6 +306,9 @@ export default async function friendsRoutes(
 				return reply.status(400).send({ error: 'Username is required' });
 			}
 			const toUsername = String(username).trim();
+			if (toUsername.length >= 16) {
+				return reply.status(400).send({ error: 'Username cannot be longer than 15 characters' });
+			}
 
 			const requested = db.prepare('SELECT id FROM users WHERE username = ?').get(toUsername) as { id: number } | undefined;
 			if (!requested) {
@@ -335,6 +347,9 @@ export default async function friendsRoutes(
 				return reply.status(400).send({ error: 'Username is required' });
 			}
 			const toUsername = String(username).trim();
+			if (toUsername.length >= 16) {
+				return reply.status(400).send({ error: 'Username cannot be longer than 15 characters' });
+			}
 
 			const target = db.prepare('SELECT id FROM users WHERE username = ?').get(toUsername) as { id: number } | undefined;
 			if (!target) {
@@ -407,6 +422,9 @@ export default async function friendsRoutes(
 				return reply.status(400).send({ error: 'Username is required' });
 			}
 			const toUsername = String(username).trim();
+			if (toUsername.length >= 16) {
+				return reply.status(400).send({ error: 'Username cannot be longer than 15 characters' });
+			}
 
 			if (toUsername === payload.username) {
 				return reply.status(400).send({ error: 'Cannot block yourself' });
@@ -461,6 +479,9 @@ export default async function friendsRoutes(
 				return reply.status(400).send({ error: 'Username is required' });
 			}
 			const toUsername = String(username).trim();
+			if (toUsername.length >= 16) {
+				return reply.status(400).send({ error: 'Username cannot be longer than 15 characters' });
+			}
 
 			const target = db.prepare('SELECT id FROM users WHERE username = ?').get(toUsername) as { id: number } | undefined;
 			if (!target) {

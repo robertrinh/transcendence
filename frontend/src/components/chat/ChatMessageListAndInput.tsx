@@ -36,7 +36,7 @@ export function ChatMessageList({
 
     return (
         <>
-            <div className="flex-1 min-h-0 overflow-y-auto p-3 bg-slate-800/50 space-y-0.5 font-mono text-xs">
+            <div className="flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden p-3 bg-slate-800/50 space-y-0.5 font-mono text-xs">
                 {messages.length === 0 ? (
                     <div className="text-center text-slate-400 py-8 text-sm font-sans">
                         No messages yet. Start the conversation!
@@ -51,10 +51,10 @@ export function ChatMessageList({
                             return (
                                 <div
                                     key={message.id}
-                                    className="py-0.5 flex flex-wrap items-baseline gap-x-1"
+                                    className="py-0.5 flex flex-wrap items-baseline gap-x-1 min-w-0"
                                 >
-                                    <span className="text-brand-cyan/90">[{timeStr}]</span>
-                                    <span className="text-brand-cyan/90">
+                                    <span className="text-brand-cyan/90 shrink-0">[{timeStr}]</span>
+                                    <span className="text-brand-cyan/90 break-words min-w-0">
                                         {message.message}
                                     </span>
                                 </div>
@@ -64,7 +64,7 @@ export function ChatMessageList({
                         return (
                             <div
                                 key={message.id}
-                                className="relative py-0.5 flex flex-wrap items-baseline gap-x-1"
+                                className="relative py-0.5 flex flex-wrap items-baseline gap-x-1 min-w-0"
                             >
                                 <span className="text-slate-500 shrink-0">
                                     [{timeStr}]
@@ -84,7 +84,7 @@ export function ChatMessageList({
                                 >
                                     {message.username}
                                 </button>
-                                <span className={message.isPrivate ? 'text-brand-purple/90' : 'text-white'}>: {message.message}</span>
+                                <span className={`min-w-0 break-words ${message.isPrivate ? 'text-brand-purple/90' : 'text-white'}`}>: {message.message}</span>
                                 {message.username !== currentUsername &&
                                     showPopover && (
                                         <div
@@ -170,7 +170,7 @@ export function ChatInput({
                     onChange={(e) => onChange(e.target.value)}
                     placeholder={placeholder}
                     className="flex-1 text-sm text-slate-100 placeholder-slate-500 border border-slate-500 bg-slate-600 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-orange focus:border-brand-orange"
-                    maxLength={200}
+                    maxLength={255}
                     disabled={!connected}
                 />
                 <button
