@@ -1,4 +1,4 @@
-import { arenaHeight, isCollidingBallPaddle, Point } from "./lib"
+import { arenaHeight, isCollidingBallPaddle } from "./lib"
 import { type Ball } from "./ball"
 
 export class PlayerPaddle

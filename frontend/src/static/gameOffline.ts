@@ -1,8 +1,8 @@
 import { Ball } from './ball'
 import { PlayerPaddle } from './playerPaddle'
-import { playerOne, playerTwo, ball, Point, Vector2,
+import { playerOne, playerTwo, ball,
     applyBallHorizontalBounce, drawPlayerScores, arenaWidth, clientTick,
-    roundMax, assertIsNotNull, textColor, intervals,
+    roundMax, assertIsNotNull, textColor,
     isCollidingBallPaddle
 } from './lib'
 import { DifficultyLevel } from './ai'

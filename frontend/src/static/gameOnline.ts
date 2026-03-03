@@ -1,6 +1,6 @@
 import { Ball } from './ball'
 import { playerOne, playerTwo, ball, clientTick, drawPlayerScores,
-    intervals, heartbeatFrequencyMS, resetState } from './lib'
+    heartbeatFrequencyMS, resetState } from './lib'
 
 interface MoveTS {
     type: string,

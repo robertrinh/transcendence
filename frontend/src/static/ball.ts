@@ -1,4 +1,4 @@
-import { assertIsNotNull, Vector2, Point, arenaWidth, arenaHeight } from './lib'
+import { assertIsNotNull, Vector2, arenaWidth, arenaHeight } from './lib'
 
 export class Ball
 {
