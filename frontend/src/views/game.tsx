@@ -19,6 +19,7 @@ export default function Game() {
   const [lobbyId, setLobbyId] = useState<string>("")
   const [error, setError] = useState<string | null>(null)
   const [gameData, setGameData] = useState<any>(null)
+  const gameDataRef = useRef(gameData)
   const websocket = useRef<WebSocket | null>(null)
   const [tournamentId, setTournamentId] = useState<number | null>(null)
   const tournamentIdRef = useRef(tournamentId)
@@ -41,6 +42,10 @@ export default function Game() {
   useEffect(() => {
 	tournamentIdRef.current = tournamentId
   }, [tournamentId])
+
+  useEffect(() => {
+	gameDataRef.current = gameData
+  }, [gameData])
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -75,6 +80,7 @@ export default function Game() {
     switch (websocketState) {
       case WebSocket.CLOSED:
         if (error) {
+          stateKiller()
           setScreen('error')
         }
         else {
@@ -206,25 +212,40 @@ export default function Game() {
 
   useEffect(() => {
     const handleOnBeforeUnload = (event: BeforeUnloadEvent) => {
-	  stateKiller()
       event.preventDefault();
-      event.returnValue = '';
-      return (event.returnValue);
     }
+    const onPageHide = () => {
+      stateKiller()
+	}
+	window.addEventListener('pagehide', onPageHide)
     window.addEventListener('beforeunload', handleOnBeforeUnload, {capture : true})
     return () =>{
       window.removeEventListener('beforeunload', handleOnBeforeUnload, {capture : true})
+	  window.removeEventListener('pagehide', onPageHide)
     }
   },[])
 
 	function stateKiller() {
-		if (!tournamentIdRef.current) {
-			return
+		fetchWithAuth('/api/games/matchmaking/cancel', {
+			method: 'PUT',
+			keepalive: true
+		})
+		if (tournamentIdRef.current) {
+    		fetchWithAuth(`/api/tournaments/${tournamentIdRef.current}/leave`, {
+				method: 'DELETE',
+				keepalive: true
+			})
+			return ;
 		}
-        fetchWithAuth(`/api/tournaments/${tournamentIdRef.current}/leave`,
-          {method: 'DELETE', keepalive: true})
-		fetchWithAuth('/api/games/matchmaking/cancel', {method: 'PUT', keepalive: true})
-		fetchWithAuth('/api/tournaments/extreme', {method: 'POST', keepalive: true})
+		if (gameDataRef.current?.id) {
+			console.log('LEAVING GAME!')
+			fetchWithAuth('/api/games/cancel', {
+				method: 'POST',
+				keepalive: true,
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ game_id: gameDataRef.current.id }),
+			})	
+		}
   }
 
   async function handleRandomPlayer() {
