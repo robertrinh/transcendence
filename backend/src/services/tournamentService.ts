@@ -25,6 +25,9 @@ function finalizeNextGame(nextGame: Game, finishedGame: Game,
 				AND tournaments.status = 'ongoing'
 			`).all(finishedGame.winner_id, nextGame.player1_id, TournamentId) as undefined | { user_id: number, user_left: boolean }[]
         assert(upcomingPlayersLeft !== undefined, 'upcomingPlayersLeft cannot be undefined')
+        if (finishedGame.winner_id === nextGame.player1_id) {
+            return
+        }
         assert(upcomingPlayersLeft.length === 2, 'We should always have two players')
 		const playerMap = new Map<number, boolean>([
 			[upcomingPlayersLeft[0].user_id, upcomingPlayersLeft[0].user_left],
