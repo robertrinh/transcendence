@@ -3,6 +3,7 @@ import { tournamentService } from '../services/tournamentService.js'
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { Tournament, TournamentParticipant } from '../types/database.interfaces.js';
 import { systemBroadcast } from '../sseNotify.js';
+import { db } from '../databaseInit.js'
 
 export const tournamentController = {
 	getAllTournaments: async (req: FastifyRequest, reply: FastifyReply) => {
@@ -22,6 +23,39 @@ export const tournamentController = {
 		const games = tournamentService.getTournamentGames(id);
 		return { success: true, data: tournament, games, participants }
 	},
+
+	getActiveTournament: async (req: FastifyRequest, reply: FastifyReply) => {
+        const user_id = req.user!.userId;
+        const activeTournament = tournamentService.hasActiveTournament(user_id);
+        if (!activeTournament) {
+            return { success: true, data: null }
+		}
+		if (activeTournament.status === 'ongoing') {
+            const games = tournamentService.getTournamentGames(activeTournament.id) as any[];
+            const allFinished = games.length > 0 && games.every((g: any) => g.status === 'finished');
+            if (allFinished) {
+                // Tournament is stuck — find the final winner and close it
+                const finalGame = games.reduce((a: any, b: any) => (a.round > b.round ? a : b));
+                if (finalGame?.winner_id) {
+                    db.prepare('UPDATE tournaments SET status = ?, winner_id = ?, end_date = datetime(\'now\') WHERE id = ?')
+                        .run('finished', finalGame.winner_id, activeTournament.id);
+                } else {
+                    db.prepare('UPDATE tournaments SET status = ? WHERE id = ?')
+                        .run('finished', activeTournament.id);
+                }
+                return { success: true, data: null }
+            }
+        }
+        return {
+            success: true,
+            data: {
+                id: activeTournament.id,
+                name: activeTournament.name,
+                max_participants: activeTournament.max_participants,
+                status: activeTournament.status
+            }
+        }
+    },
 
 	//this endpoint can be called if a player clicks "join tournament" and NO open tournament exist currently
 	//add a alternative in frontend when clicking join tournament for how many participants. 2 4 8 or 16 so its fixed size tournament
@@ -43,7 +77,11 @@ export const tournamentController = {
         if (typeof max_participants !== 'number' || !allowedSizes.includes(max_participants)) {
             throw new ApiError(400, 'max_participants must be 4, 8, or 16')
         }
-        const result = tournamentService.createTournament(trimmedName, description ?? '', max_participants);
+		const activeTour = tournamentService.hasActiveTournament(user_id);
+        if (activeTour) {
+            throw new ApiError(409, 'You already have an active tournament', 'ACTIVE_TOURNAMENT_EXISTS');
+        }
+        const result = tournamentService.createTournament(trimmedName, description ?? '', max_participants, user_id);
         if (result.changes == 0)
             throw new ApiError(404, 'something went wrong creating tournament')
 		systemBroadcast(`Tournament "${trimmedName}" opened!`)

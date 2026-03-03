@@ -72,10 +72,12 @@ CREATE TABLE IF NOT EXISTS tournaments (
 	max_participants INTEGER CHECK(max_participants IN (4, 8, 16)),
     status TEXT CHECK (status IN ('open', 'ongoing', 'finished', 'cancelled')) DEFAULT 'open',
 	winner_id INTEGER,
+    created_by INTEGER, -- new for tourny limit
     created_at DATETIME DEFAULT (datetime('now')) NOT NULL,
 	start_date DATETIME,
 	end_date DATETIME,
-	FOREIGN KEY (winner_id) REFERENCES users(id)
+	FOREIGN KEY (winner_id) REFERENCES users(id),
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL -- new for tourny limit
 );
 
 CREATE TABLE IF NOT EXISTS chat_messages (
