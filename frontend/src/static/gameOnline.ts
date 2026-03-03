@@ -103,7 +103,6 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
     }
 
     let deltaTimeMS: number, now: number, then: number | undefined
-    let gameRunning = true
 
     function update() {
         now = performance.now()
@@ -127,7 +126,9 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
     }
 
     function draw() {
-        if (!gameRunning) return
+        if (!globalThis.gameRunning) {
+            return
+        }
         requestAnimationFrame(draw)
         update()
         ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -310,5 +311,6 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
     }
     ball.x = canvas.width / 2
     ball.y = canvas.height / 2
+    globalThis.gameRunning = true
     requestAnimationFrame(draw)
 }

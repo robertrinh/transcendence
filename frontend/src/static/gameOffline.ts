@@ -205,6 +205,9 @@ export async function gameOfflineLobby(
     }
 
     function draw() {
+        if (!globalThis.gameRunning) {
+            return
+        }
         requestAnimationFrame(draw)
         update()
         ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -236,5 +239,6 @@ export async function gameOfflineLobby(
     }
     const app = {state: gameState.Start}
     ball.setRandomStart()
+    globalThis.gameRunning = true
     requestAnimationFrame(draw)
 }

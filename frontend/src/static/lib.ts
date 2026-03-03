@@ -34,6 +34,12 @@ export const playerTwo = new Player(
     arenaWidth - ballSize, 0, ballSize, ballSize * 4, paddleMoveUnits,
     p2PaddleColor)
 
+declare global {
+    var gameRunning: boolean
+}
+
+globalThis.gameRunning = false
+
 function resetBall() {
     ball.x = 0
     ball.y = 0
@@ -72,6 +78,7 @@ function resetPlayerTwo() {
 }
 
 export function resetState() {
+    globalThis.gameRunning = false
     resetBall()
     resetPlayerOne()
     resetPlayerTwo()
