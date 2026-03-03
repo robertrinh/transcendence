@@ -236,7 +236,7 @@ export const userController = {
 
    deleteUser: async (request: FastifyRequest, reply: FastifyReply) => {
         try {
-            const userId = (request.user as any).userId;
+            const userId = request.user!.userId;
             const { password } = request.body as { password?: string };
 
             if (!password) {

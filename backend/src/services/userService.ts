@@ -1,6 +1,21 @@
 import { db } from '../databaseInit.js'
 import { dbError } from '../error/dbErrors.js'
 
+type UserNameAvatarRow = { username: string; avatar_url: string | null };
+type PublicProfileRow = {
+    id: number;
+    username: string;
+    nickname: string | null;
+    display_name: string | null;
+    is_anonymous: number;
+    anonymized_at: string | null;
+    avatar_url: string | null;
+    wins: number;
+    losses: number;
+    total_games: number;
+};
+type IsAnonymousRow = { is_anonymous?: number };
+
 export const userService = {
 
     fetchUser: (id: number) => {
@@ -33,7 +48,7 @@ export const userService = {
             FROM users u
             LEFT JOIN avatars a ON u.avatar_id = a.id
             WHERE u.id = ?
-        `).get(id) as any
+        `).get(id) as UserNameAvatarRow | undefined
         if (!user) return { username: 'Unknown', avatar_url: null }
         return { username: user.username, avatar_url: user.avatar_url || null }
     },
@@ -77,7 +92,7 @@ export const userService = {
             FROM users u 
             LEFT JOIN avatars a ON u.avatar_id = a.id 
             WHERE u.username = ?
-        `).get(username) as any;
+        `).get(username) as PublicProfileRow | undefined;
 
         if (!user) return null;
 
@@ -151,7 +166,7 @@ export const userService = {
     },
 
     isUserAnonymous: (id: number): boolean => {
-        const result = db.prepare('SELECT is_anonymous FROM users WHERE id = ?').get(id) as any;
+        const result = db.prepare('SELECT is_anonymous FROM users WHERE id = ?').get(id) as IsAnonymousRow | undefined;
         return result ? Boolean(result.is_anonymous) : false;
     },
 
