@@ -3,7 +3,7 @@ import { authenticator } from "otplib";
 import QRCode from "qrcode";
 import { db } from '../databaseInit.js'
 import { authenticate, authenticatePendingOnly, requireNonGuest } from "../auth/middleware.js";
-import { generateToken } from "../auth/utils.js";
+import { generateToken } from "../auth/jwt.js";
 
 export default async function twofaRoutes(
 	fastify: FastifyInstance
@@ -64,6 +64,9 @@ export default async function twofaRoutes(
 		
 		//* verify 2FA code
 		const { code } = request.body as { code: string };
+		if (!code || typeof code !== 'string' || !/^\d{6}$/.test(code)) {
+			return reply.code(400).send({ success: false, error: 'Code must be 6 digits' });
+		}
 		const isValid = authenticator.verify({
 			secret: user.two_factor_secret,
 			token: code,
@@ -85,6 +88,9 @@ export default async function twofaRoutes(
 		preHandler: [authenticate, requireNonGuest]}, async (request, reply) => {
 		const { userId } = request.user! as { userId: number };
 		const { code } = request.body as { code: string };
+		if (!code || typeof code !== 'string' || !/^\d{6}$/.test(code)) {
+			return reply.code(400).send({ success: false, error: 'Code must be 6 digits' });
+		}
 
 		//* fetch user's secret from database + verify 2fa code
 		const user = db.prepare('SELECT two_factor_secret FROM users WHERE id = ?').get(userId) as { two_factor_secret: string } | undefined
@@ -116,6 +122,9 @@ export default async function twofaRoutes(
 		preHandler: [authenticatePendingOnly, requireNonGuest]}, async (request, reply) => {
 		const { userId, username } = request.user! as { userId: number, username: string };
 		const { code } = request.body as { code: string };
+		if (!code || typeof code !== 'string' || !/^\d{6}$/.test(code)) {
+			return reply.code(400).send({ success: false, error: 'Code must be 6 digits' });
+		}
 
 		//* fetch user's 2FA data
 		const user = db.prepare('SELECT two_factor_enabled, two_factor_secret FROM users WHERE id = ?').get(userId) as { two_factor_enabled: number, two_factor_secret: string } | undefined;
