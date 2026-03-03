@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify'
 import { userController } from '../controllers/userController.js'
 import { IDSchema } from '../schemas/generic.schema.js'
-import { userBody, userParamSchema } from '../schemas/users.schema.js'
+import { deleteUserBody, updateProfileBody, userBody, userParamSchema } from '../schemas/users.schema.js'
 import { authenticate, requireNonGuest } from '../auth/middleware.js'
 import { anonymizeResponseSchema } from '../schemas/users.schema.js'
 import { MIN_PASSWORD_LENGTH } from '../auth/password.js'
@@ -53,6 +53,7 @@ export default async function usersRoutes (
             security: [{ bearerAuth: [] }],
             tags: ['users'],
             summary: 'Update user',
+            body: updateProfileBody
         }, preHandler: [authenticate, requireNonGuest]
     }, userController.updateProfile);
 
@@ -93,6 +94,7 @@ export default async function usersRoutes (
             security: [{ bearerAuth: [] }],
             tags: ['users', 'privacy'],
             summary: 'Delete user',
+            body: deleteUserBody
         }, preHandler: [authenticate, requireNonGuest]
     }, userController.deleteUser);
 
