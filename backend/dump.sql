@@ -117,6 +117,7 @@ CREATE TABLE IF NOT EXISTS blocked (
 );
 
 CREATE TABLE IF NOT EXISTS tournament_participants (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	tournament_id INTEGER NOT NULL,
 	user_id INTEGER NOT NULL,
 	user_left BOOLEAN CHECK(user_left IN (0,1)) DEFAULT 0 NOT NULL,
