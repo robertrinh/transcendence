@@ -297,26 +297,24 @@ export default function Game() {
   }
 
   async function joinLobbyReq(lobbyId: string) {
-    setGameMode("online")
-    setScreen("searching")
     try {
       const response = await fetchWithAuth('/api/games/joinlobby', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lobby_id: lobbyId }),
       })
+      const data = await response.json().catch(() => ({}))
       if (!response.ok) 
 		throw new Error('Failed to join lobby')
-      const data = await response.json()
       console.log('Joined lobby response:', data)
-	  if (data.success as boolean) {
-		setGameData(data.data)
-		setScreen("ready-room")
-	  }
+      if (data.success as boolean) {
+        setGameMode('online')
+        setGameData(data.data)
+        setScreen("ready-room")
+      }
     } catch (err) {
       console.error('Join lobby failed err:', err)
-      setScreen("main")
-      setGameMode("none")
+      throw err
     }
   }
 
