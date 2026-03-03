@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS games (
 	),
 	tournament_id INTEGER,
     round INTEGER,
+	lobby_id INTEGER CHECK(length(lobby_id) = 10),
     status TEXT CHECK (status IN ('pending', 'ready', 'ongoing', 'finished', 'cancelled')) DEFAULT 'pending',
 	created_at DATETIME DEFAULT (datetime('now')) NOT NULL,
 	finished_at DATETIME,
