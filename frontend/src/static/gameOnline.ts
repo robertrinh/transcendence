@@ -1,6 +1,6 @@
 import { Ball } from './ball'
 import { playerOne, playerTwo, ball, clientTick, drawPlayerScores,
-    heartbeatFrequencyMS, resetState } from './lib'
+    heartbeatFrequencyMS, resetState, textColor } from './lib'
 
 interface MoveTS {
     type: string,
@@ -138,11 +138,11 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
         playerOne.paddle.draw(drawCtx)
         playerTwo.paddle.draw(drawCtx)
         if (playerID === 2) {
-            drawPlayerScores(canvas, drawCtx, 48, "#36454f", "sans-serif",
+            drawPlayerScores(canvas, drawCtx, 48, textColor, "sans-serif",
             p2Score, p1Score, oppName, ownName)
         }
         else {
-            drawPlayerScores(canvas, drawCtx, 48, "#36454f", "sans-serif",
+            drawPlayerScores(canvas, drawCtx, 48, textColor, "sans-serif",
             p2Score, p1Score, ownName, oppName)
         }
         ctx.drawImage(drawCanvas, 0, 0)
