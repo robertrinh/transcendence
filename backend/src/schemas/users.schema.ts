@@ -9,6 +9,17 @@ export const userBody = S.object()
 	.prop('username', S.string().required())
 	.prop('password', S.string().minLength(MIN_PASSWORD_LENGTH).required());
 
+export const updateProfileBody = S.object()
+	.additionalProperties(false)
+	.prop('nickname', S.string().maxLength(15))
+	.prop('display_name', S.string().maxLength(15))
+	.prop('email', S.string().maxLength(65))
+	.prop('password', S.string().minLength(MIN_PASSWORD_LENGTH));
+
+export const deleteUserBody = S.object()
+	.additionalProperties(false)
+	.prop('password', S.string().minLength(1).required());
+
 export const tokenSchema = S.object()
   .prop('token', S.string());
 
