@@ -11,7 +11,7 @@ export class Ball
 	speedX: number
 	maxSpeed: number
 	private trailPos: Array<Point>
-	private trailLen = 9
+	private trailLen = 27
 	private trailColors: Array<string>
 
 	constructor(x: number, y: number, dirVector: Vector2, radius: number,

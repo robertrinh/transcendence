@@ -37,12 +37,12 @@ const paddleSpeedPerTick = 0.5
 const ballSpeed = ballSpeedPerTick * clientTick
 export const paddleMoveUnits = paddleSpeedPerTick * clientTick
 // colors
-const ballColor = "#ffffff"
+export const ballColor = "#ffffff"
 const p1PaddleColor = "#00d4ff"
 const p2PaddleColor = "#ff6600"
-export const textColor = "#00d4ff"
+export const textColor = ballColor
 // objects
-const trailColors = new Array("#ffffff", "#88ccff", "#003366")
+const trailColors = new Array("#dc6acf")
 export const ball = new Ball(
     0, 0, {x: 1, y: 1}, ballRadius, ballSpeed, ballColor, 0, 7.5,
     trailColors)
