@@ -150,6 +150,7 @@ export function App() {
 	};
 
 	const handleLogout = async () => {
+		window.dispatchEvent(new Event('gameCleanup'))
 		try {
 			const token = localStorage.getItem('token');
 			if (token) {

@@ -16,7 +16,9 @@ export default function JoinLobby({ onJoin, onBack }: JoinLobbyProps) {
       return
     }
     setError(null)
-    Promise.resolve(onJoin(trimmed)).catch(() => setError('Cannot find lobby code'))
+    Promise.resolve(onJoin(trimmed)).catch((err) =>
+      setError(err instanceof Error ? err.message : 'Cannot find lobby code')
+    )
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

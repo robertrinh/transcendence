@@ -2,7 +2,7 @@ import { ApiError } from '../error/errors.js';
 import { gamesService } from '../services/gamesService.js'
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { userService } from '../services/userService.js';
-import { Player } from '../types/database.interfaces.js'
+import { Player, Game } from '../types/database.interfaces.js'
 import { tournamentService } from '../services/tournamentService.js';
 
 
@@ -80,7 +80,10 @@ export const gamesController = {
         // look if a game is already there first, create one otherwise
         const foundPrivateGame = gamesService.fetchPrivateGame(trimmedLobbyId);
         if (foundPrivateGame) {
-            return {success: true, data: foundPrivateGame, message: 'Game found, connect to gameserver'}
+			if (foundPrivateGame.status === 'ready') {
+				return {success: true, data: foundPrivateGame, message: 'Game found, connect to gameserver'}
+			}
+			throw new ApiError(404, 'This lobby is no longer available')
         }
 
         const game_queue = gamesService.fetchlobby(trimmedLobbyId);

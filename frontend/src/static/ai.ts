@@ -69,16 +69,16 @@ export class AI
 
     }
 
-    private moveTo(targetY: number, paddle: PlayerPaddle) {
+    private moveTo(targetY: number, paddle: PlayerPaddle, ball: Ball) {
         if (this.coversCentreTargetY(targetY, paddle)) {
             return
         }
         const deltaY = targetY - (paddle.y + paddle.height / 2)
         if (deltaY < 0) {
-            paddle.moveUp()
+            paddle.moveUp(ball)
         }
         else {
-            paddle.moveDown()
+            paddle.moveDown(ball)
         }
     }
 
@@ -90,8 +90,8 @@ export class AI
         return false
     }
 
-    private moveToTargetPoint(paddle: PlayerPaddle) {
-        this.moveTo(this.targetY, paddle)
+    private moveToTargetPoint(paddle: PlayerPaddle, ball: Ball) {
+        this.moveTo(this.targetY, paddle, ball)
     }
 
     private getTargetPoint(ball: Ball, paddle: PlayerPaddle) {
@@ -150,7 +150,7 @@ export class AI
     }
 
     update(deltaTimeMS: number, ball: Ball, paddle: PlayerPaddle) {
-        this.moveToTargetPoint(paddle)
+        this.moveToTargetPoint(paddle, ball)
         this.msSinceLastAction += deltaTimeMS
         if (this.msSinceLastAction < 1000) {
            return

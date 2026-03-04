@@ -241,10 +241,10 @@ fastify.post('/send', {
 
             try {
                 const insertMessage = db.prepare(`
-                    INSERT INTO chat_messages (user_id, username, message, timestamp) 
-                    VALUES (?, ?, ?, ?)
+                    INSERT INTO chat_messages (user_id, message, timestamp) 
+                    VALUES (?, ?, ?)
                 `);
-                insertMessage.run(payload.userId, payload.username, message.trim(), new Date().toISOString());
+                insertMessage.run(payload.userId, message.trim(), new Date().toISOString());
             } catch (dbError: any) {
                 console.error('Error saving message to database:', dbError);
                 if (dbError?.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
@@ -279,10 +279,10 @@ fastify.post('/send', {
 
         try {
             const insertMessage = db.prepare(`
-                INSERT INTO chat_messages (user_id, username, message, timestamp) 
-                VALUES (?, ?, ?, ?)
+                INSERT INTO chat_messages (user_id, message, timestamp) 
+                VALUES (?, ?, ?)
             `);
-            insertMessage.run(payload.userId, payload.username, message.trim(), new Date().toISOString());
+            insertMessage.run(payload.userId, message.trim(), new Date().toISOString());
         } catch (dbError: any) {
             console.error('Error saving message to database:', dbError);
             if (dbError?.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {

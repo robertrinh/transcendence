@@ -217,11 +217,16 @@ export default function Game() {
     const onPageHide = () => {
       stateKiller()
 	}
+	const handleCleanupOnLogut = () => {
+		stateKiller()
+	}
 	window.addEventListener('pagehide', onPageHide)
     window.addEventListener('beforeunload', handleOnBeforeUnload, {capture : true})
+	window.addEventListener('gameCleanup', handleCleanupOnLogut)
     return () =>{
       window.removeEventListener('beforeunload', handleOnBeforeUnload, {capture : true})
 	  window.removeEventListener('pagehide', onPageHide)
+window.removeEventListener('gameCleanup', handleCleanupOnLogut)
     }
   },[])
 
@@ -304,8 +309,8 @@ export default function Game() {
         body: JSON.stringify({ lobby_id: lobbyId }),
       })
       const data = await response.json().catch(() => ({}))
-      if (!response.ok) 
-		throw new Error('Failed to join lobby')
+      if (!response.ok)
+        throw new Error(typeof data?.message === 'string' ? data.message : 'Failed to join lobby')
       console.log('Joined lobby response:', data)
       if (data.success as boolean) {
         setGameMode('online')
