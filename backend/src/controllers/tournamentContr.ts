@@ -85,7 +85,6 @@ export const tournamentController = {
 
 		if (participants.length + 1 === tournament.max_participants) {
 			const allParticipants = tournamentService.getTournamentParticipants(id) as TournamentParticipant[];
-			const creatorStillIn = allParticipants.some(p => p.user_id === tournament.created_by);
 			tournamentService.startTournament(id, allParticipants);
 			return {success: true, message: 'tournament full, starting!'}
 		}

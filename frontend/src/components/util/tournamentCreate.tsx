@@ -62,24 +62,6 @@ export default function TournamentCreate({ onTournamentCreated, onBack }: Tourna
         setLoading(false)
     }
 }
-
-    useEffect(() => {
-        const checkActive = async () => {
-            try {
-                const response = await fetchWithAuth('/api/tournaments/active')
-                if (response.ok) {
-                    const data = await response.json()
-                    if (data.data) {
-                        setActiveTournament(data.data)
-                    }
-                }
-            } catch (err) {
-                console.error('Failed to check active tournament:', err)
-            }
-        }
-        checkActive()
-    }, [])
-
     const handleCreate = async () => {
         if (!name.trim()) {
             setError('Tournament name is required')
