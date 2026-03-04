@@ -15,9 +15,9 @@ export function registerErrorHandler(server: FastifyInstance) {
       }
     });
   
-  if (error instanceof AssertionError) {
-    process.exit(1)
-  }
+//   if (error instanceof AssertionError) {
+//     process.exit(1)
+//   }
 
 	if (error instanceof ApiError) {
       return reply.code(error.statusCode).send({
