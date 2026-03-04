@@ -216,8 +216,8 @@ export default function TournamentCreate({ onTournamentCreated, onBack }: Tourna
                                 }}>
                                     &gt; MAX PLAYERS
                                 </label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {[4, 8].map((num) => (
+                                <div className="grid grid-cols-1">
+                                    {[4].map((num) => (
                                         <button
                                             key={num}
                                             onClick={() => setMaxParticipants(num)}
