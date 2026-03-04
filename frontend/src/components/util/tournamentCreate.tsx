@@ -49,7 +49,6 @@ export default function TournamentCreate({ onTournamentCreated, onBack }: Tourna
         })
 
         if (!response.ok) {
-            // const err = await response.json()
             setActiveTournament(null)
             setError('Tournament is full. You can create a new one.')
             return
