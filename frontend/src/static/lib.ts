@@ -2,24 +2,6 @@ import { Ball } from "./ball"
 import { Player } from "./player"
 import { PlayerPaddle } from "./playerPaddle"
 
-class Intervals {
-    gameOfflineUpdate: number | ReturnType<typeof setInterval> | undefined
-    gameOnlineUpdate: number | ReturnType<typeof setInterval> | undefined
-
-    constructor(gameOfflineUpdate?: number, gameOnlineUpdate?: number) {
-        this.gameOfflineUpdate = gameOfflineUpdate
-        this.gameOnlineUpdate = gameOnlineUpdate
-    }
-
-    reset() {
-        if (this.gameOfflineUpdate !== undefined) {
-            clearInterval(this.gameOfflineUpdate)
-        }
-        if (this.gameOnlineUpdate !== undefined) {
-            clearInterval(this.gameOnlineUpdate)
-        }
-    }
-}
 /**
  * Globals
  */
@@ -32,17 +14,17 @@ export const ballSize = ballRadius * 2
 const targetFPS = 60
 export const heartbeatFrequencyMS = 3000
 export const clientTick = 1000 / targetFPS
-const ballSpeedPerTick = 0.25
+const ballSpeedPerTick = 0.4
 const paddleSpeedPerTick = 0.5
 const ballSpeed = ballSpeedPerTick * clientTick
 export const paddleMoveUnits = paddleSpeedPerTick * clientTick
 // colors
-const ballColor = "#ffffff"
+export const ballColor = "#ffffff"
 const p1PaddleColor = "#00d4ff"
 const p2PaddleColor = "#ff6600"
-export const textColor = "#00d4ff"
+export const textColor = ballColor
 // objects
-const trailColors = new Array("#ffffff", "#88ccff", "#003366")
+const trailColors = new Array("#dc6acf")
 export const ball = new Ball(
     0, 0, {x: 1, y: 1}, ballRadius, ballSpeed, ballColor, 0, 7.5,
     trailColors)
@@ -51,7 +33,12 @@ export const playerOne = new Player(
 export const playerTwo = new Player(
     arenaWidth - ballSize, 0, ballSize, ballSize * 4, paddleMoveUnits,
     p2PaddleColor)
-export const intervals = new Intervals()
+
+declare global {
+    var gameRunning: boolean
+}
+
+globalThis.gameRunning = false
 
 function resetBall() {
     ball.x = 0
@@ -91,10 +78,10 @@ function resetPlayerTwo() {
 }
 
 export function resetState() {
+    globalThis.gameRunning = false
     resetBall()
     resetPlayerOne()
     resetPlayerTwo()
-    intervals.reset()
 }
 
 export class Vector2
@@ -275,3 +262,40 @@ export function drawPlayerScores(
         ctx.fillStyle = p1PaddleColor
         ctx.fillStyle = p2PaddleColor
     }
+
+// https://www.jeffreythompson.org/collision-detection/circle-rect.php
+export function isCollidingBallPaddle(
+    ballCenterX: number, ballCenterY: number, ballRadius: number, paddlePointX: number,
+    paddlePointY: number, paddleWidth: number, paddleHeight: number
+): null | 'vert' | 'hor' {
+    let testX = ballCenterX
+    let testY = ballCenterY
+
+    if (ballCenterX < paddlePointX) {
+        // left
+        testX = paddlePointX
+    }
+    else if (ballCenterX > paddlePointX + paddleWidth) {
+        // right
+        testX = paddlePointX + paddleWidth
+    }
+
+    if (ballCenterY < paddlePointY) {
+        // top
+        testY = paddlePointY
+    }
+    else if (ballCenterY > paddlePointY + paddleHeight) {
+        // bottom
+        testY = paddlePointY + paddleHeight
+    }
+    const distX = ballCenterX-testX
+    const distY = ballCenterY-testY
+    const distance = Math.sqrt((distX*distX) + (distY*distY))
+    if (distance <= ballRadius) {
+        if (Math.abs(distX) > Math.abs(distY)) {
+            return 'vert'
+        }
+        return 'hor'
+    }
+    return null
+}
