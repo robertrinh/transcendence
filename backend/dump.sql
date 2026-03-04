@@ -69,11 +69,11 @@ CREATE TABLE IF NOT EXISTS tournaments (
 	id INTEGER PRIMARY KEY,
 	name TEXT CHECK(length(name) < 16) NOT NULL,
 	description TEXT CHECK(length(description) < 101),
-	max_participants INTEGER CHECK(max_participants IN (4, 8, 16)),
-    status TEXT CHECK (status IN ('open', 'ongoing', 'finished', 'cancelled')) DEFAULT 'open',
+	max_participants INTEGER CHECK(max_participants IN (4, 8)),
+	status TEXT CHECK (status IN ('open', 'ongoing', 'finished', 'cancelled')) DEFAULT 'open',
 	winner_id INTEGER,
-    created_by INTEGER, -- new for tourny limit
-    created_at DATETIME DEFAULT (datetime('now')) NOT NULL,
+ 	created_by INTEGER, -- new for tourny limit
+	created_at DATETIME DEFAULT (datetime('now')) NOT NULL,
 	start_date DATETIME,
 	end_date DATETIME,
 	FOREIGN KEY (winner_id) REFERENCES users(id),

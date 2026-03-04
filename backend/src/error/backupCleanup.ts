@@ -1,5 +1,5 @@
 import { db } from '../databaseInit.js';
-import { Game } from '../types/database.interfaces.js';
+import { Game, Tournament } from '../types/database.interfaces.js';
 
 function removeStaleQueueEntries(entry : { player_id: number }) {
     db.prepare('DELETE FROM game_queue WHERE player_id = ?').run(entry.player_id);
@@ -28,6 +28,11 @@ export function  dbCleanUpJob () {
             db.prepare('UPDATE users SET status = ? WHERE id = ? OR id = ?').run('idle', game.player1_id, game.player2_id);
             console.log(`set game: ${game.id} to cancelled because of timeout`);
         }
+
+		const staleTournament = db.prepare(`SELECT id FROM tournaments WHERE status IS ('open') AND created_at < (datetime('now', '-10 minutes'))`).all() as Tournament[];
+		for (const tournament of staleTournament) {
+			db.prepare('UPDATE tournaments SET status = ? WHERE id = ?').run('cancelled', tournament.id);
+		}
 
         const result = db.prepare(`
         UPDATE users SET status = 'idle'

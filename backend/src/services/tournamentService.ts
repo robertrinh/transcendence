@@ -106,11 +106,6 @@ export const tournamentService = {
         ).run(name, description, max_participants, created_by)
     },
 
-    reassignCreator: (tournament_id: number, new_creator_id: number) => {
-        db.prepare('UPDATE tournaments SET created_by = ? WHERE id = ?')
-            .run(new_creator_id, tournament_id);
-    },
-
     joinTournament: (tournament_id: number, user_id: number) => {
         try {
 			const user_already_in = db.prepare(
@@ -159,7 +154,7 @@ export const tournamentService = {
             }
         }
 
-        db.prepare('UPDATE tournaments SET status = ? WHERE id = ?').run('ongoing', tournament_id);
+        db.prepare('UPDATE tournaments SET status = ?, created_by = NULL WHERE id = ?').run('ongoing', tournament_id);
     },
 
     // Called when a tournament game finishes — advances winner to next round
