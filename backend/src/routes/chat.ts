@@ -4,6 +4,7 @@ import { db } from '../databaseInit.js'
 import { userService } from '../services/userService.js';
 import { authenticate } from '../auth/middleware.js';
 import { register as sseRegister, unregister as sseUnregister, get as sseGet, getConnectionCount, getAllConnections, sendToConnections, broadcast as sseBroadcast, getConnectionIdsForUser } from '../sseNotify.js';
+import { chatJoinBodySchema, chatSendBodySchema, chatStreamQuerySchema } from '../schemas/chat.schema.js';
 
 const chatMessages: any[] = [];
 
@@ -15,11 +16,12 @@ export default async function chatRoutes (
     fastify.get('/stream', {
         schema: {
             tags: ['chat'],
-            summary: 'Server-Sent Events (SSE) endpoint'
+            summary: 'Server-Sent Events (SSE) endpoint',
+            querystring: chatStreamQuerySchema
         }}, async (request, reply) => {
     try {
         //  Get token from query parameter (EventSource limitation)
-        const token = (request.query as any).token;
+        const { token } = request.query as { token: string };
         
         if (!token) {
             console.error('No token provided in query parameter');
@@ -117,7 +119,8 @@ export default async function chatRoutes (
 fastify.post('/join', {
         schema: {
             tags: ['chat'],
-            summary: 'Join chat endpoint with JWT verification'
+            summary: 'Join chat endpoint with JWT verification',
+            body: chatJoinBodySchema
         }, preHandler: [authenticate]},
         async (request, reply) => {
     try {
@@ -133,7 +136,7 @@ fastify.post('/join', {
             });
         }
 
-        const { connectionId } = request.body as any;
+        const { connectionId } = request.body as { connectionId: string };
         
         const connection = sseGet(connectionId);
         if (!connection) {
@@ -168,7 +171,8 @@ fastify.post('/join', {
 fastify.post('/send', {
         schema: {
             tags: ['chat'],
-            summary: 'Send message endpoint with JWT verification'
+            summary: 'Send message endpoint with JWT verification',
+            body: chatSendBodySchema
         }, preHandler: [authenticate]}, async (request, reply) => {
     try {
         const payload = request.user!;
@@ -183,7 +187,12 @@ fastify.post('/send', {
             });
         }
 
-        const { connectionId, message, isPrivate, toUser } = request.body as any;
+        const { connectionId, message, isPrivate, toUser } = request.body as {
+            connectionId: string;
+            message: string;
+            isPrivate?: boolean;
+            toUser?: string;
+        };
         
         if (!message || !message.trim()) {
             return reply.status(400).send({ error: 'Message cannot be empty' });

@@ -20,6 +20,10 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (password.length > 50) {
+            setError('Password cannot be longer than 50 characters');
+            return;
+        }
         setLoading(true);
         setError('');
 
@@ -98,7 +102,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
                                 <label className="block text-white/70 text-sm font-medium mb-1.5">
                                     Password
                                 </label>
-                                <input
+								<input
                                     type="password"
                                     placeholder="Min 8 characters"
                                     value={password}
