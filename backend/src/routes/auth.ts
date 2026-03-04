@@ -2,7 +2,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyReply } from 'fastify'
 import { db, comparePassword } from '../databaseInit.js'
 import bcrypt from 'bcrypt'
 import { generateToken, verifyToken } from '../auth/jwt.js'
-import { validatePassword } from '../auth/password.js'
+import { validatePassword, MAX_PASSWORD_LENGTH } from '../auth/password.js'
 import { validateEmail } from '../auth/email.js'
 import { loginBodySchema, registerBodySchema } from '../schemas/auth.schema.js'
 
@@ -98,6 +98,12 @@ export default async function authRoutes (
 			return reply.code(400).send({
 				success: false,
 				error: 'Username cannot be longer than 15 characters'
+			})
+		}
+		if (password.length > MAX_PASSWORD_LENGTH) {
+			return reply.code(400).send({
+				success: false,
+				error: 'Password cannot be longer than 50 characters'
 			})
 		}
 		const user = db.prepare('SELECT id, username, password FROM users WHERE username = ?').get(username) as { id: number, username: string, password: string } | undefined

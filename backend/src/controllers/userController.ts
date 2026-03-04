@@ -3,7 +3,7 @@ import { userService } from '../services/userService.js';
 import { FastifyRequest, FastifyReply } from 'fastify';
 import bcrypt from 'bcrypt'
 import { comparePassword } from '../databaseInit.js'
-import { validatePassword } from '../auth/password.js'
+import { validatePassword, MAX_PASSWORD_LENGTH } from '../auth/password.js'
 import { validateEmail } from '../auth/email.js'
 import { createWriteStream, existsSync, mkdirSync } from 'fs'
 import { pipeline } from 'stream/promises'
@@ -242,6 +242,11 @@ export const userController = {
             if (!password) {
                 return reply.status(400).send({
                     error: 'Password is required to delete account'
+                });
+            }
+            if (password.length > MAX_PASSWORD_LENGTH) {
+                return reply.status(400).send({
+                    error: 'Password cannot be longer than 50 characters'
                 });
             }
 

@@ -4,7 +4,7 @@ import { IDSchema } from '../schemas/generic.schema.js'
 import { deleteUserBody, updateProfileBody, userBody, userParamSchema } from '../schemas/users.schema.js'
 import { authenticate, requireNonGuest } from '../auth/middleware.js'
 import { anonymizeResponseSchema } from '../schemas/users.schema.js'
-import { MIN_PASSWORD_LENGTH } from '../auth/password.js'
+import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from '../auth/password.js'
 
 export default async function usersRoutes (
     fastify: FastifyInstance,
@@ -66,8 +66,8 @@ export default async function usersRoutes (
                 type: 'object',
                 required: ['current_password', 'new_password'],
                 properties: {
-                    current_password: { type: 'string' },
-                    new_password: { type: 'string', minLength: MIN_PASSWORD_LENGTH }
+                    current_password: { type: 'string', maxLength: MAX_PASSWORD_LENGTH },
+                    new_password: { type: 'string', minLength: MIN_PASSWORD_LENGTH, maxLength: MAX_PASSWORD_LENGTH }
                 }
             }
         }, preHandler: [authenticate, requireNonGuest]
