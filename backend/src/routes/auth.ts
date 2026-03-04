@@ -2,8 +2,9 @@ import { FastifyInstance, FastifyPluginOptions, FastifyReply } from 'fastify'
 import { db, comparePassword } from '../databaseInit.js'
 import bcrypt from 'bcrypt'
 import { generateToken, verifyToken } from '../auth/jwt.js'
-import { validatePassword } from '../auth/password.js'
+import { validatePassword, MAX_PASSWORD_LENGTH } from '../auth/password.js'
 import { validateEmail } from '../auth/email.js'
+import { loginBodySchema, registerBodySchema } from '../schemas/auth.schema.js'
 
 async function registerGuest(
 	reply: FastifyReply, username: string
@@ -83,7 +84,8 @@ export default async function authRoutes (
 	fastify.post('/auth/login', {
 		schema: {
 			tags: ['auth'],
-			summary: 'Login as a user'
+			summary: 'Login as a user',
+			body: loginBodySchema
 		}}, async (request, reply) => {
 		const { username, password } = request.body as { username: string, password: string}
 		if (!username || !password) {
@@ -96,6 +98,12 @@ export default async function authRoutes (
 			return reply.code(400).send({
 				success: false,
 				error: 'Username cannot be longer than 15 characters'
+			})
+		}
+		if (password.length > MAX_PASSWORD_LENGTH) {
+			return reply.code(400).send({
+				success: false,
+				error: 'Password cannot be longer than 50 characters'
 			})
 		}
 		const user = db.prepare('SELECT id, username, password FROM users WHERE username = ?').get(username) as { id: number, username: string, password: string } | undefined
@@ -137,7 +145,8 @@ export default async function authRoutes (
 	fastify.post('/auth/register', {
 		schema: {
 			tags: ['auth'],
-			summary: 'Register a new user or guest'
+			summary: 'Register a new user or guest',
+			body: registerBodySchema
 		}}, async (request, reply) => {
 		const { username, isGuest, password, email } = request.body as { 
 			username?: string,

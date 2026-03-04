@@ -4,6 +4,7 @@ import QRCode from "qrcode";
 import { db } from '../databaseInit.js'
 import { authenticate, authenticatePendingOnly, requireNonGuest } from "../auth/middleware.js";
 import { generateToken } from "../auth/jwt.js";
+import { twofaCodeBodySchema } from '../schemas/auth.schema.js';
 
 export default async function twofaRoutes(
 	fastify: FastifyInstance
@@ -37,7 +38,8 @@ export default async function twofaRoutes(
 	fastify.post('/auth/2fa/enable', {
 		schema: {
 			tags: ['auth', '2fa'],
-			summary: 'Endpoint for enabling two-factor authentication'
+			summary: 'Endpoint for enabling two-factor authentication',
+			body: twofaCodeBodySchema
 		},
 		preHandler: [authenticate, requireNonGuest]}, async (request, reply) => {
 		const { userId } = request.user! as { userId: number };
@@ -83,7 +85,8 @@ export default async function twofaRoutes(
 	fastify.post('/auth/2fa/disable', {
 		schema: {
 			tags: ['auth', '2fa'],
-			summary: 'Endpoint for disabling two-factor authentication'
+			summary: 'Endpoint for disabling two-factor authentication',
+			body: twofaCodeBodySchema
 		},
 		preHandler: [authenticate, requireNonGuest]}, async (request, reply) => {
 		const { userId } = request.user! as { userId: number };
@@ -117,7 +120,8 @@ export default async function twofaRoutes(
 	fastify.post('/auth/2fa/verify', {
 		schema: {
 			tags: ['auth', '2fa'],
-			summary: 'Complete login by verifying 2FA code'
+			summary: 'Complete login by verifying 2FA code',
+			body: twofaCodeBodySchema
 		},
 		preHandler: [authenticatePendingOnly, requireNonGuest]}, async (request, reply) => {
 		const { userId, username } = request.user! as { userId: number, username: string };

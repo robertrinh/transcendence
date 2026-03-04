@@ -123,6 +123,10 @@ const Settings: React.FC<SettingsProps> = ({ user, onUserUpdate }) => {
             showMessage('error', 'Password must be at least 8 characters long');
             return;
         }
+        if (passwordForm.new_password.length > 50) {
+            showMessage('error', 'Password cannot be longer than 50 characters');
+            return;
+        }
 
         setLoading(true);
 
@@ -271,6 +275,10 @@ const handleAnonymizeProfile = async () => {
         
         if (!deletePassword) {
             showMessage('error', 'Please enter your password to confirm deletion');
+            return;
+        }
+        if (deletePassword.length > 50) {
+            setDeleteError('Password cannot be longer than 50 characters');
             return;
         }
 
