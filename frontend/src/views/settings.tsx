@@ -389,6 +389,7 @@ const handleAnonymizeProfile = async () => {
                                     className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-500 focus:ring-2 focus:ring-brand-red focus:border-brand-red"
                                     placeholder="Your password"
                                     required
+                                    minLength={8}
                                     disabled={!!deleteSuccess}
                                 />
                                 {deleteError && (
@@ -693,6 +694,7 @@ const handleAnonymizeProfile = async () => {
                                                     value={profileForm.display_name}
                                                     onChange={(e) => setProfileForm({...profileForm, display_name: e.target.value})}
                                                     className="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-500 focus:ring-2 focus:ring-brand-orange focus:border-brand-orange"
+                                                    maxLength={15}
                                                 />
                                                 <button
                                                     type="submit"
@@ -734,6 +736,7 @@ const handleAnonymizeProfile = async () => {
                                                     value={profileForm.nickname}
                                                     onChange={(e) => setProfileForm({...profileForm, nickname: e.target.value})}
                                                     className="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-500 focus:ring-2 focus:ring-brand-orange focus:border-brand-orange"
+                                                    maxLength={15}
                                                 />
                                                 <button
                                                     type="submit"
@@ -775,6 +778,7 @@ const handleAnonymizeProfile = async () => {
                                                     value={profileForm.email}
                                                     onChange={(e) => setProfileForm({...profileForm, email: e.target.value})}
                                                     className="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-500 focus:ring-2 focus:ring-brand-orange focus:border-brand-orange"
+                                                    maxLength={65}
                                                 />
                                                 <button
                                                     type="submit"

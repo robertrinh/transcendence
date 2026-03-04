@@ -14,7 +14,7 @@ services:
     volumes:
       - database:/app/database
       - uploads:/app/uploads  
-    restart: always
+    restart: "no"
     networks:
       - transcendence
     develop:

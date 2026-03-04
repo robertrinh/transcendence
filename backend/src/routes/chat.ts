@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import { verifyToken } from '../auth/utils.js';
+import { verifyToken } from '../auth/jwt.js';
 import { db } from '../databaseInit.js'
 import { userService } from '../services/userService.js';
 import { authenticate } from '../auth/middleware.js';
@@ -189,8 +189,8 @@ fastify.post('/send', {
             return reply.status(400).send({ error: 'Message cannot be empty' });
         }
 		
-		if (message.length > 1000) {
-			return reply.status(400).send({ error: 'Message cannot be longer than 1000 characters' });
+		if (message.length > 255) {
+			return reply.status(400).send({ error: 'Message cannot be longer than 255 characters' });
 		}
 
         const connection = sseGet(connectionId);

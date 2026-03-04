@@ -3,6 +3,7 @@ import { tournamentService } from '../services/tournamentService.js'
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { Tournament, TournamentParticipant } from '../types/database.interfaces.js';
 import { systemBroadcast } from '../sseNotify.js';
+import { db } from '../databaseInit.js'
 
 export const tournamentController = {
 	getAllTournaments: async (req: FastifyRequest, reply: FastifyReply) => {
@@ -45,13 +46,31 @@ export const tournamentController = {
 	//returns the id of the tournament to be used when polling from the frontend to check if tournament is starting
 	createTournament: async (req: FastifyRequest, reply: FastifyReply) => {
         const user_id = req.user!.userId;
-        const {name, description, max_participants } = req.body as {name: string, description: string, max_participants: number };
-        const result = tournamentService.createTournament(name, description, max_participants, user_id);
+        const { name, description, max_participants } = req.body as { name: string, description: string, max_participants: number };
+        const trimmedName = typeof name === 'string' ? name.trim() : '';
+        if (!trimmedName) {
+            throw new ApiError(400, 'Tournament name is required')
+        }
+        if (trimmedName.length >= 16) {
+            throw new ApiError(400, 'Tournament name cannot be longer than 15 characters')
+        }
+        if (description !== undefined && description !== null && String(description).length >= 101) {
+            throw new ApiError(400, 'Tournament description cannot be longer than 100 characters')
+        }
+        const allowedSizes = [4, 8, 16];
+        if (typeof max_participants !== 'number' || !allowedSizes.includes(max_participants)) {
+            throw new ApiError(400, 'max_participants must be 4, 8, or 16')
+        }
+		const activeTour = tournamentService.hasActiveTournament(user_id);
+        if (activeTour) {
+            throw new ApiError(409, 'You already have an active tournament', 'ACTIVE_TOURNAMENT_EXISTS');
+        }
+        const result = tournamentService.createTournament(trimmedName, description ?? '', max_participants, user_id);
         if (result.changes == 0)
-            throw new ApiError(404, 'something went wrong creating tournament');
-        systemBroadcast(`Tournament "${name}" opened!`)
-        tournamentService.joinTournament(result.lastInsertRowid as number, user_id); 
-        return {success: true, data: { id: result.lastInsertRowid, max_participants, created_by: user_id }, message: 'Tournament successfully created and creator joined!'};
+            throw new ApiError(404, 'something went wrong creating tournament')
+		systemBroadcast(`Tournament "${trimmedName}" opened!`)
+        tournamentService.joinTournament(result.lastInsertRowid as number, user_id);
+        return { success: true, data: { id: result.lastInsertRowid, max_participants }, message: 'Tournament successfully created and creator joined!' };
     },
 
 	//player clicks "join tournament" and an open tournament exists --> player will be added AND start Tournament if full
@@ -101,11 +120,5 @@ export const tournamentController = {
 		if (games.length === 0)
 			throw new ApiError(404, 'tournament not found or no games found'); 
 		return {success: true, games };
-	},
-
-	removeFromActiveGame: async (req: FastifyRequest, reply: FastifyReply) => {
-		const user_id = req.user!.userId;
-		tournamentService.removeFromActiveGame(user_id)
-		return {success: true}
 	},
 }

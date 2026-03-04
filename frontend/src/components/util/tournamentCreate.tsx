@@ -64,6 +64,43 @@ export default function TournamentCreate({ onTournamentCreated, onBack }: Tourna
     }
 }
 
+    // const [activeTournament, setActiveTournament] = useState<{id: number, name: string, max_participants: number, status: string} | null>(null)
+
+    useEffect(() => {
+        const checkActive = async () => {
+            try {
+                const response = await fetchWithAuth('/api/tournaments/active')
+                if (response.ok) {
+                    const data = await response.json()
+                    if (data.data) {
+                        setActiveTournament(data.data)
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to check active tournament:', err)
+            }
+        }
+        checkActive()
+    }, [])
+
+    // const handleRejoin = async () => {
+    //     if (!activeTournament) return
+    //     try {
+    //         await fetchWithAuth(`/api/tournaments/${activeTournament.id}/join`, { 
+    //             method: 'POST',
+    //             headers: { 'Content-Type': 'application/json' },
+    //             body: JSON.stringify({
+    //                 name,
+    //                 description,
+    //                 max_participants: maxParticipants
+    //             })
+    //         })
+    //     } catch (err) {
+    //         console.error('Failed to rejoin:', err)
+    //     }
+    //     onTournamentCreated(activeTournament.id, activeTournament.max_participants)
+    // }
+
     const handleCreate = async () => {
         if (!name.trim()) {
             setError('Tournament name is required')
@@ -99,6 +136,7 @@ export default function TournamentCreate({ onTournamentCreated, onBack }: Tourna
         }
     }
 
+    
     return (
         <div className="min-h-screen flex items-center justify-center bg-black p-4" style={{
             backgroundImage: 'linear-gradient(45deg, #1a1a2e 25%, transparent 25%, transparent 75%, #1a1a2e 75%, #1a1a2e), linear-gradient(45deg, #1a1a2e 25%, transparent 25%, transparent 75%, #1a1a2e 75%, #1a1a2e)',
@@ -116,7 +154,7 @@ export default function TournamentCreate({ onTournamentCreated, onBack }: Tourna
                     fontFamily: 'monospace',
                     letterSpacing: '4px'
                 }}>
-                    CREATE TOURNAMENT
+                    {activeTournament ? 'ACTIVE TOURNAMENT' : 'CREATE TOURNAMENT'}
                 </h1>
 
                 <div className="border-4 p-8 bg-gray-900" style={{

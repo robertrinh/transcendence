@@ -4,6 +4,7 @@ import { dbError } from '../error/dbErrors.js'
 import { Tournament, TournamentParticipant, Game } from '../types/database.interfaces.js';
 import { systemBroadcast } from '../sseNotify.js';
 import { gamesService } from './gamesService.js';
+import { strict as assert } from 'node:assert';
 
 function finalizeNextGame(nextGame: Game, finishedGame: Game,
 	TournamentId: number){
@@ -12,6 +13,7 @@ function finalizeNextGame(nextGame: Game, finishedGame: Game,
 			.run(finishedGame.winner_id, nextGame.id);
 			return
 		}
+        assert(finishedGame.winner_id !== null, 'winner_id of previous game must be a number')
 		const upcomingPlayersLeft = db.prepare(`
 			SELECT
 				tournament_participants.user_id,
@@ -22,9 +24,8 @@ function finalizeNextGame(nextGame: Game, finishedGame: Game,
 				AND tournament_participants.tournament_id = ?
 				AND tournaments.status = 'ongoing'
 			`).all(finishedGame.winner_id, nextGame.player1_id, TournamentId) as undefined | { user_id: number, user_left: boolean }[]
-		if (upcomingPlayersLeft === undefined) {
-			throw new ApiError(404, 'Send help')
-		}
+        assert(upcomingPlayersLeft !== undefined, 'upcomingPlayersLeft cannot be undefined')
+        assert(upcomingPlayersLeft.length === 2, 'We should always have two players')
 		const playerMap = new Map<number, boolean>([
 			[upcomingPlayersLeft[0].user_id, upcomingPlayersLeft[0].user_left],
 			[upcomingPlayersLeft[1].user_id, upcomingPlayersLeft[1].user_left]
@@ -32,14 +33,9 @@ function finalizeNextGame(nextGame: Game, finishedGame: Game,
 		const playerOneId = nextGame.player1_id
 		const playerOneLeft = playerMap.get(playerOneId)
 		const playerTwoId = finishedGame.winner_id
-		if (playerTwoId === null) {
-			throw new ApiError(500, 'Everything bad')
-		}
 		const playerTwoLeft = playerMap.get(playerTwoId)
 		const roundMax = 5 // we need an envvar
-		if (playerOneLeft && playerTwoLeft) {
-			throw new ApiError(500, 'New world lost')
-		}
+        assert(!(playerOneLeft && playerTwoLeft), 'A tie cannot happen here')
 		if (playerOneLeft) {
 			db.prepare(`
 				UPDATE games
@@ -75,6 +71,18 @@ function finalizeNextGame(nextGame: Game, finishedGame: Game,
 		}
 }
 
+function removeFromActiveGame(user_id: number) {
+    const activeGameId = db.prepare(`
+        SELECT
+            id
+        FROM games
+        WHERE (player1_id = @user_id OR player2_id = @user_id)
+            AND status IN ('pending', 'ready', 'ongoing')
+        `).pluck().all({user_id: user_id}) as undefined | number[]
+    assert(activeGameId !== undefined, 'activeGameId cannot be undefined')
+    assert(activeGameId.length === 1)
+    gamesService.cancelGame(activeGameId[0], user_id)
+}
 
 export const tournamentService = {
 
@@ -195,7 +203,8 @@ export const tournamentService = {
             }
             const tournamentParticipants = db.prepare(
                 'SELECT * FROM tournament_participants WHERE tournament_id = ?')
-                .all(tournament_id) as TournamentParticipant[]
+                .all(tournament_id) as undefined | TournamentParticipant[]
+            assert(tournamentParticipants !== undefined, 'tournamentParticipants cannot be undefined')
             let userFound = false
             for (const participant of tournamentParticipants) {
                 if (participant.user_id === user_id) {
@@ -207,7 +216,6 @@ export const tournamentService = {
             }
             switch (tournament.status) {
                 case 'ongoing':
-                    // Give default wins for upcoming games
                     db.prepare(`
                         UPDATE tournament_participants
 						SET user_left = 1
@@ -217,6 +225,7 @@ export const tournamentService = {
                         tournament_id: tournament_id,
                         user_id: user_id
                     })
+                    removeFromActiveGame(user_id)
                     break
                 case 'open':
                     db.prepare('DELETE FROM tournament_participants WHERE tournament_id = ? AND user_id = ?')
