@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 interface JoinLobbyProps {
-  onJoin: (lobbyId: string) => void
+  onJoin: (lobbyId: string) => void | Promise<void>
   onBack: () => void
 }
 
@@ -16,7 +16,9 @@ export default function JoinLobby({ onJoin, onBack }: JoinLobbyProps) {
       return
     }
     setError(null)
-    onJoin(trimmed)
+    Promise.resolve(onJoin(trimmed)).catch((err) =>
+      setError(err instanceof Error ? err.message : 'Cannot find lobby code')
+    )
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -60,8 +62,9 @@ export default function JoinLobby({ onJoin, onBack }: JoinLobbyProps) {
             value={lobbyInput}
             onChange={(e) => { setLobbyInput(e.target.value); setError(null) }}
             onKeyDown={handleKeyDown}
-            placeholder="e.g. abc123"
+            placeholder="e.g. abc12xyz90"
             autoFocus
+            maxLength={10}
             className="w-full bg-black border-2 border-cyan-600 rounded-lg p-4 text-cyan-300 text-xl font-bold tracking-widest text-center mb-4 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/50 placeholder-gray-600 transition-all"
             style={{
               fontFamily: 'monospace',

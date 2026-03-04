@@ -1,8 +1,9 @@
 import { Ball } from './ball'
 import { PlayerPaddle } from './playerPaddle'
-import { playerOne, playerTwo, ball, Point, Vector2,
+import { playerOne, playerTwo, ball,
     applyBallHorizontalBounce, drawPlayerScores, arenaWidth, clientTick,
-    roundMax, handlePaddleCollision, assertIsNotNull, textColor, intervals
+    roundMax, assertIsNotNull, textColor,
+    isCollidingBallPaddle
 } from './lib'
 import { DifficultyLevel } from './ai'
 import { GameMode } from '../components/game/types'
@@ -73,14 +74,13 @@ export async function gameOfflineLobby(
     }
 
     function moveBall(ball: Ball, playerOne: PlayerPaddle, playerTwo: PlayerPaddle): void {
-        const oldBallPos = new Point(ball.x + ball.radius, ball.y + ball.radius)
-        const newBallPos = new Point(
-            oldBallPos.x + ball.dirVector.x * ball.movementSpeed,
-            oldBallPos.y + ball.dirVector.y * ball.movementSpeed
-        )
-        ball.appendPos(new Point(ball.x, ball.y))
-        ball.x = newBallPos.x - ball.radius
-        ball.y = newBallPos.y - ball.radius
+        const oldBallX = ball.x + ball.radius
+        const oldBallY = ball.y + ball.radius
+        const newBallX = oldBallX + ball.dirVector.x * ball.movementSpeed
+        const newBallY = oldBallY + ball.dirVector.y * ball.movementSpeed
+        ball.appendPos([ball.x, ball.y])
+        ball.x = newBallX - ball.radius
+        ball.y = newBallY - ball.radius
         let paddle = null
         if (ball.dirVector.x < 0) {
             paddle = playerOne
@@ -91,26 +91,20 @@ export async function gameOfflineLobby(
         if (paddle === null) {
             return
         }
-        const paddleIntersect = handlePaddleCollision(
-            oldBallPos, newBallPos, paddle, ball
+        const closestSide = isCollidingBallPaddle(newBallX, newBallY, ball.radius, 
+            paddle.x, paddle.y, paddle.width, paddle.height
         )
-        if (paddleIntersect === null) {
+        if (closestSide === null) {
             applyBallHorizontalBounce(ball)
             return
         }
-        const paddleHitPoint = paddleIntersect[0]
-        const paddleHitSide = paddleIntersect[1]
-        switch (paddleHitSide) {
-            case "left":
-            case "right":
-                ball.dirVector.x *= -1
-                ball.x = paddleHitPoint.x - ball.radius
-                break
-            case "bottom":
-            case "top":
-                ball.dirVector.y *= -1
-                ball.y = paddleHitPoint.y - ball.radius
-                break
+        if (closestSide === 'hor') {
+            ball.dirVector.y *= -1
+            ball.y = oldBallY - ball.radius
+        }
+        else {
+            ball.dirVector.x *= -1
+            ball.x = oldBallX - ball.radius
         }
     }
 
@@ -126,13 +120,6 @@ export async function gameOfflineLobby(
             return true
         }
         return false
-    }
-
-    function getRandomStartVec(): Vector2 {
-        return new Vector2(
-            Math.random() < 0.5 ? -1: 1,
-            Math.random() < 0.5 ? -1: 1
-        )
     }
 
     enum gameState {
@@ -180,44 +167,49 @@ export async function gameOfflineLobby(
             then = now
         }
         deltaTimeMS = now - then
-        if (deltaTimeMS > clientTick) {
-            then = now - (deltaTimeMS % clientTick)
-            if (app.state === gameState.RoundEnd) {
-                return
-            }
-            moveBall(ball, playerOne.paddle, playerTwo.paddle)
-            playerOne.paddle.update()
-            if (playerTwo.humanControlled) {
-                playerTwo.paddle.update()
-            }
-            else {
-                assertIsNotNull(playerTwo.ai)
-                playerTwo.ai.update(deltaTimeMS, ball, playerTwo.paddle)
-            }
-            if (ballExitsLeftSide()) {
-                playerTwo.roundScore++
-                app.state = gameState.RoundEnd
-            }
-            if (ballExitsRightSide()) {
-                playerOne.roundScore++
-                app.state = gameState.RoundEnd
-            }
-            if (app.state === gameState.RoundEnd) {
-                ball.setStart(getRandomStartVec())
-                app.state = gameState.ActiveRound
-            }
-            if (playerOne.roundScore === roundMax || playerTwo.roundScore === 
-                roundMax) {
-                // we could upload the game results here (if we want to track
-                // offline games too)
-                app.state = gameState.RoundEnd
-                endGame()
-            }
+        if (deltaTimeMS < clientTick) {
+            return
+        }
+        then = now - (deltaTimeMS % clientTick)
+        if (app.state === gameState.RoundEnd) {
+            return
+        }
+        moveBall(ball, playerOne.paddle, playerTwo.paddle)
+        playerOne.paddle.update(ball)
+        if (playerTwo.humanControlled) {
+            playerTwo.paddle.update(ball)
+        }
+        else {
+            assertIsNotNull(playerTwo.ai)
+            playerTwo.ai.update(deltaTimeMS, ball, playerTwo.paddle)
+        }
+        if (ballExitsLeftSide()) {
+            playerTwo.roundScore++
+            app.state = gameState.RoundEnd
+        }
+        if (ballExitsRightSide()) {
+            playerOne.roundScore++
+            app.state = gameState.RoundEnd
+        }
+        if (app.state === gameState.RoundEnd) {
+            ball.setRandomStart()
+            app.state = gameState.ActiveRound
+        }
+        if (playerOne.roundScore === roundMax || playerTwo.roundScore === 
+            roundMax) {
+            // we could upload the game results here (if we want to track
+            // offline games too)
+            app.state = gameState.RoundEnd
+            endGame()
         }
     }
 
     function draw() {
+        if (!globalThis.gameRunning) {
+            return
+        }
         requestAnimationFrame(draw)
+        update()
         ctx.clearRect(0, 0, canvas.width, canvas.height)
         drawCtx.clearRect(0, 0, canvas.width, canvas.height)
         drawCtx.fillStyle = "#050510"
@@ -246,7 +238,7 @@ export async function gameOfflineLobby(
         playerTwo.setAI(DifficultyLevel.Normal)
     }
     const app = {state: gameState.Start}
-    ball.setStart(getRandomStartVec())
+    ball.setRandomStart()
+    globalThis.gameRunning = true
     requestAnimationFrame(draw)
-    intervals.gameOfflineUpdate = setInterval(update, clientTick)
 }

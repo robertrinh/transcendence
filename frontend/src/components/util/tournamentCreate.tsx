@@ -95,6 +95,7 @@ export default function TournamentCreate({ onTournamentCreated, onBack }: Tourna
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 disabled={loading}
+                                maxLength={15}
                                 className="w-full bg-black border-4 border-purple-500 text-green-400 px-4 py-3 focus:outline-none focus:border-yellow-300 disabled:opacity-50"
                                 style={{
                                     fontFamily: 'monospace',
@@ -117,6 +118,7 @@ export default function TournamentCreate({ onTournamentCreated, onBack }: Tourna
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
                                 disabled={loading}
+                                maxLength={100}
                                 className="w-full bg-black border-4 border-purple-500 text-green-400 px-4 py-3 focus:outline-none focus:border-yellow-300 disabled:opacity-50 h-20 resize-none"
                                 style={{
                                     fontFamily: 'monospace',

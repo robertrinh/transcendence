@@ -64,7 +64,7 @@ export default function TournamentLobby({
 
         const fetchTournamentStatus = async () => {
             try {
-                const response = await fetch(`/api/tournaments/${tournamentId}`)
+                const response = await fetchWithAuth(`/api/tournaments/${tournamentId}`)
                 if (!response.ok) throw new Error('Failed to fetch tournament')
 
                 const data = await response.json()

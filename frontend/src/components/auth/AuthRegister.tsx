@@ -77,6 +77,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
                                     className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-acidGreen focus:border-brand-acidGreen transition-all"
                                     required
                                     minLength={3}
+                                    maxLength={15}
                                 />
                             </div>
                             <div>
@@ -90,6 +91,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
                                     onChange={(e) => setEmail(e.target.value)}
                                     className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-acidGreen focus:border-brand-acidGreen transition-all"
                                     required
+                                    maxLength={65}
                                 />
                             </div>
                             <div>
@@ -184,6 +186,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-acidGreen focus:border-brand-acidGreen"
                             required
                             minLength={3}
+                            maxLength={15}
                         />
                     </div>
 
@@ -195,6 +198,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({
                             onChange={(e) => setEmail(e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-acidGreen focus:border-brand-acidGreen"
                             required
+                            maxLength={65}
                         />
                     </div>
 

@@ -6,7 +6,7 @@ import sys
 from websockets import ServerConnection, broadcast, WebSocketException
 from player import Player
 from ball import Ball
-from lib import Vector2, Rect
+from lib import Vector2, Rect, is_colliding_ball_paddle
 from player_paddle import PlayerPaddle
 from datetime import datetime
 from base64 import b64encode
@@ -35,7 +35,7 @@ BALL_SIZE = BALL_RADIUS * 2
 ROUND_MAX = 5
 
 # movement
-BALL_SPEED_PER_TICK = 0.25
+BALL_SPEED_PER_TICK = 0.4
 PADDLE_SPEED_PER_TICK = 0.5
 BALL_SPEED = BALL_SPEED_PER_TICK * TICK
 PADDLE_SPEED = PADDLE_SPEED_PER_TICK * TICK
@@ -59,6 +59,7 @@ class GameInstance:
     connections: list[ServerConnection]
     game_running = False
     is_done = False
+    force_kill = False
 
     p1_last_ts: int
     p1_input: []
@@ -111,6 +112,7 @@ class GameInstance:
         self.p2_score = 0
 
     def kill(self):
+        self.log('killed...')
         self.set_game_start()
         self.players.clear()
         self.db_game_id = -1
@@ -142,6 +144,9 @@ class GameInstance:
     def lobby_full(self) -> bool:
         return len(self.players) == 2
 
+    def set_force_kill(self):
+        self.force_kill = True
+
     async def start_lobby(self):
         lobby_timeout_sec = 30
         sec_passed = 0
@@ -170,18 +175,17 @@ class GameInstance:
                 player_left = p
                 break
         if player_left is None:
-            return
-        if was_p1:
-            self.p2_score = ROUND_MAX
+            self.set_force_kill()
         else:
-            self.p1_score = ROUND_MAX
-        try:
-            await player_left.connection.send(json.dumps(
-            {'type': 'OPPONENT_DISCONNECT'}))
-        except WebSocketException:
-            self.p1_score = 0
-            self.p2_score = 0
-        handle_score(self)
+            if was_p1:
+                self.p2_score = ROUND_MAX
+            else:
+                self.p1_score = ROUND_MAX
+            try:
+                await player_left.connection.send(json.dumps(
+                {'type': 'OPPONENT_DISCONNECT'}))
+            except WebSocketException:
+                self.set_force_kill()
 
 
 def line_line_intersect(
@@ -201,70 +205,6 @@ def line_line_intersect(
         intersect_y = p1.y + (dist1 * (p2.y - p1.y))
         return (Point(intersect_x, intersect_y), side)
     return None
-
-
-def handle_paddle_collision(
-        old_ball_pos: Point, new_ball_pos: Point,
-        player: PlayerPaddle, ball: Ball) -> None | tuple[Point, str]:
-    intersect = None
-    shape = player.shape
-    bottomleft = [shape.x, shape.y + shape.height]
-    bottomright = [shape.x + shape.width, shape.y + shape.height]
-    topright = [shape.x + shape.width, shape.y]
-    topleft = [shape.x, shape.y]
-    # moving left
-    if ball.dir_vect.x < 0:
-        intersect = line_line_intersect(
-            old_ball_pos,
-            new_ball_pos,
-            Point(topright[0] + ball.radius_px, topright[1] - ball.radius_px),
-            Point(
-                bottomright[0] + ball.radius_px,
-                bottomright[1] + ball.radius_px
-            ),
-            "right"
-        )
-    elif ball.dir_vect.x > 0:
-        intersect = line_line_intersect(
-            old_ball_pos,
-            new_ball_pos,
-            Point(topleft[0] - ball.radius_px, topleft[1] - ball.radius_px),
-            Point(
-                bottomleft[0] - ball.radius_px,
-                bottomleft[1] + ball.radius_px
-            ),
-            "left"
-        )
-    if intersect is None:
-        if ball.dir_vect.y < 0:
-            intersect = line_line_intersect(
-                old_ball_pos,
-                new_ball_pos,
-                Point(
-                    bottomleft[0] - ball.radius_px,
-                    bottomleft[1] + ball.radius_px
-                ),
-                Point(
-                    bottomright[0] + ball.radius_px,
-                    bottomright[1] + ball.radius_px
-                ),
-                "bottom"
-            )
-        elif ball.dir_vect.y > 0:
-            intersect = line_line_intersect(
-                    old_ball_pos,
-                    new_ball_pos,
-                    Point(
-                        topleft[0] - ball.radius_px,
-                        topleft[1] - ball.radius_px
-                    ),
-                    Point(
-                        topright[0] + ball.radius_px,
-                        topright[1] - ball.radius_px
-                    ),
-                    "top"
-                )
-    return intersect
 
 
 def handle_court_collision(
@@ -329,7 +269,8 @@ def handle_score(game: GameInstance):
             auth_header = "Basic " + b64encode(
                 f"gameserver:{HTTP_PASSWD}".encode()).decode()
             response = requests.put(
-                f"http://backend:{BACKEND_PORT}/api/games/{game.db_game_id}/finish",
+                f"http://backend:{BACKEND_PORT}/api/games/{game.db_game_id}"
+                "/finish",
                 headers={"Authorization": auth_header},
                 json={
                     "winner_id": winner_id,
@@ -361,7 +302,9 @@ def move_ball(ball: Ball, player_one: PlayerPaddle, player_two: PlayerPaddle):
         paddle = player_two
     if paddle is None:
         return
-    paddle_intersect = handle_paddle_collision(old_pos, new_pos, paddle, ball)
+    paddle_intersect = is_colliding_ball_paddle(
+        new_pos, ball.radius_px, Point(paddle.shape.x, paddle.shape.y),
+        paddle.shape.width, paddle.shape.height)
     if paddle_intersect is None:
         # Court collision
         court_pt = handle_court_collision(old_pos, new_pos, ball)
@@ -386,14 +329,14 @@ def move_ball(ball: Ball, player_one: PlayerPaddle, player_two: PlayerPaddle):
                 ball.shape.x = new_pos.x - ball.radius_px
                 ball.shape.y = ARENA_HEIGHT - (ball.radius_px * 2)
         return
-    paddle_point, side = paddle_intersect
-    match side:
-        case "left" | "right":
-            ball.dir_vect.x *= -1
-            ball.shape.x = paddle_point.x - ball.radius_px
-        case "bottom" | "top":
-            ball.dir_vect.y *= -1
-            ball.shape.y = paddle_point.y - ball.radius_px
+    if paddle_intersect == 'vert':
+        ball.dir_vect.x *= -1
+        ball.shape.x = old_pos.x - ball.radius_px
+        ball.shape.y = old_pos.y - ball.radius_px
+    else:
+        ball.dir_vect.y *= -1
+        ball.shape.x = old_pos.x - ball.radius_px
+        ball.shape.y = old_pos.y - ball.radius_px
 
 
 def random_ball_vec() -> Vector2:
@@ -407,7 +350,8 @@ async def check_heartbeat(game: GameInstance):
     i = 0
     while i < 2:
         player: Player = game.players[i]
-        if now - player.last_hearbeat > HEARTBEAT_FREQUENCY_MS + HEARTBEAT_GRACE_MS:
+        if now - player.last_hearbeat > \
+           HEARTBEAT_FREQUENCY_MS + HEARTBEAT_GRACE_MS:
             game.log(f"\"{player.username}\" timed out...")
             await game.on_client_disconnect(player)
             return
@@ -416,6 +360,9 @@ async def check_heartbeat(game: GameInstance):
 
 async def update(game: GameInstance):
     await check_heartbeat(game)
+    if game.force_kill:
+        game.force_kill = False
+        game.kill()
     move_ball(game.ball, game.p1_paddle, game.p2_paddle)
     process_input(game)
     handle_score(game)
@@ -443,20 +390,20 @@ async def game_loop(game: GameInstance):
     return game_state
 
 
-def process_paddle(input: list, paddle: PlayerPaddle):
+def process_paddle(input: list, paddle: PlayerPaddle, ball: Ball):
     for move in input:
         if move[0] == 'DOWN':
-            paddle.move_down(ARENA_HEIGHT)
+            paddle.move_down(ball, ARENA_HEIGHT)
         elif move[0] == 'UP':
-            paddle.move_up()
+            paddle.move_up(ball)
 
 
 def process_input(game: GameInstance):
     if len(game.p1_input) != 0:
-        process_paddle(game.p1_input, game.p1_paddle)
+        process_paddle(game.p1_input, game.p1_paddle, game.ball)
         game.p1_last_ts = game.p1_input[-1][1]
         game.p1_input.clear()
     if len(game.p2_input) != 0:
-        process_paddle(game.p2_input, game.p2_paddle)
+        process_paddle(game.p2_input, game.p2_paddle, game.ball)
         game.p2_last_ts = game.p2_input[-1][1]
         game.p2_input.clear()

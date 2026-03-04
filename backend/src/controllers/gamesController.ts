@@ -2,7 +2,7 @@ import { ApiError } from '../error/errors.js';
 import { gamesService } from '../services/gamesService.js'
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { userService } from '../services/userService.js';
-import { Player } from '../types/database.interfaces.js'
+import { Player, Game } from '../types/database.interfaces.js'
 import { tournamentService } from '../services/tournamentService.js';
 
 
@@ -67,17 +67,28 @@ export const gamesController = {
 
     joinLobby: async (req: FastifyRequest, reply: FastifyReply) => {
         const player_id = req.user!.userId;
-        const { lobby_id } = req.body as { lobby_id: string }
+        const { lobby_id } = req.body as { lobby_id: string };
+        const trimmedLobbyId = typeof lobby_id === 'string' ? lobby_id.trim() : '';
+        if (!trimmedLobbyId) {
+            throw new ApiError(400, 'Lobby code is required')
+        }
+        if (trimmedLobbyId.length > 10) {
+            throw new ApiError(400, 'Lobby code cannot be longer than 10 characters')
+        }
 
         const player = userService.fetchUser(player_id) as Player;
         // look if a game is already there first, create one otherwise
-        const foundPrivateGame = gamesService.fetchPrivateGame(lobby_id)
+        const foundPrivateGame = gamesService.fetchPrivateGame(trimmedLobbyId);
         if (foundPrivateGame) {
-            return {success: true, data: foundPrivateGame, message: 'Game found, connect to gameserver'}
+			if (foundPrivateGame.status === 'ready') {
+				return {success: true, data: foundPrivateGame, message: 'Game found, connect to gameserver'}
+			}
+			throw new ApiError(404, 'This lobby is no longer available')
         }
-        const game_queue = gamesService.fetchlobby(lobby_id);
+
+        const game_queue = gamesService.fetchlobby(trimmedLobbyId);
         if (game_queue === undefined)
-            throw new ApiError(404, `Lobby \"${lobby_id}\" not found`)
+            throw new ApiError(404, `Lobby "${trimmedLobbyId}" not found`)
         if (game_queue.player_id === player_id) {
             return {success: false, message: 'Waiting for your opponent to join...'}
         }
@@ -87,7 +98,7 @@ export const gamesController = {
         if (player.status === 'searching') {
             throw new ApiError(400, 'You are already searching for a game')
         }
-        const game = gamesService.createGame(game_queue.player_id, player_id, lobby_id);
+        const game = gamesService.createGame(game_queue.player_id, player_id, trimmedLobbyId);
         return {success: true, data: game, message: 'Game created, connect to gameserver'}
     },
 

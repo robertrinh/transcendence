@@ -30,7 +30,7 @@ export default function TournamentJoin({
     useEffect(() => {
         const fetchTournaments = async () => {
             try {
-                const response = await fetch('/api/tournaments')
+                const response = await fetchWithAuth('/api/tournaments')
 				switch (response.status) {
 					case 404:
 						return
@@ -78,7 +78,7 @@ export default function TournamentJoin({
             }
 
             await response.json()
-            const tourResponse = await fetch(`/api/tournaments/${tId}`)
+            const tourResponse = await fetchWithAuth(`/api/tournaments/${tId}`)
             const tourData = await tourResponse.json()
             onTournamentJoined(tId, tourData.data.max_participants)
         } catch (err: any) {

@@ -1,6 +1,6 @@
 import { test, mock } from 'node:test'
 import assert from 'node:assert'
-import { generateToken, verifyToken } from '../../auth/utils.js'
+import { generateToken, verifyToken } from '../../auth/jwt.js'
 import type { FastifyRequest, FastifyReply } from 'fastify';
 
 //* Token/utils tests – no DB, no middleware

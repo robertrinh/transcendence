@@ -19,6 +19,7 @@ export default function Game() {
   const [lobbyId, setLobbyId] = useState<string>("")
   const [error, setError] = useState<string | null>(null)
   const [gameData, setGameData] = useState<any>(null)
+  const gameDataRef = useRef(gameData)
   const websocket = useRef<WebSocket | null>(null)
   const [tournamentId, setTournamentId] = useState<number | null>(null)
   const tournamentIdRef = useRef(tournamentId)
@@ -41,6 +42,10 @@ export default function Game() {
   useEffect(() => {
 	tournamentIdRef.current = tournamentId
   }, [tournamentId])
+
+  useEffect(() => {
+	gameDataRef.current = gameData
+  }, [gameData])
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -75,6 +80,7 @@ export default function Game() {
     switch (websocketState) {
       case WebSocket.CLOSED:
         if (error) {
+          stateKiller()
           setScreen('error')
         }
         else {
@@ -206,25 +212,40 @@ export default function Game() {
 
   useEffect(() => {
     const handleOnBeforeUnload = (event: BeforeUnloadEvent) => {
-	  stateKiller()
       event.preventDefault();
-      event.returnValue = '';
-      return (event.returnValue);
     }
+    const onPageHide = () => {
+      stateKiller()
+	}
+	window.addEventListener('pagehide', onPageHide)
     window.addEventListener('beforeunload', handleOnBeforeUnload, {capture : true})
     return () =>{
       window.removeEventListener('beforeunload', handleOnBeforeUnload, {capture : true})
+	  window.removeEventListener('pagehide', onPageHide)
     }
   },[])
 
 	function stateKiller() {
-		if (!tournamentIdRef.current) {
-			return
+		fetchWithAuth('/api/games/matchmaking/cancel', {
+			method: 'PUT',
+			keepalive: true
+		})
+		if (tournamentIdRef.current) {
+    		fetchWithAuth(`/api/tournaments/${tournamentIdRef.current}/leave`, {
+				method: 'DELETE',
+				keepalive: true
+			})
+			return ;
 		}
-        fetchWithAuth(`/api/tournaments/${tournamentIdRef.current}/leave`,
-          {method: 'DELETE', keepalive: true})
-		fetchWithAuth('/api/games/matchmaking/cancel', {method: 'PUT', keepalive: true})
-		fetchWithAuth('/api/tournaments/extreme', {method: 'POST', keepalive: true})
+		if (gameDataRef.current?.id) {
+			console.log('LEAVING GAME!')
+			fetchWithAuth('/api/games/cancel', {
+				method: 'POST',
+				keepalive: true,
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ game_id: gameDataRef.current.id }),
+			})	
+		}
   }
 
   async function handleRandomPlayer() {
@@ -276,26 +297,24 @@ export default function Game() {
   }
 
   async function joinLobbyReq(lobbyId: string) {
-    setGameMode("online")
-    setScreen("searching")
     try {
       const response = await fetchWithAuth('/api/games/joinlobby', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lobby_id: lobbyId }),
       })
-      if (!response.ok) 
-		throw new Error('Failed to join lobby')
-      const data = await response.json()
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok)
+        throw new Error(typeof data?.message === 'string' ? data.message : 'Failed to join lobby')
       console.log('Joined lobby response:', data)
-	  if (data.success as boolean) {
-		setGameData(data.data)
-		setScreen("ready-room")
-	  }
+      if (data.success as boolean) {
+        setGameMode('online')
+        setGameData(data.data)
+        setScreen("ready-room")
+      }
     } catch (err) {
       console.error('Join lobby failed err:', err)
-      setScreen("main")
-      setGameMode("none")
+      throw err
     }
   }
 

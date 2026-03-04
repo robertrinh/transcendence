@@ -1,8 +1,9 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyReply } from 'fastify'
 import { db, comparePassword } from '../databaseInit.js'
 import bcrypt from 'bcrypt'
-import { generateToken, verifyToken } from '../auth/utils.js'
+import { generateToken, verifyToken } from '../auth/jwt.js'
 import { validatePassword } from '../auth/password.js'
+import { validateEmail } from '../auth/email.js'
 
 async function registerGuest(
 	reply: FastifyReply, username: string
@@ -23,10 +24,29 @@ async function registerUser(
 	reply: FastifyReply, username: string,
 	password: string | undefined, email: string | undefined
 ) {
+	if (username.length > 15){
+		return reply.code(400).send({
+			success: false,
+			error: 'Username can not be longer then 15 characters'
+		})
+	}
 	if (!email) {
 		return reply.code(400).send({
 			success: false,
 			error: 'Email is required'
+		})
+	}
+	if (email.length >= 66) {
+		return reply.code(400).send({
+			success: false,
+			error: 'Email cannot be longer than 65 characters'
+		})
+	}
+	const emailValidation = validateEmail(email)
+	if (!emailValidation.valid) {
+		return reply.code(400).send({
+			success: false,
+			error: emailValidation.error
 		})
 	}
 	if (!password) {
@@ -70,6 +90,12 @@ export default async function authRoutes (
 			return reply.code(400).send({
 				success: false,
 				error: 'Username and/or password are required'
+			})
+		}
+		if (username.length >= 16) {
+			return reply.code(400).send({
+				success: false,
+				error: 'Username cannot be longer than 15 characters'
 			})
 		}
 		const user = db.prepare('SELECT id, username, password FROM users WHERE username = ?').get(username) as { id: number, username: string, password: string } | undefined
@@ -129,6 +155,12 @@ export default async function authRoutes (
 			return reply.code(400).send({
 				success: false,
 				error: 'Username must be at least 3 characters long'
+			})
+		}
+		if (username.length >= 16) {
+			return reply.code(400).send({
+				success: false,
+				error: 'Username cannot be longer than 15 characters'
 			})
 		}
 		//* check if username exists

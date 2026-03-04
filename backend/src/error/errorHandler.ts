@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify'
 import { ApiError } from './errors.js';
+import { AssertionError } from 'node:assert';
 
 export function registerErrorHandler(server: FastifyInstance) {
 	server.setErrorHandler(async (error, request, reply) => {
@@ -13,7 +14,11 @@ export function registerErrorHandler(server: FastifyInstance) {
         query: request.query,
       }
     });
-	
+  
+  if (error instanceof AssertionError) {
+    process.exit(1)
+  }
+
 	if (error instanceof ApiError) {
       return reply.code(error.statusCode).send({
         statusCode: error.statusCode,

@@ -127,6 +127,7 @@ const Login: React.FC<LoginProps> = ({
 								onChange={(e) => setUsername(e.target.value)}
 								className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-mint focus:border-brand-mint transition-all"
 								required
+								maxLength={15}
 							/>
 						</div>
 						<div>
@@ -219,6 +220,7 @@ const Login: React.FC<LoginProps> = ({
 								onChange={(e) => setUsername(e.target.value)}
 								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-mint focus:border-brand-mint"
 								required
+								maxLength={15}
 							/>
 						</div>
 

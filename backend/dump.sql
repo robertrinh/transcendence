@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS users (
 	),
     created_at DATETIME DEFAULT (datetime('now')) NOT NULL,
     avatar_id INTEGER,
-    email TEXT CHECK(length(email) < 65),
+    email TEXT CHECK(length(email) < 66),
     status TEXT CHECK (status IN ('idle', 'searching', 'playing')) DEFAULT 'idle' NOT NULL,
     two_factor_secret TEXT,
     two_factor_enabled BOOLEAN CHECK(two_factor_enabled IN (0,1)) DEFAULT 0 NOT NULL,
@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS games (
 	),
 	tournament_id INTEGER,
     round INTEGER,
+	lobby_id INTEGER CHECK(length(lobby_id) = 10),
     status TEXT CHECK (status IN ('pending', 'ready', 'ongoing', 'finished', 'cancelled')) DEFAULT 'pending',
 	created_at DATETIME DEFAULT (datetime('now')) NOT NULL,
 	finished_at DATETIME,
@@ -115,6 +116,7 @@ CREATE TABLE IF NOT EXISTS blocked (
 );
 
 CREATE TABLE IF NOT EXISTS tournament_participants (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	tournament_id INTEGER NOT NULL,
 	user_id INTEGER NOT NULL,
 	user_left BOOLEAN CHECK(user_left IN (0,1)) DEFAULT 0 NOT NULL,

@@ -7,7 +7,7 @@ const BASE_URL = 'http://localhost:3000/api'
 //* Shared test user data
 //* testuser stays persistent throughout the tests
 const testuser = {
-	username: `testuser_${Date.now()}`,
+	username: `test_username`,
 	password: 'testpassword',
 	email: `testuser_${Date.now()}@test.com`
 }
@@ -50,7 +50,7 @@ test('POST /auth/register: successful registration', async () => {
 test('POST /auth/register: missing required fields', async () => {
 	const response = await api('/auth/register', {
 		method: 'POST',
-		body: JSON.stringify({ username: `missingfields_${Date.now()}` })
+		body: JSON.stringify({ username: `missingfields` })
 	})
 
 	const data = await response.json()
@@ -75,7 +75,7 @@ test('POST /auth/register: username already exists', async () => {
 test('POST /auth/register: password too short', async () => {
 	const response = await api('/auth/register', {
 		method: 'POST',
-		body: JSON.stringify({ username: `shortpw_${Date.now()}`, password: 'short', email: `shortpw_${Date.now()}@test.com` })
+		body: JSON.stringify({ username: `short_pw`, password: 'short', email: `shortpw_${Date.now()}@test.com` })
 	})
 		const data = await response.json()
 
