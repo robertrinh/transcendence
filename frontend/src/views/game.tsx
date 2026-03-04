@@ -217,11 +217,16 @@ export default function Game() {
     const onPageHide = () => {
       stateKiller()
 	}
+	const handleCleanupOnLogut = () => {
+		stateKiller()
+	}
 	window.addEventListener('pagehide', onPageHide)
     window.addEventListener('beforeunload', handleOnBeforeUnload, {capture : true})
+	window.addEventListener('gameCleanup', handleCleanupOnLogut)
     return () =>{
       window.removeEventListener('beforeunload', handleOnBeforeUnload, {capture : true})
 	  window.removeEventListener('pagehide', onPageHide)
+window.removeEventListener('gameCleanup', handleCleanupOnLogut)
     }
   },[])
 
