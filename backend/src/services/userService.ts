@@ -1,5 +1,6 @@
 import { db } from '../databaseInit.js'
 import { dbError } from '../error/dbErrors.js'
+import { tournamentService } from './tournamentService.js';
 
 type UserNameAvatarRow = { username: string; avatar_url: string | null };
 type PublicProfileRow = {
@@ -193,6 +194,12 @@ export const userService = {
     },
 
    deleteUser: (id: number) => {
+       try {
+        tournamentService.removeFromActiveGame(id);
+       }
+       catch (err: any) {
+        err as void
+       }
 	   try {
 			db.prepare('DELETE FROM users WHERE id = ?').run(id);
         } catch (err: any) {
