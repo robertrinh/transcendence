@@ -226,7 +226,7 @@ export default function Game() {
     return () =>{
       window.removeEventListener('beforeunload', handleOnBeforeUnload, {capture : true})
 	  window.removeEventListener('pagehide', onPageHide)
-	  window.removeEventListener('game:cleanup', handleCleanupOnLogut)
+window.removeEventListener('gameCleanup', handleCleanupOnLogut)
     }
   },[])
 
