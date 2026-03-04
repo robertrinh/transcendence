@@ -114,7 +114,8 @@ async def process_message(
             player.ping = now - int(message_content['timestamp'])
             if player.ping < 0:
                 player.ping = 0
-            print(f"player \"{player.username}\" sent HEARTBEAT, ping {player.ping}ms")
+            print(f"player \"{player.username}\" sent HEARTBEAT, ping "
+                  f"{player.ping}ms")
         case _:
             raise RuntimeError(f"Unknown message type: {message_type}")
 

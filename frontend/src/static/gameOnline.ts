@@ -1,6 +1,6 @@
 import { Ball } from './ball'
 import { playerOne, playerTwo, ball, clientTick, drawPlayerScores,
-    intervals, heartbeatFrequencyMS, resetState } from './lib'
+    heartbeatFrequencyMS, resetState, textColor } from './lib'
 
 interface MoveTS {
     type: string,
@@ -58,13 +58,13 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
         const timestamp = +new Date()
         if (playerOne.paddle.downPressed) {
             const moveObj = {type: "MOVE_DOWN", timestamp: timestamp} as MoveTS
-            playerOne.paddle.moveDown()
+            playerOne.paddle.moveDown(ball)
             websocket.send(JSON.stringify(moveObj))
             pendingMoves.push(moveObj)
         }
         if (playerOne.paddle.upPressed) {
             const moveObj = {type: "MOVE_UP", timestamp: timestamp} as MoveTS
-            playerOne.paddle.moveUp()
+            playerOne.paddle.moveUp(ball)
             websocket.send(JSON.stringify(moveObj))
             pendingMoves.push(moveObj)
         }
@@ -93,7 +93,7 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
             return
         }
         const updateDelta = clientTick * (1 + (deltaTimeMS / 1000))
-        ball.appendPos(new Point(ball.x, ball.y))
+        ball.appendPos([ball.x, ball.y])
         ball.x += interpVelocityBall.x * updateDelta
         ball.y += interpVelocityBall.y * updateDelta
     }
@@ -107,7 +107,6 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
     }
 
     let deltaTimeMS: number, now: number, then: number | undefined
-    let gameRunning = true
 
     function update() {
         now = performance.now()
@@ -131,8 +130,11 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
     }
 
     function draw() {
-        if (!gameRunning) return
+        if (!globalThis.gameRunning) {
+            return
+        }
         requestAnimationFrame(draw)
+        update()
         ctx.clearRect(0, 0, canvas.width, canvas.height)
         drawCtx.clearRect(0, 0, canvas.width, canvas.height)
         drawCtx.fillStyle = "#050510"
@@ -141,11 +143,11 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
         playerOne.paddle.draw(drawCtx)
         playerTwo.paddle.draw(drawCtx)
         if (playerID === 2) {
-            drawPlayerScores(canvas, drawCtx, 48, "#36454f", "sans-serif",
-            p1Score, p2Score, oppName, ownName)
+            drawPlayerScores(canvas, drawCtx, 48, textColor, "sans-serif",
+            p2Score, p1Score, oppName, ownName)
         }
         else {
-            drawPlayerScores(canvas, drawCtx, 48, "#36454f", "sans-serif",
+            drawPlayerScores(canvas, drawCtx, 48, textColor, "sans-serif",
             p2Score, p1Score, ownName, oppName)
         }
         ctx.drawImage(drawCanvas, 0, 0)
@@ -166,10 +168,10 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
                 break
             }
             if (movePair.type === 'MOVE_UP') {
-                playerOne.paddle.moveUp()
+                playerOne.paddle.moveUp(ball)
             }
             else if (movePair.type === 'MOVE_DOWN') {
-                playerOne.paddle.moveDown()
+                playerOne.paddle.moveDown(ball)
             }
             i++
         }
@@ -307,6 +309,6 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
     }
     ball.x = canvas.width / 2
     ball.y = canvas.height / 2
+    globalThis.gameRunning = true
     requestAnimationFrame(draw)
-    intervals.gameOnlineUpdate = setInterval(update, clientTick)
 }
