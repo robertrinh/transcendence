@@ -254,7 +254,7 @@ const handleAnonymizeProfile = async () => {
         const response = await fetchWithAuth('/api/users/anonymize', { method: 'POST' });
         const data = await response.json();
         if (response.ok) {
-           showMessage('success', 'Profile anonymized successfully. Logging out...');
+           showMessage('success', 'Profile anonymized successfully.');
            if (onUserUpdate) {
                 onUserUpdate({ ...user!, is_anonymous: true });
             }
@@ -851,6 +851,7 @@ const handleAnonymizeProfile = async () => {
                                                 onChange={(e) => setPasswordForm({...passwordForm, current_password: e.target.value})}
                                                 className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-500 focus:ring-2 focus:ring-brand-orange focus:border-brand-orange"
                                                 required
+                                                maxLength={50}
                                             />
                                         </div>
                                         <div>
@@ -979,7 +980,7 @@ const handleAnonymizeProfile = async () => {
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                     </svg>
                                                     <div>
-                                                        <h4 className="text-brand-acidGreen font-semibold mb-2">✓ Anonymous Mode Enabled</h4>
+                                                        <h4 className="text-brand-acidGreen font-semibold mb-2">Anonymous Mode Enabled</h4>
                                                         <p className="text-sm text-slate-300 leading-relaxed">
                                                             Your profile is now in anonymous mode. Your personal information has been hidden and chat access is permanently restricted.
                                                         </p>
