@@ -15,7 +15,6 @@ function finalizeNextGame(nextGame: Game, finishedGame: Game,
 			.run(finishedGame.winner_id, nextGame.id);
 			return
 		}
-		assert(nextGame.player1_id !== finishedGame.winner_id, 'it does happen FUCK')
 		// now nextGame has a player
 		if (nextGame.player1_id === finishedGame.winner_id) {
 			// this happens when a player leaves a game after the countdown
