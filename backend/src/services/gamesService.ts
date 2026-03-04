@@ -23,7 +23,7 @@ export const gamesService = {
     },
 
     fetchPrivateGame: (lobby_id: string) => {
-        return db.prepare('SELECT * FROM games WHERE lobby_id = ?').get(lobby_id)
+        return db.prepare('SELECT * FROM games WHERE lobby_id = ?').get(lobby_id) as Game | undefined;
     },
 	addtoGameQueue: (player: number) => {
 		const run_game_queue = db.transaction(() => {
