@@ -184,7 +184,7 @@ export default function GameCanvas({mode, websocket, ownName, oppName, ownAvatar
                 </div>
                 <br /><br />
                 {/* Game Canvas */}
-                <canvas id="game-canvas" className="border-4 border-indigo-500 bg-white"></canvas>
+                <canvas id="game-canvas"></canvas>
             </div>
         </div>
     )
