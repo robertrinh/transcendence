@@ -1,10 +1,6 @@
 import S from 'fluent-json-schema';
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from '../auth/password.js';
 
-export const userSchema = S.object()
-	.prop('id', S.number())
-	.prop('username', S.string());
-
 export const userBody = S.object()
 	.prop('username', S.string().required())
 	.prop('password', S.string().minLength(MIN_PASSWORD_LENGTH).maxLength(MAX_PASSWORD_LENGTH).required());
