@@ -27,14 +27,12 @@ export default function GameResults({
     }
   }
 
-//   const isWin = winnerLabel.includes('WIN')
   const isLoss = winnerLabel.includes('LOST')
 
   const titleColor = isLoss ? '#ff4444' : '#ffd700'
   const titleGlow = isLoss
     ? '0 0 30px #ff4444, 0 0 60px #ff0000'
     : '0 0 30px #ffd700, 0 0 60px #ffa500'
-  const titleEmoji = isLoss ? '💀' : '🏆'
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black p-4" style={{
@@ -55,7 +53,7 @@ export default function GameResults({
           textShadow: titleGlow,
           fontFamily: 'monospace',
         }}>
-          {titleEmoji} {winnerLabel} {titleEmoji}
+			{winnerLabel}
         </div>
 
         <div className="flex items-center justify-center gap-8 mb-10">

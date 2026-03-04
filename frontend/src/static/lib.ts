@@ -251,11 +251,11 @@ export function drawPlayerScores(
         ctx.textAlign = "center"
         ctx.fillStyle = color
         ctx.fillText(
-            playerTwoRoundScore.toString(), canvas.width * 0.25,
+            playerOneRoundScore.toString(), canvas.width * 0.25,
             canvas.height * 0.1
         )
         ctx.fillText(
-            playerOneRoundScore.toString(), canvas.width * 0.75,
+            playerTwoRoundScore.toString(), canvas.width * 0.75,
             canvas.height * 0.1
         )
         ctx.font = `${Math.floor(fontSizePX * 0.5)}px ${textStyle}`

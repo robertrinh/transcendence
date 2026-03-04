@@ -217,16 +217,13 @@ export async function gameOfflineLobby(
         ball.draw(drawCtx)
         playerOne.paddle.draw(drawCtx)
         playerTwo.paddle.draw(drawCtx)
-        // if (playerTwo.humanControlled === false) {
-        //     playerTwo.ai?.drawRays(drawCtx)
-        // }
         if (gameMode === 'singleplayer') {
             drawPlayerScores(canvas, drawCtx, 48, textColor, "sans-serif",
-            playerTwo.roundScore, playerOne.roundScore, ownName, 'Totally Not A Bot')
+            playerOne.roundScore, playerTwo.roundScore, ownName, 'Totally Not A Bot')
         }
         if (gameMode === 'multiplayer') {
             drawPlayerScores(canvas, drawCtx, 48, textColor, "sans-serif",
-            playerTwo.roundScore, playerOne.roundScore, p1Name, p2Name)
+            playerOne.roundScore, playerTwo.roundScore, p1Name, p2Name)
         }
         ctx.drawImage(drawCanvas, 0, 0)
     }

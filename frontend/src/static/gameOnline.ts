@@ -148,7 +148,7 @@ export async function gameOnlineLobby(canvas: HTMLCanvasElement,
         }
         else {
             drawPlayerScores(canvas, drawCtx, 48, textColor, "sans-serif",
-            p2Score, p1Score, ownName, oppName)
+            p1Score, p2Score, ownName, oppName)
         }
         ctx.drawImage(drawCanvas, 0, 0)
     }
