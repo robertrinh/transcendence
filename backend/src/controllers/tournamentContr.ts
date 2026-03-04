@@ -3,6 +3,7 @@ import { tournamentService } from '../services/tournamentService.js'
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { Tournament, TournamentParticipant } from '../types/database.interfaces.js';
 import { systemBroadcast } from '../sseNotify.js';
+import { db } from '../databaseInit.js'
 
 export const tournamentController = {
 	getAllTournaments: async (req: FastifyRequest, reply: FastifyReply) => {
@@ -17,14 +18,30 @@ export const tournamentController = {
 		const tournament = tournamentService.getTournamentByID(id);
 		if (!tournament)
 			throw new ApiError(404, 'Tournament not found');
-		
 		const participants = tournamentService.getTournamentParticipants(id);
 		const games = tournamentService.getTournamentGames(id);
 		return { success: true, data: tournament, games, participants }
 	},
 
+	getActiveTournament: async (req: FastifyRequest, reply: FastifyReply) => {
+        const user_id = req.user!.userId;
+        const activeTournament = tournamentService.hasActiveTournament(user_id);
+        if (!activeTournament) {
+            return { success: true, data: null }
+        }
+        return {
+            success: true,
+            data: {
+                id: activeTournament.id,
+                name: activeTournament.name,
+                max_participants: activeTournament.max_participants,
+                status: activeTournament.status
+            }
+        }
+    },
+
 	//this endpoint can be called if a player clicks "join tournament" and NO open tournament exist currently
-	//add a alternative in frontend when clicking join tournament for how many participants. 2 4 8 or 16 so its fixed size tournament
+	//add a alternative in frontend when clicking join tournament for how many participants. 4 8 so its fixed size tournament
 	//returns the id of the tournament to be used when polling from the frontend to check if tournament is starting
 	createTournament: async (req: FastifyRequest, reply: FastifyReply) => {
         const user_id = req.user!.userId;
@@ -39,11 +56,15 @@ export const tournamentController = {
         if (description !== undefined && description !== null && String(description).length >= 101) {
             throw new ApiError(400, 'Tournament description cannot be longer than 100 characters')
         }
-        const allowedSizes = [4, 8, 16];
+        const allowedSizes = [4];
         if (typeof max_participants !== 'number' || !allowedSizes.includes(max_participants)) {
-            throw new ApiError(400, 'max_participants must be 4, 8, or 16')
+            throw new ApiError(400, 'max_participants must be 4')
         }
-        const result = tournamentService.createTournament(trimmedName, description ?? '', max_participants);
+		const activeTour = tournamentService.hasActiveTournament(user_id);
+        if (activeTour) {
+            throw new ApiError(409, 'You already have an active tournament', 'ACTIVE_TOURNAMENT_EXISTS');
+        }
+        const result = tournamentService.createTournament(trimmedName, description ?? '', max_participants, user_id);
         if (result.changes == 0)
             throw new ApiError(404, 'something went wrong creating tournament')
 		systemBroadcast(`Tournament "${trimmedName}" opened!`)
@@ -51,7 +72,6 @@ export const tournamentController = {
         return { success: true, data: { id: result.lastInsertRowid, max_participants }, message: 'Tournament successfully created and creator joined!' };
     },
 
-	//player clicks "join tournament" and an open tournament exists --> player will be added AND start Tournament if full
 	joinTournament: async (req: FastifyRequest, reply: FastifyReply) => {
 		const { id } = req.params as {id: number};
 		const user_id = req.user!.userId;

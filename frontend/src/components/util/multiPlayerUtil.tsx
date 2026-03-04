@@ -126,7 +126,7 @@ export default function MultiplayerMenu({
             >
               <div className="text-4xl mb-2">🏆</div>
               <h2 className="text-2xl font-black text-yellow-300 uppercase" style={{fontFamily: 'monospace'}}>
-                Tournament
+                Tourney
               </h2>
               <p className="text-yellow-200 text-xs font-bold mt-2" style={{fontFamily: 'monospace'}}>
                 COMPETE FOR GLORY

@@ -7,6 +7,7 @@ export interface Tournament {
 	max_participants: number;
 	status: 'open' | 'ongoing' | 'finished' | 'canceled';
 	winner_id: number | null;
+	created_by: number | null;
 	created_at: string;
 	start_date: string;
 	end_date?: string;

@@ -30,6 +30,9 @@ export default function ReadyRoom({
   const myReadyRef = useRef(myReady)
   useEffect(() => { myReadyRef.current = myReady }, [myReady])
 
+  const bothReadyRef = useRef(false)
+  useEffect(() => { bothReadyRef.current = bothReady }, [bothReady])
+
   const isPlayer1 = Number(currentUser?.id) === Number(gameData?.player1_id)
   const myName = currentUser?.username || currentUser?.display_name || (isPlayer1 ? 'Player 1' : 'Player 2')
   const opponentName = oppUserName
