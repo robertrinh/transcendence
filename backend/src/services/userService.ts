@@ -145,6 +145,9 @@ export const userService = {
                         two_factor_enabled = 0
                     WHERE id = ?
                 `).run(id);
+
+                db.prepare('DELETE FROM friends WHERE user_id = ? OR friend_id = ?').run(id, id);
+                db.prepare('DELETE FROM friend_request WHERE requester_id = ? OR requested_id = ?').run(id, id);
             });
 
             transaction();

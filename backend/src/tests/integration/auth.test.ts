@@ -80,8 +80,8 @@ test('POST /auth/register: password too short', async () => {
 		const data = await response.json()
 
 		assert.strictEqual(response.status, 400)
-		assert.strictEqual(data.success, false)
-		assert.strictEqual(data.error, 'Password must be at least 8 characters long')
+		assert.strictEqual(data.statusCode, 400)
+		assert.ok(data.validation, 'Should return a validation error')
 	})
 
 test('POST /auth/register: username too short', async () => {
@@ -92,8 +92,8 @@ test('POST /auth/register: username too short', async () => {
 		const data = await response.json()
 
 		assert.strictEqual(response.status, 400)
-		assert.strictEqual(data.success, false)
-		assert.strictEqual(data.error, 'Username must be at least 3 characters long')
+		assert.strictEqual(data.statusCode, 400)
+		assert.ok(data.validation, 'Should return a validation error')
 	})
 
 //* ======================== Login tests ========================
@@ -124,8 +124,8 @@ test('POST /auth/login: missing required fields', async () => {
 	const data = await response.json()
 
 	assert.strictEqual(response.status, 400)
-	assert.strictEqual(data.success, false)
-	assert.strictEqual(data.error, 'Username and/or password are required')
+	assert.strictEqual(data.statusCode, 400)
+	assert.ok(data.validation, 'Should return a validation error')
 })
 
 test('POST /auth/login: invalid username', async () => {

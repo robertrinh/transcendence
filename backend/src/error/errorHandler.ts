@@ -32,10 +32,19 @@ export function registerErrorHandler(server: FastifyInstance) {
   if (error.validation) {
       return reply.code(400).send({
         statusCode: 400,
-        error: 'Fastify validation erorr',
+        error: 'Fastify validation error',
         message: error.message,
         validation: error.validation
       });
+  }
+
+  const statusCode = (error as { statusCode?: number }).statusCode;
+  if (typeof statusCode === 'number' && statusCode >= 400 && statusCode < 500) {
+    return reply.code(statusCode).send({
+      statusCode,
+      error: (error as Error).name || 'Client Error',
+      message: (error as Error).message ?? 'Bad Request',
+    });
   }
 
   return reply.code(500).send({
