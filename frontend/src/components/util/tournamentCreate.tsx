@@ -64,8 +64,6 @@ export default function TournamentCreate({ onTournamentCreated, onBack }: Tourna
     }
 }
 
-    // const [activeTournament, setActiveTournament] = useState<{id: number, name: string, max_participants: number, status: string} | null>(null)
-
     useEffect(() => {
         const checkActive = async () => {
             try {
@@ -82,24 +80,6 @@ export default function TournamentCreate({ onTournamentCreated, onBack }: Tourna
         }
         checkActive()
     }, [])
-
-    // const handleRejoin = async () => {
-    //     if (!activeTournament) return
-    //     try {
-    //         await fetchWithAuth(`/api/tournaments/${activeTournament.id}/join`, { 
-    //             method: 'POST',
-    //             headers: { 'Content-Type': 'application/json' },
-    //             body: JSON.stringify({
-    //                 name,
-    //                 description,
-    //                 max_participants: maxParticipants
-    //             })
-    //         })
-    //     } catch (err) {
-    //         console.error('Failed to rejoin:', err)
-    //     }
-    //     onTournamentCreated(activeTournament.id, activeTournament.max_participants)
-    // }
 
     const handleCreate = async () => {
         if (!name.trim()) {
@@ -255,8 +235,8 @@ export default function TournamentCreate({ onTournamentCreated, onBack }: Tourna
                                 }}>
                                     &gt; MAX PLAYERS
                                 </label>
-                                <div className="grid grid-cols-3 gap-3">
-                                    {[4, 8, 16].map((num) => (
+                                <div className="grid grid-cols-2 gap-2">
+                                    {[4, 8].map((num) => (
                                         <button
                                             key={num}
                                             onClick={() => setMaxParticipants(num)}
