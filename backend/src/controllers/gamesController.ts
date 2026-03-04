@@ -130,6 +130,13 @@ export const gamesController = {
             winner_id: number,
             finished_at: string
         };
+		const game = gamesService.fetchGame(id) as Game | undefined;
+		if (game === undefined) {
+			throw new ApiError(404, 'Cannot finish game; not found')
+		}
+		if (game.status === 'finished') {
+			throw new ApiError(400, 'Cannot finish game; game already finished')
+		}
         gamesService.finishGame(id, score_player1, score_player2, winner_id, finished_at);
         tournamentService.advanceWinner(id);
         return { success: true, message: 'Game finished' };
