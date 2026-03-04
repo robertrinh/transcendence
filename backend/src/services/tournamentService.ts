@@ -86,8 +86,21 @@ export const tournamentService = {
         return db.prepare('SELECT * FROM tournaments WHERE id = ?').get(id);
     },
 
-    createTournament: (name: string, description: string, max_participants: number) => {
-        return db.prepare('INSERT INTO tournaments (name, description, max_participants) VALUES (?, ?, ?)').run(name, description, max_participants)
+    hasActiveTournament: (user_id: number): Tournament | undefined => {
+        return db.prepare(
+            `SELECT * FROM tournaments WHERE created_by = ? AND status IN ('open', 'ongoing')`
+        ).get(user_id) as Tournament | undefined
+    },
+
+    createTournament: (name: string, description: string, max_participants: number, created_by: number) => {
+        return db.prepare(
+            'INSERT INTO tournaments (name, description, max_participants, created_by) VALUES (?, ?, ?, ?)'
+        ).run(name, description, max_participants, created_by)
+    },
+
+    reassignCreator: (tournament_id: number, new_creator_id: number) => {
+        db.prepare('UPDATE tournaments SET created_by = ? WHERE id = ?')
+            .run(new_creator_id, tournament_id);
     },
 
     joinTournament: (tournament_id: number, user_id: number) => {
@@ -252,7 +265,7 @@ export const tournamentService = {
 			SELECT
 				id
 			FROM games
-			WHERE player1_id = @user_id OR player2_id = @user_id
+			WHERE (player1_id = @user_id OR player2_id = @user_id)
 				AND status IN ('pending', 'ready', 'ongoing')
 			`).pluck().get({user_id: user_id}) as undefined | number
 		if (!activeGameId) {

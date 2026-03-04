@@ -23,6 +23,13 @@ export default async function tournamentsRoutes (
 			body: postTournamentSchemaBody
 		}, preHandler: [authenticate]}, tournamentController.createTournament)
 
+	fastify.get('/active', {
+		schema: {
+			security: [{bearerAuth: []}],
+			tags: ['tournaments'],
+			summary: 'Check if user has an active tournament'
+		}, preHandler: [authenticate]}, tournamentController.getActiveTournament)
+
     fastify.get('/:id', {
 		schema: {
 			tags: ['tournaments'],

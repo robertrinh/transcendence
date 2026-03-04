@@ -22,7 +22,7 @@ export function  dbCleanUpJob () {
             removeStaleQueueEntries(entry);
         }
 
-        const staleGames = db.prepare(`SELECT id, player1_id, player2_id FROM games WHERE status NOT IN ('finished', 'cancelled') AND finished_at IS NULL AND created_at < (datetime('now', '-2 minutes'))`).all() as Game[];
+        const staleGames = db.prepare(`SELECT id, player1_id, player2_id FROM games WHERE status NOT IN ('finished', 'cancelled') AND finished_at IS NULL AND tournament_id IS NULL AND created_at < (datetime('now', '-2 minutes'))`).all() as Game[];
         for (const game of staleGames) {
             db.prepare('UPDATE games SET status = ? WHERE id = ?').run('cancelled', game.id);    
             db.prepare('UPDATE users SET status = ? WHERE id = ? OR id = ?').run('idle', game.player1_id, game.player2_id);

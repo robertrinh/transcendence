@@ -65,9 +65,11 @@ CREATE TABLE IF NOT EXISTS tournaments (
 	max_participants INTEGER DEFAULT 8,
     status TEXT CHECK (status IN ('open', 'ongoing', 'finished', 'cancelled')) DEFAULT 'open',
 	winner_id INTEGER,
+    created_by INTEGER,
     created_at DATETIME DEFAULT (datetime('now')),
 	start_date DATETIME, --necessary?
-	end_date DATETIME
+	end_date DATETIME,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- New tables for authentication, chat and messages
