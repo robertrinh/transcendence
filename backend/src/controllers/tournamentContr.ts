@@ -56,9 +56,9 @@ export const tournamentController = {
         if (description !== undefined && description !== null && String(description).length >= 101) {
             throw new ApiError(400, 'Tournament description cannot be longer than 100 characters')
         }
-        const allowedSizes = [4, 8];
+        const allowedSizes = [4];
         if (typeof max_participants !== 'number' || !allowedSizes.includes(max_participants)) {
-            throw new ApiError(400, 'max_participants must be 4, 8')
+            throw new ApiError(400, 'max_participants must be 4')
         }
 		const activeTour = tournamentService.hasActiveTournament(user_id);
         if (activeTour) {
