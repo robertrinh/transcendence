@@ -1,5 +1,5 @@
 import S from 'fluent-json-schema';
-import { MIN_PASSWORD_LENGTH } from '../auth/password.js';
+import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from '../auth/password.js';
 
 export const userSchema = S.object()
 	.prop('id', S.number())
@@ -7,18 +7,18 @@ export const userSchema = S.object()
 
 export const userBody = S.object()
 	.prop('username', S.string().required())
-	.prop('password', S.string().minLength(MIN_PASSWORD_LENGTH).required());
+	.prop('password', S.string().minLength(MIN_PASSWORD_LENGTH).maxLength(MAX_PASSWORD_LENGTH).required());
 
 export const updateProfileBody = S.object()
 	.additionalProperties(false)
 	.prop('nickname', S.string().maxLength(15))
 	.prop('display_name', S.string().maxLength(15))
 	.prop('email', S.string().maxLength(65))
-	.prop('password', S.string().minLength(MIN_PASSWORD_LENGTH));
+	.prop('password', S.string().minLength(MIN_PASSWORD_LENGTH).maxLength(MAX_PASSWORD_LENGTH));
 
 export const deleteUserBody = S.object()
 	.additionalProperties(false)
-	.prop('password', S.string().minLength(1).required());
+	.prop('password', S.string().minLength(1).maxLength(MAX_PASSWORD_LENGTH).required());
 
 export const tokenSchema = S.object()
   .prop('token', S.string());
