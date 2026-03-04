@@ -6,14 +6,26 @@ import { systemBroadcast } from '../sseNotify.js';
 import { gamesService } from './gamesService.js';
 import { strict as assert } from 'node:assert';
 
+// nextGame will always contain one NULL player
 function finalizeNextGame(nextGame: Game, finishedGame: Game,
 	TournamentId: number){
+        assert(finishedGame.winner_id !== null, 'winner_id of previous game must be a number')
 		if (nextGame.player1_id === null) {
 			db.prepare('UPDATE games SET player1_id = ? WHERE id = ?')
 			.run(finishedGame.winner_id, nextGame.id);
 			return
 		}
-        assert(finishedGame.winner_id !== null, 'winner_id of previous game must be a number')
+		// now nextGame has a player
+		if (nextGame.player1_id === finishedGame.winner_id) {
+			// this happens when a player leaves a game after the countdown
+			return
+		}
+		// happy case, no one left
+		db.prepare(`
+			UPDATE games
+			SET player2_id = ?, status = ? WHERE id = ?
+		`)
+		.run(finishedGame.winner_id, 'ready', nextGame.id);
 		const upcomingPlayersLeft = db.prepare(`
 			SELECT
 				tournament_participants.user_id,
@@ -24,50 +36,38 @@ function finalizeNextGame(nextGame: Game, finishedGame: Game,
 				AND tournament_participants.tournament_id = ?
 				AND tournaments.status = 'ongoing'
 			`).all(finishedGame.winner_id, nextGame.player1_id, TournamentId) as undefined | { user_id: number, user_left: boolean }[]
-        assert(upcomingPlayersLeft !== undefined, 'upcomingPlayersLeft cannot be undefined')
-        assert(upcomingPlayersLeft.length === 2, 'We should always have two players')
-		const playerMap = new Map<number, boolean>([
-			[upcomingPlayersLeft[0].user_id, upcomingPlayersLeft[0].user_left],
-			[upcomingPlayersLeft[1].user_id, upcomingPlayersLeft[1].user_left]
-		])
-		const playerOneId = nextGame.player1_id
-		const playerOneLeft = playerMap.get(playerOneId)
-		const playerTwoId = finishedGame.winner_id
-		const playerTwoLeft = playerMap.get(playerTwoId)
-		const roundMax = 5 // we need an envvar
-        assert(!(playerOneLeft && playerTwoLeft), 'A tie cannot happen here')
-		if (playerOneLeft) {
-			db.prepare(`
-				UPDATE games
-				SET
-					player2_id = ?,
-					status = 'finished',
-					score_player1 = 0,
-					score_player2 = ?,
-					winner_id = ?,
-					finished_at = (datetime('now'))
-				WHERE id = ?
-				`).run(playerTwoId, roundMax, playerTwoId, nextGame.id)
-		}
-		else if (playerTwoLeft) {
-			db.prepare(`
-				UPDATE games
-				SET
-					player2_id = ?,
-					status = 'finished',
-					score_player1 = ?,
-					score_player2 = 0,
-					winner_id = ?,
-					finished_at = (datetime('now'))
-				WHERE id = ?
-				`).run(playerTwoId, roundMax, playerOneId, nextGame.id)
-		}
-		else {
-			db.prepare(`
-				UPDATE games
-				SET player2_id = ?, status = ? WHERE id = ?
-			`)
-			.run(playerTwoId, 'ready', nextGame.id);
+		assert(upcomingPlayersLeft, 'upcomingPlayersLeft cannot be undefined')
+		const roundMax = 5
+		if (upcomingPlayersLeft.length === 2) {
+			for (const pair of upcomingPlayersLeft) {
+				console.log('Nice loop', pair)
+				// player1_id left, make player2_id the winner
+				if (pair.user_id === nextGame.player1_id && pair.user_left) {
+					return db.prepare(`
+						UPDATE games
+						SET
+							status = 'finished',
+							score_player1 = 0,
+							score_player2 = ?,
+							winner_id = ?,
+							finished_at = (datetime('now'))
+						WHERE id = ?
+						`).run(roundMax, finishedGame.winner_id, nextGame.id)
+				}
+				// player2_id left, make player1_id the winner
+				else if (pair.user_id === finishedGame.winner_id && pair.user_left) {
+					return db.prepare(`
+						UPDATE games
+						SET
+							status = 'finished',
+							score_player1 = ?,
+							score_player2 = 0,
+							winner_id = ?,
+							finished_at = (datetime('now'))
+						WHERE id = ?
+						`).run(roundMax, nextGame.player1_id, nextGame.id)
+				}
+			}
 		}
 }
 
@@ -80,7 +80,9 @@ function removeFromActiveGame(user_id: number) {
             AND status IN ('pending', 'ready', 'ongoing')
         `).pluck().all({user_id: user_id}) as undefined | number[]
     assert(activeGameId !== undefined, 'activeGameId cannot be undefined')
-    assert(activeGameId.length === 1)
+	if (activeGameId.length === 0) {
+		return
+	}
     gamesService.cancelGame(activeGameId[0], user_id)
 }
 
@@ -159,10 +161,11 @@ export const tournamentService = {
 
     // Called when a tournament game finishes — advances winner to next round
     advanceWinner: (game_id: number) => {
-        const game = db.prepare('SELECT * FROM games WHERE id = ?').get(game_id) as Game | undefined;
-        if (!game || !game.tournament_id || !game.winner_id)
-            return;
-
+        const game = db.prepare('SELECT * FROM games WHERE id = ?').get(game_id) as Game;
+		assert(game !== undefined, 'This is already checked in other paths')
+        if (!game.tournament_id || !game.winner_id) {
+			return
+		}
         const tournament_id = game.tournament_id;
         const currentRound = game.round!;
         const nextRound = currentRound + 1;
@@ -171,7 +174,6 @@ export const tournamentService = {
         const nextRoundGames = db.prepare(
             'SELECT * FROM games WHERE tournament_id = ? AND round = ? ORDER BY id ASC'
         ).all(tournament_id, nextRound) as Game[];
-
         if (nextRoundGames.length === 0) {
             // This was the final — check if game is finished
             console.log(`🏆 Tournament ${tournament_id} final completed! Winner: ${game.winner_id}`);

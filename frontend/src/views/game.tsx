@@ -64,6 +64,7 @@ export default function Game() {
     }
     websocket.current.onclose = (event: CloseEvent) => {
       if (event.reason.length > 0) {
+            window.location.href = '/';
         setError(event.reason)
       }
       setWebsocketState(WebSocket.CLOSED)
