@@ -67,8 +67,10 @@ export default function TournamentLobby({
                 const response = await fetchWithAuth(`/api/tournaments/${tournamentId}`)
                 if (!response.ok) throw new Error('Failed to fetch tournament')
                 const data = await response.json()
-				if (data.data.status === 'cancelled')
+				if (data.data.status === 'cancelled') {
+					alert('Tournament lobby timed out')
 					onLeaveTournament()
+				}
                 setTournament(data.data)
                 setParticipants(data.participants || [])
                 setError(null)

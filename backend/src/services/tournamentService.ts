@@ -71,21 +71,6 @@ function finalizeNextGame(nextGame: Game, finishedGame: Game,
 		}
 }
 
-function removeFromActiveGame(user_id: number) {
-    const activeGameId = db.prepare(`
-        SELECT
-            id
-        FROM games
-        WHERE (player1_id = @user_id OR player2_id = @user_id)
-            AND status IN ('pending', 'ready', 'ongoing')
-        `).pluck().all({user_id: user_id}) as undefined | number[]
-    assert(activeGameId !== undefined, 'activeGameId cannot be undefined')
-	if (activeGameId.length === 0) {
-		return
-	}
-    gamesService.cancelGame(activeGameId[0], user_id)
-}
-
 export const tournamentService = {
 
     getAllTournaments: () => {
@@ -222,7 +207,7 @@ export const tournamentService = {
                         tournament_id: tournament_id,
                         user_id: user_id
                     })
-                    removeFromActiveGame(user_id)
+                    tournamentService.removeFromActiveGame(user_id)
                     break
                 case 'open':
                     db.prepare('DELETE FROM tournament_participants WHERE tournament_id = ? AND user_id = ?')
