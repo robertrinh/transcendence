@@ -154,7 +154,7 @@ The subject asks for at least **7 major modules**. Points: **Major = 2 pts, Mino
 - **GDPR compliance** *(Minor)* : Privacy policy, anonymize profile, delete account, view/edit your data in Settings.
 - **Two-Factor Authentication (2FA) and JWT** *(Major)* : JWT on all protected routes. TOTP 2FA with otplib; setup, enable, verify endpoints; QR code for authenticator apps.
 
-**Summary:** 7 Major (14 pts) + 4 Minor (4 pts).
+**Summary:** 6 Major (12 pts) + 4 Minor (4 pts).
 
 | Module | Type | Implementation |
 |--------|------|----------------|
