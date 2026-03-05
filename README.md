@@ -1,6 +1,6 @@
 # Transcendence (ft_transcendence)
 
-A single-page web-based **Pong** platform where you can create an account, play locally or against friends online, join tournaments, chat in real time, and manage your profile and privacy. This project was built for the ft_transcendence assignment at Codam. Made by [@robertrinh](https://github.com/robertrinh), [@rutgermeuzelaar](https://github.com/rutgermeuzelaar), [@joaovieira](https://github.com/joaovieira) and [@ekeln](https://github.com/ekeln)
+A single-page web-based **Pong** platform where you can create an account, play locally or against friends online, join tournaments, chat in real time, and manage your profile and privacy. This project was built for the ft_transcendence assignment at Codam. Made by [@robertrinh](https://github.com/robertrinh), [@rutgermeuzelaar](https://github.com/rutgermeuzelaar), [@joaovazvieira](https://github.com/joaovazvieira) and [@ekenln](https://github.com/ekenln)
 
 ---
 
@@ -176,8 +176,8 @@ The subject asks for at least **7 major modules**. Points: **Major = 2 pts, Mino
 Check out the contributors!
 - [@robertrinh](https://github.com/robertrinh)
 - [@rutgermeuzelaar](https://github.com/rutgermeuzelaar)
-- [@joaovieira](https://github.com/joaovieira)
-- [@ekeln](https://github.com/ekeln)
+- [@joaovazvieira](https://github.com/joaovazvieira)
+- [@ekenln](https://github.com/ekenln)
 
 ---
 
